@@ -1075,13 +1075,14 @@ function handleFormSubmit(e) {
     id: generateId(),
     amount,
     description,
-    type: currentType,
+    type: document.getElementById('typeGasto').classList.contains('active') ? 'gasto' : 'ingreso',
     date: new Date().toISOString()
   });
   
   saveData();
   document.getElementById('amount').value = '';
   document.getElementById('description').value = '';
+  document.getElementById('amount').focus();
   render();
 }
 
