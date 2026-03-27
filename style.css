@@ -397,3 +397,58 @@ body {
   height: 0;
   display: none;
 }
+
+/* Modal */
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.modal.visible {
+  display: flex;
+}
+
+.modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+}
+
+.modal__content {
+  position: relative;
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  max-width: 340px;
+  width: 100%;
+  box-shadow: var(--shadow-md);
+}
+
+.modal__title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.modal__steps {
+  padding-left: 20px;
+  margin-bottom: 24px;
+}
+
+.modal__steps li {
+  margin-bottom: 12px;
+  line-height: 1.5;
+  color: var(--gray-700);
+}
+
+.modal__steps li::marker {
+  color: var(--primary);
+  font-weight: 600;
+}

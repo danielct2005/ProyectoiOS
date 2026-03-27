@@ -41,6 +41,21 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <!-- Modal de instalación iOS -->
+  <div class="modal" id="iOSModal">
+    <div class="modal__backdrop"></div>
+    <div class="modal__content">
+      <h3 class="modal__title">📱 Cómo instalar en iOS</h3>
+      <ol class="modal__steps">
+        <li>Toca el botón <strong>Compartir</strong> <span style="font-size:1.2em">📤</span></li>
+        <li>Desliza hacia abajo para ver más opciones</li>
+        <li>Toca <strong>"Agregar a Inicio"</strong></li>
+        <li>Toca <strong>"Agregar"</strong> en la esquina superior</li>
+      </ol>
+      <button class="btn btn--primary" id="closeIOSModal">¡Entendido!</button>
+    </div>
+  </div>
+
   <!-- Offline Banner -->
   <div class="offline-banner" id="offlineBanner">
     Sin conexión - Modo offline activo
@@ -117,6 +132,9 @@
         <button class="btn btn--primary" id="installBtn" style="display: none;">
           📲 Instalar App
         </button>
+        <button class="btn btn--secondary mt-1" id="iOSInstallBtn">
+          📱 Agregar a Inicio (iOS)
+        </button>
       </div>
 
       <!-- Debug Info (solo desarrollo) -->
@@ -185,31 +203,67 @@
 
     // ===== PWA Install Prompt =====
     let deferredPrompt;
-    const installBtn = document.getElementById('installPrompt');
+    const installBtn = document.getElementById('installBtn');
+    const iOSInstallBtn = document.getElementById('iOSInstallBtn');
+    const installPromptEl = document.getElementById('installPrompt');
 
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      installBtn.textContent = 'Sí';
-      document.getElementById('installBtn').style.display = 'flex';
-    });
+    // Detectar si es iOS
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
-    document.getElementById('installBtn').addEventListener('click', async () => {
-      if (!deferredPrompt) return;
+    if (isIOS) {
+      installPromptEl.textContent = 'Sí';
+      iOSInstallBtn.style.display = 'flex';
+      installBtn.style.display = 'none';
       
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      
-      if (outcome === 'accepted') {
-        installBtn.textContent = 'Sí';
+      // Mostrar automáticamente el modal instructivo en iOS
+      // (Solo una vez, usando localStorage)
+      const hasSeenIOSModal = localStorage.getItem('iosPwaModalShown');
+      if (!hasSeenIOSModal) {
+        setTimeout(() => {
+          document.getElementById('iOSModal').classList.add('visible');
+        }, 1500); // Esperar 1.5s para que cargue la UI
+        localStorage.setItem('iosPwaModalShown', 'true');
       }
-      deferredPrompt = null;
-      document.getElementById('installBtn').style.display = 'none';
-    });
+      
+      iOSInstallBtn.addEventListener('click', () => {
+        document.getElementById('iOSModal').classList.add('visible');
+      });
+      
+      document.getElementById('closeIOSModal').addEventListener('click', () => {
+        document.getElementById('iOSModal').classList.remove('visible');
+      });
+      
+      document.querySelector('.modal__backdrop').addEventListener('click', () => {
+        document.getElementById('iOSModal').classList.remove('visible');
+      });
+    } else {
+      // Android/Chrome - usar beforeinstallprompt
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        installPromptEl.textContent = 'Sí';
+        installBtn.style.display = 'flex';
+        iOSInstallBtn.style.display = 'none';
+      });
+
+      document.getElementById('installBtn').addEventListener('click', async () => {
+        if (!deferredPrompt) return;
+        
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        
+        if (outcome === 'accepted') {
+          installPromptEl.textContent = 'Sí';
+        }
+        deferredPrompt = null;
+        installBtn.style.display = 'none';
+      });
+    }
 
     window.addEventListener('appinstalled', () => {
-      installBtn.textContent = 'Sí';
-      document.getElementById('installBtn').style.display = 'none';
+      installPromptEl.textContent = 'Sí';
+      installBtn.style.display = 'none';
+      iOSInstallBtn.style.display = 'none';
       console.log('PWA instalada');
     });
 
