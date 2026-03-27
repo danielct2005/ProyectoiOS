@@ -780,3 +780,142 @@ body.dark-mode .debt-group__header { background: var(--gray-50); }
 body.dark-mode .form-input { background: var(--gray-50); border-color: var(--gray-300); color: var(--gray-900); }
 body.dark-mode .modal__backdrop { background: rgba(0, 0, 0, 0.7); }
 
+/* ===== HAMBURGER MENU ===== */
+.menu-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 200;
+  display: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.menu-overlay.visible {
+  display: block;
+  opacity: 1;
+}
+
+.hamburger-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 280px;
+  background: var(--white);
+  z-index: 201;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+  box-shadow: var(--shadow-lg);
+}
+
+.hamburger-menu.visible {
+  transform: translateX(0);
+}
+
+.menu-header {
+  padding: calc(20px + var(--safe-top)) var(--space-md) var(--space-md);
+  border-bottom: 1px solid var(--gray-200);
+}
+
+.menu-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--gray-900);
+}
+
+.menu-content {
+  padding: var(--space-md);
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  width: 100%;
+  padding: var(--space-md);
+  border: none;
+  background: transparent;
+  border-radius: var(--radius);
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--gray-700);
+  cursor: pointer;
+  text-align: left;
+  -webkit-tap-highlight-color: transparent;
+  margin-bottom: var(--space-xs);
+}
+
+.menu-item:active {
+  background: var(--gray-100);
+}
+
+.menu-item.active {
+  background: rgba(0, 122, 255, 0.1);
+  color: var(--primary);
+}
+
+.menu-icon {
+  font-size: 1.25rem;
+}
+
+/* ===== QUICK ACCESS GRID ===== */
+.quick-access-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.quick-access-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-md) var(--space-sm);
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.quick-access-card:active {
+  background: var(--gray-100);
+  transform: scale(0.98);
+}
+
+.quick-access-icon {
+  font-size: 1.5rem;
+  margin-bottom: var(--space-xs);
+}
+
+.quick-access-label {
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: var(--gray-700);
+  text-align: center;
+}
+
+/* Dark mode for menu */
+body.dark-mode .hamburger-menu {
+  background: var(--gray-800);
+}
+
+body.dark-mode .menu-header {
+  border-color: var(--gray-700);
+}
+
+body.dark-mode .menu-title,
+body.dark-mode .menu-item {
+  color: var(--gray-900);
+}
+
+body.dark-mode .menu-item:active {
+  background: var(--gray-700);
+}
+
+body.dark-mode .menu-item.active {
+  background: rgba(0, 122, 255, 0.2);
+}
+

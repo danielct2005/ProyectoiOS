@@ -9,13 +9,14 @@ const STORAGE_KEY = 'finanzas_app_data';
 const MAX_TRANSACTIONS = 20;
 
 // ===== STATE =====
-let currentSection = 'finanzas';
+let currentSection = 'billetera';
 let currentMonth = getCurrentMonthKey();
 let transactions = [];
 let fixedExpenses = [];
 let debts = [];
 let creditCards = [];
 let history = {};
+let importantDates = [];
 let darkMode = localStorage.getItem('darkMode') === 'true';
 let lastPaymentMonth = null; // Track last month when cuentas were paid
 
@@ -103,6 +104,7 @@ function loadData() {
       creditCards = parsed.creditCards || [];
       history = parsed.history || {};
       lastPaymentMonth = parsed.lastPaymentMonth || null;
+      importantDates = parsed.importantDates || [];
     } else {
       transactions = [];
       fixedExpenses = [];
@@ -110,6 +112,7 @@ function loadData() {
       creditCards = [];
       history = {};
       lastPaymentMonth = null;
+      importantDates = [];
     }
   } catch (error) {
     console.error('Error al cargar datos:', error);
@@ -119,6 +122,7 @@ function loadData() {
     creditCards = [];
     history = {};
     lastPaymentMonth = null;
+    importantDates = [];
   }
 }
 
@@ -130,7 +134,8 @@ function saveData() {
       debts,
       creditCards,
       history,
-      lastPaymentMonth
+      lastPaymentMonth,
+      importantDates
     }));
   } catch (error) {
     console.error('Error al guardar datos:', error);
@@ -288,22 +293,33 @@ function loadMonthData() {
 
 // ===== RENDER FUNCTIONS =====
 
+// Section titles
+const sectionTitles = {
+  billetera: 'Billetera',
+  agenda: 'Agenda',
+  ajustes: 'Ajustes'
+};
+
 function render() {
   renderNavigation();
+  renderMenu();
+  
+  // Update header title
+  const headerTitle = document.getElementById('headerTitle');
+  if (headerTitle) {
+    headerTitle.textContent = sectionTitles[currentSection] || 'Billetera';
+  }
   
   try {
     switch (currentSection) {
-      case 'finanzas':
-        renderFinanzas();
+      case 'billetera':
+        renderBilletera();
         break;
-      case 'fijos':
-        renderFijos();
+      case 'agenda':
+        renderAgenda();
         break;
-      case 'deudas':
-        renderDeudas();
-        break;
-      case 'historial':
-        renderHistorial();
+      case 'ajustes':
+        renderAjustes();
         break;
     }
   } catch (error) {
@@ -312,26 +328,16 @@ function render() {
   }
 }
 
-function renderNavigation() {
-  // Agregar event listeners
-  document.querySelectorAll('.nav__item').forEach(item => {
-    item.onclick = (e) => {
-      e.preventDefault();
-      console.log('Clicked section:', item.dataset.section);
-      currentSection = item.dataset.section;
-      render();
-    };
-  });
-  
-  // Actualizar navegación activa
-  document.querySelectorAll('.nav__item').forEach(item => {
-    item.classList.toggle('nav__item--active', item.dataset.section === currentSection);
+function renderMenu() {
+  // Update both menu and nav
+  document.querySelectorAll('.menu-item, .nav__item').forEach(item => {
+    const section = item.dataset.section;
+    item.classList.toggle('active', section === currentSection);
   });
 }
 
-// ===== FINANZAS SECTION =====
-
-function renderFinanzas() {
+// Rename renderFinanzas to renderBilletera
+function renderBilletera() {
   const main = document.querySelector('.main');
   const balance = calculateBalance();
   const income = calculateIncome();
@@ -1297,6 +1303,33 @@ function init() {
     updateDarkMode();
   }
   
+  // Hamburger menu toggle
+  const menuBtn = document.getElementById('menuBtn');
+  const menu = document.getElementById('hamburgerMenu');
+  const overlay = document.getElementById('menuOverlay');
+  
+  if (menuBtn && menu && overlay) {
+    menuBtn.onclick = () => {
+      menu.classList.add('visible');
+      overlay.classList.add('visible');
+    };
+    
+    overlay.onclick = () => {
+      menu.classList.remove('visible');
+      overlay.classList.remove('visible');
+    };
+  }
+  
+  // Menu item clicks
+  document.querySelectorAll('.menu-item').forEach(item => {
+    item.onclick = () => {
+      currentSection = item.dataset.section;
+      document.getElementById('hamburgerMenu').classList.remove('visible');
+      document.getElementById('menuOverlay').classList.remove('visible');
+      render();
+    };
+  });
+  
   console.log('💰 App de Finanzas inicializada');
 }
 
@@ -1311,6 +1344,231 @@ function updateDarkMode() {
     body.classList.remove('dark-mode');
     if (btn) btn.textContent = '🌙';
   }
+}
+
+document.addEventListener('DOMContentLoaded', init);
+
+// ===== AGENDA SECTION =====
+
+function renderAgenda() {
+  const main = document.querySelector('.main');
+  
+  main.innerHTML = `
+    <div class="section-header">
+      <h2 class="section-title">Fechas Importantes</h2>
+      <button class="btn btn--sm btn--primary" id="addDateBtn">➕ Agregar</button>
+    </div>
+    
+    <div class="card">
+      <div class="transaction-list" id="datesList">
+        ${importantDates.length === 0 ? `
+          <div class="empty-state">
+            <span class="empty-state__icon">📅</span>
+            <p class="empty-state__text">Sin fechas importantes</p>
+            <p class="empty-state__hint">Agrega cumpleaños, pagos, etc.</p>
+          </div>
+        ` : importantDates.map(d => `
+          <div class="transaction-item" data-id="${d.id}">
+            <div class="transaction-item__icon transaction-item__icon--gasto">🎉</div>
+            <div class="transaction-item__content">
+              <div class="transaction-item__desc">${escapeHtml(d.title)}</div>
+              <div class="transaction-item__date">${d.date} ${d.notes ? '- ' + d.notes : ''}</div>
+            </div>
+            <button class="edit-debt-btn" data-edit="${d.id}">⋮</button>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+    
+    <!-- Modal Agregar/Editar Fecha -->
+    <div class="modal" id="dateModal">
+      <div class="modal__backdrop"></div>
+      <div class="modal__content">
+        <h3 class="modal__title" id="dateModalTitle">Agregar Fecha</h3>
+        <form id="dateForm">
+          <input type="hidden" id="dateEditId">
+          <div class="form-group">
+            <label class="form-label" for="dateTitle">Título</label>
+            <input type="text" id="dateTitle" class="form-input" placeholder="Ej: Cumpleaños Juan" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="dateDesc">Fecha</label>
+            <input type="text" id="dateDesc" class="form-input" placeholder="Ej: 15 de Marzo" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="dateNotes">Notas (opcional)</label>
+            <input type="text" id="dateNotes" class="form-input" placeholder="Ej: Regalo $20.000">
+          </div>
+          <div class="modal__actions">
+            <button type="button" class="btn btn--danger" id="deleteDateBtn" style="display:none;">🗑️ Eliminar</button>
+            <button type="submit" class="btn btn--primary">Guardar</button>
+          </div>
+          <button type="button" class="btn btn--secondary btn--block mt-1" id="cancelDateBtn">Cancelar</button>
+        </form>
+      </div>
+    </div>
+  `;
+  
+  setTimeout(() => {
+    const addBtn = document.getElementById('addDateBtn');
+    const form = document.getElementById('dateForm');
+    const cancelBtn = document.getElementById('cancelDateBtn');
+    const deleteBtn = document.getElementById('deleteDateBtn');
+    const modalTitle = document.getElementById('dateModalTitle');
+    
+    addBtn.onclick = () => {
+      document.getElementById('dateEditId').value = '';
+      document.getElementById('dateTitle').value = '';
+      document.getElementById('dateDesc').value = '';
+      document.getElementById('dateNotes').value = '';
+      modalTitle.textContent = 'Agregar Fecha';
+      deleteBtn.style.display = 'none';
+      document.getElementById('dateModal').classList.add('visible');
+    };
+    
+    cancelBtn.onclick = () => document.getElementById('dateModal').classList.remove('visible');
+    document.querySelector('#dateModal .modal__backdrop').onclick = () => document.getElementById('dateModal').classList.remove('visible');
+    
+    form.onsubmit = (e) => {
+      e.preventDefault();
+      const editId = document.getElementById('dateEditId').value;
+      const title = document.getElementById('dateTitle').value.trim();
+      const date = document.getElementById('dateDesc').value.trim();
+      const notes = document.getElementById('dateNotes').value.trim();
+      
+      if (editId) {
+        const idx = importantDates.findIndex(d => d.id === editId);
+        if (idx >= 0) importantDates[idx] = { ...importantDates[idx], title, date, notes };
+      } else {
+        importantDates.push({ id: generateId(), title, date, notes });
+      }
+      
+      saveData();
+      document.getElementById('dateModal').classList.remove('visible');
+      render();
+    };
+    
+    deleteBtn.onclick = () => {
+      const editId = document.getElementById('dateEditId').value;
+      Swal.fire({
+        title: '¿Eliminar fecha?',
+        text: 'Esta acción no se puede deshacer',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#ff3b30'
+      }).then((result) => {
+        if (result.isConfirmed && editId) {
+          importantDates = importantDates.filter(d => d.id !== editId);
+          saveData();
+          document.getElementById('dateModal').classList.remove('visible');
+          render();
+        }
+      });
+    };
+    
+    document.querySelectorAll('#datesList [data-edit]').forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        const date = importantDates.find(d => d.id === btn.dataset.edit);
+        if (date) {
+          document.getElementById('dateEditId').value = date.id;
+          document.getElementById('dateTitle').value = date.title;
+          document.getElementById('dateDesc').value = date.date;
+          document.getElementById('dateNotes').value = date.notes || '';
+          modalTitle.textContent = 'Editar Fecha';
+          deleteBtn.style.display = 'block';
+          document.getElementById('dateModal').classList.add('visible');
+        }
+      };
+    });
+  }, 100);
+}
+
+// ===== AJUSTES SECTION =====
+
+function renderAjustes() {
+  const main = document.querySelector('.main');
+  
+  main.innerHTML = `
+    <div class="section-header">
+      <h2 class="section-title">Ajustes</h2>
+    </div>
+    
+    <div class="card">
+      <div class="action-list">
+        <div class="action-item" id="exportDataBtn">
+          <span class="action-item__icon">📤</span>
+          <span class="action-item__text">Exportar Datos</span>
+          <span class="action-item__arrow">→</span>
+        </div>
+        <div class="action-item" id="importDataBtn">
+          <span class="action-item__icon">📥</span>
+          <span class="action-item__text">Importar Datos</span>
+          <span class="action-item__arrow">→</span>
+        </div>
+        <div class="action-item" id="clearAllDataBtn" style="color: var(--danger);">
+          <span class="action-item__icon">🗑️</span>
+          <span class="action-item__text">Borrar Todos los Datos</span>
+          <span class="action-item__arrow">→</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="card">
+      <h3 class="card__title mb-2">Información</h3>
+      <p class="text-muted mb-1">App de Finanzas Personales</p>
+      <p class="text-muted mb-1">Versión 1.0.0</p>
+      <p class="text-muted">Todos los datos se almacenan localmente en tu dispositivo.</p>
+    </div>
+  `;
+  
+  setTimeout(() => {
+    document.getElementById('exportDataBtn').onclick = () => {
+      const data = JSON.stringify({ transactions, fixedExpenses, debts, creditCards, history, importantDates }, null, 2);
+      const blob = new Blob([data], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'mis-finanzas-backup.json';
+      a.click();
+      URL.revokeObjectURL(url);
+      Swal.fire({ title: '¡Exportado!', text: 'Datos exportados correctamente', icon: 'success' });
+    };
+    
+    document.getElementById('importDataBtn').onclick = () => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json';
+      input.onchange = (e) => {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          try {
+            const data = JSON.parse(event.target.result);
+            if (data.transactions) transactions = data.transactions;
+            if (data.fixedExpenses) fixedExpenses = data.fixedExpenses;
+            if (data.debts) debts = data.debts;
+            if (data.creditCards) creditCards = data.creditCards;
+            if (data.history) history = data.history;
+            if (data.importantDates) importantDates = data.importantDates;
+            saveData();
+            render();
+            Swal.fire({ title: '¡Importado!', text: 'Datos importados correctamente', icon: 'success' });
+          } catch (err) {
+            Swal.fire({ title: 'Error', text: 'Archivo inválido', icon: 'error' });
+          }
+        };
+        reader.readAsText(file);
+      };
+      input.click();
+    };
+    
+    document.getElementById('clearAllDataBtn').onclick = () => {
+      clearAllData();
+    };
+  }, 100);
 }
 
 document.addEventListener('DOMContentLoaded', init);
