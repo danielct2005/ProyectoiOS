@@ -28,6 +28,11 @@
   
   --white: #ffffff;
   --black: #000000;
+  --bg: var(--gray-100);
+  --bg-card: var(--white);
+  --text: var(--gray-900);
+  --text-muted: var(--gray-600);
+}
   
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.12);
@@ -56,8 +61,8 @@ html {
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
-  background: var(--gray-100);
-  color: var(--gray-900);
+  background: var(--bg);
+  color: var(--text);
   line-height: 1.5;
   min-height: 100vh;
   min-height: 100dvh;
@@ -71,12 +76,12 @@ body {
   flex-direction: column;
   min-height: 100vh;
   min-height: 100dvh;
-  background: var(--gray-100);
+  background: var(--bg);
 }
 
 /* ===== HEADER ===== */
 .header {
-  background: var(--white);
+  background: var(--bg-card);
   padding: calc(12px + var(--safe-top)) var(--space-md) var(--space-md);
   display: flex;
   align-items: center;
@@ -90,7 +95,7 @@ body {
 .header__title {
   font-size: 1.25rem;
   font-weight: 700;
-  color: var(--gray-900);
+  color: var(--text);
 }
 
 .header__btn {
@@ -251,7 +256,7 @@ body {
 
 /* ===== CARD ===== */
 .card {
-  background: var(--white);
+  background: var(--bg-card);
   border-radius: var(--radius-lg);
   padding: var(--space-md);
   margin-bottom: var(--space-md);
@@ -268,7 +273,7 @@ body {
 .card__title {
   font-size: 1rem;
   font-weight: 600;
-  color: var(--gray-900);
+  color: var(--text);
 }
 
 .card__badge {
@@ -745,4 +750,113 @@ select.form-input {
   background-repeat: no-repeat;
   background-position: right 16px center;
   padding-right: 40px;
+}
+
+/* ===== DARK MODE ===== */
+body.dark-mode {
+  --gray-50: #1c1c1e;
+  --gray-100: #2c2c2e;
+  --gray-200: #3c3c43;
+  --gray-300: #48484a;
+  --gray-400: #636366;
+  --gray-500: #8e8e93;
+  --gray-600: #aeaeb2;
+  --gray-700: #c7c7cc;
+  --gray-800: #d1d1d6;
+  --gray-900: #e5e5ea;
+  --white: #1c1c1e;
+  --black: #ffffff;
+  --bg: #000000;
+  --bg-card: #1c1c1e;
+  --text: #ffffff;
+  --text-muted: #aeaeb2;
+}
+
+body.dark-mode {
+  background: var(--bg);
+  color: var(--text);
+}
+
+body.dark-mode .app {
+  background: var(--bg);
+}
+
+body.dark-mode .header,
+body.dark-mode .nav,
+body.dark-mode .card,
+body.dark-mode .balance-card--mini {
+  background: var(--bg-card);
+  color: var(--text);
+}
+
+body.dark-mode .header__title,
+body.dark-mode .section-title,
+body.dark-mode .card__title,
+body.dark-mode .transaction-item__desc,
+body.dark-mode .transaction-item__date {
+  color: var(--text);
+}
+
+body.dark-mode .form-input,
+body.dark-mode select.form-input {
+  background: var(--gray-100);
+  border-color: var(--gray-300);
+  color: var(--text);
+}
+
+body.dark-mode .transaction-item,
+body.dark-mode .history-item,
+body.dark-mode .card-item {
+  background: var(--gray-100);
+}
+
+body.dark-mode .month-selector {
+  background: var(--bg-card);
+}
+
+body.dark-mode .modal__content {
+  background: var(--bg-card);
+  color: var(--text);
+}
+
+body.dark-mode .modal__title {
+  color: var(--text);
+}
+
+body.dark-mode .form-label {
+  color: var(--text-muted);
+}
+
+body.dark-mode .form-input::placeholder {
+  color: var(--gray-500);
+}
+
+body.dark-mode .empty-state__text,
+body.dark-mode .empty-state__hint {
+  color: var(--text-muted);
+}
+
+body.dark-mode .nav__item {
+  color: var(--gray-500);
+}
+
+body.dark-mode .nav__item--active {
+  color: var(--primary);
+}
+
+body.dark-mode .debt-group__header {
+  background: var(--gray-100);
+  color: var(--text);
+}
+
+.text-success {
+  color: var(--success) !important;
+}
+
+body.dark-mode .text-success {
+  color: var(--success);
+}
+
+body.dark-mode .modal__backdrop {
+  background: rgba(0, 0, 0, 0.7);
 }

@@ -16,6 +16,7 @@ let fixedExpenses = [];
 let debts = [];
 let creditCards = [];
 let history = {};
+let darkMode = localStorage.getItem('darkMode') === 'true';
 
 // ===== DOM ELEMENTS =====
 const elements = {};
@@ -873,15 +874,16 @@ function renderDeudas() {
 
 // Helper function to build debt item HTML
 function buildDebtItemHtml(d) {
+  const isComplete = (d.paidInstallments || 0) >= d.totalInstallments;
   return `
-    <div class="transaction-item" data-id="${d.id}">
+    <div class="transaction-item ${isComplete ? 'transaction-item--complete' : ''}" data-id="${d.id}">
       <div class="transaction-item__icon transaction-item__icon--gasto">💳</div>
       <div class="transaction-item__content">
         <div class="transaction-item__desc">${escapeHtml(d.product)}</div>
-        <div class="transaction-item__date">${d.paidInstallments || 0}/${d.totalInstallments} cuotas (${formatCurrency(d.installmentAmount)})</div>
+        <div class="transaction-item__date ${isComplete ? 'text-success' : ''}">${d.paidInstallments || 0}/${d.totalInstallments} cuotas (${formatCurrency(d.installmentAmount)})${isComplete ? ' ✓ Pagado' : ''}</div>
       </div>
       <div class="transaction-item__amount transaction-item__amount--gasto">${formatCurrency(d.totalAmount)}</div>
-      <button class="edit-debt-btn" data-edit="${d.id}">⋮</button>
+      ${!isComplete ? `<button class="edit-debt-btn" data-edit="${d.id}">⋮</button>` : ''}
       <button class="transaction-item__delete" data-delete="${d.id}">🗑️</button>
     </div>
   `;
@@ -1035,10 +1037,41 @@ function init() {
   loadData();
   render();
   
-  // Clear data button
-  document.getElementById('clearDataBtn').onclick = clearAllData;
+  // Dark mode toggle
+  const darkModeBtn = document.getElementById('darkModeBtn');
+  if (darkModeBtn) {
+    darkModeBtn.onclick = () => {
+      darkMode = !darkMode;
+      localStorage.setItem('darkMode', darkMode);
+      updateDarkMode();
+    };
+    updateDarkMode();
+  }
   
   console.log('💰 App de Finanzas inicializada');
 }
 
-document.addEventListener('DOMContentLoaded', init);
+function updateDarkMode() {
+  const body = document.body;
+  const btn = document.getElementById('darkModeBtn');
+  
+  if (darkMode) {
+    body.classList.add('dark-mode');
+    if (btn) btn.textContent = '☀️';
+  } else {
+    body.classList.remove('dark-mode');
+    if (btn) btn.textContent = '🌙';
+  }
+}
+
+function clearAllData() {
+  if (confirm('¿Borrar todos los datos? Esta acción no se puede deshacer.')) {
+    transactions = [];
+    fixedExpenses = [];
+    debts = [];
+    creditCards = [];
+    history = {};
+    saveData();
+    render();
+  }
+}
