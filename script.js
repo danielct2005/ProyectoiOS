@@ -1075,3 +1075,5 @@ function clearAllData() {
     render();
   }
 }
+
+document.addEventListener('DOMContentLoaded', init);
