@@ -221,11 +221,11 @@ body {
 }
 
 .balance-card__amount.positive {
-  color: var(--success);
+  color: #ffd700;
 }
 
 .balance-card__amount.negative {
-  color: var(--danger);
+  color: #ff6b6b;
 }
 
 .balance-card__info {

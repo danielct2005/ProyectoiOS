@@ -698,8 +698,8 @@ function renderBilletera() {
       <div class="balance-card__label">Saldo del Mes</div>
       <div class="balance-card__amount ${balance >= 0 ? 'positive' : 'negative'}">${formatCurrency(balance)}</div>
       <div class="balance-card__info">
-        <span class="balance-card__income">💚 ${formatCurrency(income)}</span>
-        <span class="balance-card__expense">💸 ${formatCurrency(expense)}</span>
+        <span class="balance-card__income">📈 ${formatCurrency(income)}</span>
+        <span class="balance-card__expense">📉 ${formatCurrency(expense)}</span>
       </div>
       ${fixedTotal > 0 || debtsMonthly > 0 ? `
         <div class="balance-card__extras">
@@ -722,8 +722,8 @@ function renderBilletera() {
         <div class="form-group">
           <label class="form-label">Tipo</label>
           <div class="type-selector">
-            <button type="button" class="type-btn active" data-type="gasto" id="typeGasto">💸 Gasto</button>
-            <button type="button" class="type-btn" data-type="ingreso" id="typeIngreso">💚 Ingreso</button>
+            <button type="button" class="type-btn active" data-type="gasto" id="typeGasto">📉 Gasto</button>
+            <button type="button" class="type-btn" data-type="ingreso" id="typeIngreso">📈 Ingreso</button>
           </div>
         </div>
         
@@ -757,7 +757,7 @@ function renderBilletera() {
         ` : transactions.slice(0, MAX_TRANSACTIONS).map(t => `
           <div class="transaction-item" data-id="${t.id}">
             <div class="transaction-item__icon transaction-item__icon--${t.type}">
-              ${t.type === 'gasto' ? '💸' : '💚'}
+              ${t.type === 'gasto' ? '📉' : '📈'}
             </div>
             <div class="transaction-item__content">
               <div class="transaction-item__desc">${escapeHtml(t.description)}</div>
@@ -802,8 +802,8 @@ function renderBilletera() {
           <div class="form-group">
             <label class="form-label">Tipo</label>
             <div class="type-selector">
-              <button type="button" class="type-btn" data-type="gasto" id="editTypeGasto">💸 Gasto</button>
-              <button type="button" class="type-btn" data-type="ingreso" id="editTypeIngreso">💚 Ingreso</button>
+              <button type="button" class="type-btn" data-type="gasto" id="editTypeGasto">📉 Gasto</button>
+              <button type="button" class="type-btn" data-type="ingreso" id="editTypeIngreso">📈 Ingreso</button>
             </div>
           </div>
           <div class="form-group">
@@ -1563,8 +1563,8 @@ function renderHistorial() {
             <span class="history-item__balance ${data.balance >= 0 ? 'positive' : 'negative'}">${formatCurrency(data.balance)}</span>
           </div>
           <div class="history-item__details">
-            <span>💚 Ingresos: ${formatCurrency(data.income)}</span>
-            <span>💸 Gastos: ${formatCurrency(data.expense)}</span>
+            <span>📈 Ingresos: ${formatCurrency(data.income)}</span>
+            <span>📉 Gastos: ${formatCurrency(data.expense)}</span>
             <span>📝 ${data.transactions?.length || 0} movimientos</span>
           </div>
           <button class="btn btn--sm btn--ghost view-history-btn" data-month="${month}">Ver movimientos</button>
@@ -1595,7 +1595,7 @@ function renderHistorial() {
         list.innerHTML = data.transactions.map(t => `
           <div class="transaction-item">
             <div class="transaction-item__icon transaction-item__icon--${t.type}">
-              ${t.type === 'gasto' ? '💸' : '💚'}
+              ${t.type === 'gasto' ? '📉' : '📈'}
             </div>
             <div class="transaction-item__content">
               <div class="transaction-item__desc">${escapeHtml(t.description)}</div>
