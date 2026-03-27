@@ -445,9 +445,9 @@ body {
 .transaction-item__icon--ingreso { background: rgba(52, 209, 88, 0.15); }
 
 .transaction-item__content {
-  flex: 1;
+  flex: 1 1 auto;
   min-width: 0;
-  max-width: calc(100% - 100px);
+  width: 100%;
 }
 
 .transaction-item__desc {
@@ -457,6 +457,7 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .transaction-item__date {
