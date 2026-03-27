@@ -7,8 +7,12 @@
 // ==================== CONSTANTS ====================
 
 const API_BASE_URL = 'https://mindicador.cl/api';
-// Proxy CORS público para evitar bloqueos
-const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
+// Múltiples proxies CORS para mayor confiabilidad
+const CORS_PROXIES = [
+  'https://api.allorigins.win/raw?url=',
+  'https://corsproxy.io/?',
+  'https://proxy.corsplus.io/'
+];
 
 // Cache para evitar llamadas repetidas
 const cache = new Map();
@@ -18,29 +22,53 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
 
 /**
  * Realiza una petición fetch con manejo de errores y proxy CORS
+ * Intenta con múltiples proxies si el primero falla
  */
 async function fetchWithErrorHandling(url, options = {}) {
-  // Usar proxy CORS para evitar bloqueos
-  const proxyUrl = CORS_PROXY + encodeURIComponent(url);
+  const timeoutMs = 8000; // 8 segundos de timeout
   
-  try {
-    const response = await fetch(proxyUrl, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
+  // Intentar cada proxy hasta que uno funcione
+  for (const proxy of CORS_PROXIES) {
+    const proxyUrl = proxy + encodeURIComponent(url);
+    
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+      
+      const response = await fetch(proxyUrl, {
+        ...options,
+        signal: controller.signal,
+        headers: {
+          'Content-Type': 'application/json',
+          ...options.headers
+        }
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    });
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      
+      const data = await response.json();
+      
+      // Verificar que los datos son válidos
+      if (data && data.serie && data.serie.length > 0) {
+        return data;
+      }
+      
+      // Si los datos no son válidos, intentar con el siguiente proxy
+      console.warn('Datos inválidos del proxy, intentando siguiente...');
+      continue;
+      
+    } catch (error) {
+      console.warn(`Proxy ${proxy} falló:`, error.message);
+      continue; // Intentar con el siguiente proxy
     }
-    
-    return await response.json();
-  } catch (error) {
-    console.error('API Error:', error);
-    throw error;
   }
+  
+  // Si todos los proxies fallan, lanzar error
+  throw new Error('Todos los proxies CORS fallaron');
 }
 
 /**

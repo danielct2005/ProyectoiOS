@@ -397,6 +397,17 @@ export function renderBilletera() {
 // ==================== ECONOMIC INDICATORS ====================
 
 async function loadEconomicIndicators() {
+  // Mostrar estado de carga
+  const ufEl = document.getElementById('ufValue');
+  const dolarEl = document.getElementById('dolarValue');
+  const euroEl = document.getElementById('euroValue');
+  const utmEl = document.getElementById('utmValue');
+  
+  if (ufEl) ufEl.textContent = 'Cargando...';
+  if (dolarEl) dolarEl.textContent = 'Cargando...';
+  if (euroEl) euroEl.textContent = 'Cargando...';
+  if (utmEl) utmEl.textContent = 'Cargando...';
+  
   // Obtener valores de la API
   const [uf, dolar, euro, utm] = await Promise.allSettled([
     API.getCurrentUF(),
@@ -406,35 +417,19 @@ async function loadEconomicIndicators() {
   ]);
   
   // Actualizar UI con los valores
-  const ufEl = document.getElementById('ufValue');
-  const dolarEl = document.getElementById('dolarValue');
-  const euroEl = document.getElementById('euroValue');
-  const utmEl = document.getElementById('utmValue');
   const refreshBtn = document.getElementById('refreshIndicatorsBtn');
   
-  if (ufEl) {
-    ufEl.textContent = uf.status === 'fulfilled' && uf.value 
-      ? formatCurrency(Math.round(uf.value)) 
-      : 'Sin conexión';
-  }
+  const formatValue = (result) => {
+    if (result.status === 'fulfilled' && result.value && result.value > 0) {
+      return formatCurrency(Math.round(result.value));
+    }
+    return 'Sin conexión';
+  };
   
-  if (dolarEl) {
-    dolarEl.textContent = dolar.status === 'fulfilled' && dolar.value 
-      ? formatCurrency(Math.round(dolar.value)) 
-      : 'Sin conexión';
-  }
-  
-  if (euroEl) {
-    euroEl.textContent = euro.status === 'fulfilled' && euro.value 
-      ? formatCurrency(Math.round(euro.value)) 
-      : 'Sin conexión';
-  }
-  
-  if (utmEl) {
-    utmEl.textContent = utm.status === 'fulfilled' && utm.value 
-      ? formatCurrency(Math.round(utm.value)) 
-      : 'Sin conexión';
-  }
+  if (ufEl) ufEl.textContent = formatValue(uf);
+  if (dolarEl) dolarEl.textContent = formatValue(dolar);
+  if (euroEl) euroEl.textContent = formatValue(euro);
+  if (utmEl) utmEl.textContent = formatValue(utm);
   
   // Botón de actualizar
   if (refreshBtn) {
