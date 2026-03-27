@@ -46,16 +46,17 @@ function getMonthName(monthKey) {
 }
 
 /**
+ * Formatea un número con separador de miles
+ */
+function formatNumber(num) {
+  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
+/**
  * Formatea un número como moneda (formato Chile)
  */
 function formatCurrency(amount) {
-  const formatted = new Intl.NumberFormat('es-CL', {
-    style: 'currency',
-    currency: 'CLP',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0
-  }).format(amount);
-  return formatted;
+  return '$' + formatNumber(amount);
 }
 
 /**
