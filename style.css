@@ -447,6 +447,7 @@ body {
 .transaction-item__content {
   flex: 1;
   min-width: 0;
+  max-width: calc(100% - 100px);
 }
 
 .transaction-item__desc {

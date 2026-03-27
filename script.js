@@ -21,6 +21,7 @@ let history = {};
 let importantDates = [];
 let darkMode = localStorage.getItem('darkMode') === 'true';
 let lastPaymentMonth = null; // Track last month when cuentas were paid
+let previousMonthBalance = 0; // Track balance to transfer to next month
 
 // ===== DOM ELEMENTS =====
 const elements = {};
@@ -107,6 +108,7 @@ function loadData() {
       history = parsed.history || {};
       lastPaymentMonth = parsed.lastPaymentMonth || null;
       importantDates = parsed.importantDates || [];
+      previousMonthBalance = parsed.previousMonthBalance || 0;
     } else {
       transactions = [];
       fixedExpenses = [];
@@ -115,6 +117,7 @@ function loadData() {
       history = {};
       lastPaymentMonth = null;
       importantDates = [];
+      previousMonthBalance = 0;
     }
   } catch (error) {
     console.error('Error al cargar datos:', error);
@@ -125,6 +128,7 @@ function loadData() {
     history = {};
     lastPaymentMonth = null;
     importantDates = [];
+    previousMonthBalance = 0;
   }
 }
 
@@ -137,7 +141,8 @@ function saveData() {
       creditCards,
       history,
       lastPaymentMonth,
-      importantDates
+      importantDates,
+      previousMonthBalance
     }));
   } catch (error) {
     console.error('Error al guardar datos:', error);
@@ -224,9 +229,19 @@ function payAllCuentas() {
       });
     });
     
-    // Actualizar cuotas pagadas en deudas
+    // Agregar movimiento de gasto por cada cuota de deuda
     debts.forEach(debt => {
       if (debt.paidInstallments < debt.totalInstallments) {
+        // Agregar gasto de la cuota
+        transactions.unshift({
+          id: generateId(),
+          amount: debt.installmentAmount,
+          description: `Cuota ${debt.paidInstallments + 1}/${debt.totalInstallments} - ${debt.product}`,
+          type: 'gasto',
+          date: new Date().toISOString()
+        });
+        
+        // Actualizar cuotas pagadas
         debt.paidInstallments++;
       }
     });
@@ -250,19 +265,49 @@ function payAllCuentas() {
 function archiveCurrentMonth() {
   const income = calculateIncome();
   const expense = calculateExpense();
+  const balance = income - expense;
   
   if (income > 0 || expense > 0) {
     history[currentMonth] = {
       income,
       expense,
-      balance: income - expense,
+      balance: balance,
       transactions: [...transactions],
       date: new Date().toISOString()
     };
   }
   
-  transactions = [];
+  // Guardar el balance para transferir al siguiente mes
+  previousMonthBalance = balance;
+  
+  // Crear el nuevo mes automáticamente
+  const [year, month] = currentMonth.split('-').map(Number);
+  let newYear = year;
+  let newMonth = month + 1;
+  
+  if (newMonth > 12) {
+    newMonth = 1;
+    newYear++;
+  }
+  
+  const newMonthKey = `${newYear}-${String(newMonth).padStart(2, '0')}`;
+  
+  // Agregar el balance transferido como ingreso inicial del nuevo mes
+  if (previousMonthBalance > 0) {
+    transactions = [{
+      id: generateId(),
+      amount: previousMonthBalance,
+      description: '💰 Saldo anterior transferido',
+      type: 'ingreso',
+      date: new Date().toISOString()
+    }];
+  } else {
+    transactions = [];
+  }
+  
+  currentMonth = newMonthKey;
   lastPaymentMonth = null;
+  
   saveData();
 }
 
@@ -1336,8 +1381,12 @@ function renderDeudas() {
             <input type="number" id="editDebtTotal" class="form-input" required inputmode="numeric">
           </div>
           <div class="form-group">
-            <label class="form-label" for="editDebtInstallments">Cuotas</label>
+            <label class="form-label" for="editDebtInstallments">Total de Cuotas</label>
             <input type="number" id="editDebtInstallments" class="form-input" required inputmode="numeric">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="editDebtPaidInstallments">Cuotas Pagadas</label>
+            <input type="number" id="editDebtPaidInstallments" class="form-input" min="0" required inputmode="numeric">
           </div>
           <div class="modal__actions">
             <button type="button" class="btn btn--secondary" id="cancelEditDebtBtn">Cancelar</button>
@@ -1473,6 +1522,7 @@ function renderDeudas() {
           document.getElementById('editDebtProduct').value = debt.product;
           document.getElementById('editDebtTotal').value = debt.totalAmount;
           document.getElementById('editDebtInstallments').value = debt.totalInstallments;
+          document.getElementById('editDebtPaidInstallments').value = debt.paidInstallments || 0;
           document.getElementById('editDebtModal').classList.add('visible');
         }
       };
@@ -1487,6 +1537,7 @@ function renderDeudas() {
         const product = document.getElementById('editDebtProduct').value.trim();
         const totalAmount = parseInt(document.getElementById('editDebtTotal').value);
         const totalInstallments = parseInt(document.getElementById('editDebtInstallments').value);
+        const paidInstallments = parseInt(document.getElementById('editDebtPaidInstallments').value);
         
         // Validar producto
         if (!product) {
@@ -1503,6 +1554,10 @@ function renderDeudas() {
           Swal.fire({ title: 'Cuotas inválidas', text: 'Ingresa al menos 1 cuota', icon: 'error' });
           return;
         }
+        if (paidInstallments < 0 || paidInstallments > totalInstallments) {
+          Swal.fire({ title: 'Cuotas pagadas inválidas', text: 'Las cuotas pagadas deben estar entre 0 y el total de cuotas', icon: 'error' });
+          return;
+        }
         
         debts[idx] = {
           ...debts[idx],
@@ -1510,6 +1565,7 @@ function renderDeudas() {
           product: product,
           totalAmount,
           totalInstallments,
+          paidInstallments,
           installmentAmount: Math.round(totalAmount / totalInstallments)
         };
         saveData();
