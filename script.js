@@ -413,6 +413,11 @@ function renderMenu() {
     const section = item.dataset.section;
     item.classList.toggle('active', section === currentSection);
   });
+  
+  // Also update sub-nav items if in finanzas section
+  document.querySelectorAll('.sub-nav__item').forEach(item => {
+    item.classList.toggle('active', item.dataset.subsection === currentSubsection);
+  });
 }
 
 // Rename renderFinanzas to renderBilletera
