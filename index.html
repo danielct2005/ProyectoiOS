@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  
+  <!-- Primary Meta Tags -->
+  <title>ProyectoiOS - PWA</title>
+  <meta name="title" content="ProyectoiOS - PWA">
+  <meta name="description" content="Progressive Web App mínima y moderna">
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="ProyectoiOS - PWA">
+  <meta property="og:description" content="Progressive Web App mínima y moderna">
+  <meta property="og:image" content="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23007aff' width='100' height='100' rx='20'/><text x='50' y='65' font-size='50' text-anchor='middle' fill='white'>P</text></svg>">
+  
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:title" content="ProyectoiOS - PWA">
+  <meta property="twitter:description" content="Progressive Web App mínima y moderna">
+  
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#007aff">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="ProyectoiOS">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="application-name" content="ProyectoiOS">
+  <meta name="msapplication-TileColor" content="#007aff">
+  <meta name="msapplication-tap-highlight" content="no">
+  
+  <!-- Favicon & Icons -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23007aff' width='100' height='100' rx='20'/><text x='50' y='65' font-size='50' text-anchor='middle' fill='white'>P</text></svg>">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23007aff' width='100' height='100' rx='20'/><text x='50' y='65' font-size='50' text-anchor='middle' fill='white'>P</text></svg>">
+  
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json">
+  
+  <!-- Styles -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Offline Banner -->
+  <div class="offline-banner" id="offlineBanner">
+    Sin conexión - Modo offline activo
+  </div>
+
+  <div class="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="header__title">ProyectoiOS</div>
+      <div class="header__icon" id="statusIndicator">
+        <span class="status__dot"></span>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+      <!-- Welcome Card -->
+      <div class="card card--elevated">
+        <div class="card__header">
+          <div class="card__icon card__icon--blue">👋</div>
+          <div>
+            <div class="card__title">¡Bienvenido!</div>
+            <div class="card__subtitle">Tu PWA está lista</div>
+          </div>
+        </div>
+        <p class="card__text">
+          Esta es una Progressive Web App básica lista para desplegar en Vercel. 
+          Instálala en tu dispositivo para una experiencia tipo app nativa.
+        </p>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-card__value" id="onlineStatus">--</div>
+          <div class="stat-card__label">Estado</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card__value" id="installPrompt">?</div>
+          <div class="stat-card__label">Instalable</div>
+        </div>
+      </div>
+
+      <!-- Features Card -->
+      <div class="card mt-2">
+        <div class="card__header">
+          <div class="card__icon card__icon--green">⚡</div>
+          <div>
+            <div class="card__title">Características</div>
+            <div class="card__subtitle">Funcionalidades PWA</div>
+          </div>
+        </div>
+        <div class="action-list">
+          <div class="action-item">
+            <span class="action-item__icon">📶</span>
+            <span class="action-item__text">Funciona Offline</span>
+            <span class="action-item__arrow">✓</span>
+          </div>
+          <div class="action-item">
+            <span class="action-item__icon">📱</span>
+            <span class="action-item__text">Instalable en Home</span>
+            <span class="action-item__arrow">✓</span>
+          </div>
+          <div class="action-item">
+            <span class="action-item__icon">🔄</span>
+            <span class="action-item__text">Service Worker</span>
+            <span class="action-item__arrow">✓</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="mt-2">
+        <button class="btn btn--primary" id="installBtn" style="display: none;">
+          📲 Instalar App
+        </button>
+      </div>
+
+      <!-- Debug Info (solo desarrollo) -->
+      <div class="card mt-2">
+        <div class="card__header">
+          <div class="card__icon card__icon--orange">🔧</div>
+          <div>
+            <div class="card__title">Debug</div>
+            <div class="card__subtitle">Información técnica</div>
+          </div>
+        </div>
+        <div class="card__text text-muted" id="debugInfo">
+          <p>Cargando información...</p>
+        </div>
+      </div>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="nav">
+      <a href="#" class="nav__item nav__item--active">
+        <span class="nav__icon">🏠</span>
+        <span>Inicio</span>
+      </a>
+      <a href="#" class="nav__item">
+        <span class="nav__icon">📋</span>
+        <span>Notas</span>
+      </a>
+      <a href="#" class="nav__item">
+        <span class="nav__icon">⚙️</span>
+        <span>Ajustes</span>
+      </a>
+    </nav>
+  </div>
+
+  <script>
+    // ===== PWA Service Worker Registration =====
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', async () => {
+        try {
+          const registration = await navigator.serviceWorker.register('sw.js');
+          console.log('SW registrado:', registration.scope);
+        } catch (error) {
+          console.error('Error al registrar SW:', error);
+        }
+      });
+    }
+
+    // ===== Online/Offline Status =====
+    const updateOnlineStatus = () => {
+      const isOnline = navigator.onLine;
+      const statusEl = document.getElementById('onlineStatus');
+      const bannerEl = document.getElementById('offlineBanner');
+      
+      if (isOnline) {
+        statusEl.textContent = 'Online';
+        bannerEl.classList.remove('visible');
+      } else {
+        statusEl.textContent = 'Offline';
+        bannerEl.classList.add('visible');
+      }
+    };
+
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    updateOnlineStatus();
+
+    // ===== PWA Install Prompt =====
+    let deferredPrompt;
+    const installBtn = document.getElementById('installPrompt');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBtn.textContent = 'Sí';
+      document.getElementById('installBtn').style.display = 'flex';
+    });
+
+    document.getElementById('installBtn').addEventListener('click', async () => {
+      if (!deferredPrompt) return;
+      
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      
+      if (outcome === 'accepted') {
+        installBtn.textContent = 'Sí';
+      }
+      deferredPrompt = null;
+      document.getElementById('installBtn').style.display = 'none';
+    });
+
+    window.addEventListener('appinstalled', () => {
+      installBtn.textContent = 'Sí';
+      document.getElementById('installBtn').style.display = 'none';
+      console.log('PWA instalada');
+    });
+
+    // ===== Debug Info =====
+    const debugInfo = document.getElementById('debugInfo');
+    debugInfo.innerHTML = `
+      <p><strong>Service Worker:</strong> ${'serviceWorker' in navigator ? '✓ Soportado' : '✗ No soportado'}</p>
+      <p><strong>Manifest:</strong> ${window.matchMedia('(display-mode: standalone)').matches ? '✓ Instalado' : '✗ No instalado'}</p>
+      <p><strong>Online:</strong> ${navigator.onLine ? '✓ Sí' : '✗ No'}</p>
+      <p><strong>Display Mode:</strong> ${window.matchMedia('(display-mode: standalone)').matches ? 'standalone' : 'browser'}</p>
+    `;
+  </script>
+</body>
+</html>
