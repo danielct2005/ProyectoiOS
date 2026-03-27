@@ -420,6 +420,7 @@ function renderFinanzas() {
             <div class="transaction-item__amount transaction-item__amount--${t.type}">
               ${t.type === 'gasto' ? '-' : '+'}${formatCurrency(t.amount)}
             </div>
+            <button class="edit-debt-btn" data-edit="${t.id}">⋮</button>
             <button class="transaction-item__delete" data-delete="${t.id}">🗑️</button>
           </div>
         `).join('')}
@@ -456,11 +457,34 @@ function renderFinanzas() {
     
     document.getElementById('transactionForm').onsubmit = handleFormSubmit;
     
-    document.querySelectorAll('[data-delete]').forEach(btn => {
-      btn.onclick = (e => {
+    document.querySelectorAll('#transactionList [data-delete]').forEach(btn => {
+      btn.onclick = (e) => {
         e.stopPropagation();
         deleteTransaction(btn.dataset.delete);
-      });
+      };
+    });
+    
+    // Edit transaction button
+    document.querySelectorAll('#transactionList [data-edit]').forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        const transaction = transactions.find(t => t.id === btn.dataset.edit);
+        if (transaction) {
+          document.getElementById('amount').value = transaction.amount;
+          document.getElementById('description').value = transaction.description;
+          
+          // Set the correct type
+          if (transaction.type === 'gasto') {
+            handleTypeChange('gasto');
+          } else {
+            handleTypeChange('ingreso');
+          }
+          
+          // Delete the old one
+          deleteTransaction(transaction.id);
+          document.getElementById('amount').focus();
+        }
+      };
     });
     
     document.getElementById('archiveMonthBtn').onclick = () => {
