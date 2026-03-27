@@ -483,10 +483,16 @@ body {
   font-size: 1rem;
   padding: var(--space-sm);
   cursor: pointer;
-  opacity: 0.5;
+  opacity: 0;
   transition: opacity 0.2s;
   -webkit-tap-highlight-color: transparent;
   flex-shrink: 0;
+}
+
+.transaction-item:active .transaction-item__delete,
+.transaction-item:hover .transaction-item__delete,
+.transaction-item:focus-within .transaction-item__delete {
+  opacity: 0.5;
 }
 
 .transaction-item__delete:active { opacity: 1; color: var(--danger); }
@@ -783,10 +789,24 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0.5;
+  opacity: 0;
   transition: opacity 0.2s, background 0.2s;
   -webkit-tap-highlight-color: transparent;
   flex-shrink: 0;
+}
+
+.transaction-item:active .edit-debt-btn,
+.transaction-item:hover .edit-debt-btn,
+.transaction-item:focus-within .edit-debt-btn,
+.edit-debt-btn.visible {
+  opacity: 0.5;
+}
+
+.transaction-item:active .edit-debt-btn,
+.transaction-item:hover .edit-debt-btn,
+.transaction-item:focus-within .edit-debt-btn,
+.edit-debt-btn.visible {
+  opacity: 0.5;
 }
 
 .edit-debt-btn:active {
