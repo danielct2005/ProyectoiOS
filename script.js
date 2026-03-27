@@ -1005,6 +1005,12 @@ function renderBilletera() {
     };
     
     document.getElementById('archiveMonthBtn').onclick = () => {
+      // Verificar si es fin de mes real
+      const now = new Date();
+      const [year, month] = currentMonth.split('-').map(Number);
+      const lastDayOfMonth = new Date(year, month, 0).getDate();
+      const isEndOfMonth = now.getDate() >= lastDayOfMonth - 3; // Permitir 3 días antes del fin
+      
       // Check if already archived
       if (history[currentMonth]) {
         Swal.fire({
@@ -1021,6 +1027,16 @@ function renderBilletera() {
           title: 'Sin movimientos',
           text: 'No hay movimientos para archivar',
           icon: 'info'
+        });
+        return;
+      }
+      
+      // Validar que sea fin de mes
+      if (!isEndOfMonth) {
+        Swal.fire({
+          title: 'Aún no puedes archivar',
+          text: `Solo puedes archivar el mes los últimos días del mes (desde el día ${lastDayOfMonth - 3})`,
+          icon: 'warning'
         });
         return;
       }
@@ -1275,6 +1291,16 @@ function renderDeudas() {
     debtsByCard[cardId].push(d);
   });
   
+  // Función para calcular progreso (0 a 1)
+  const getProgress = (d) => {
+    return d.paidInstallments / d.totalInstallments;
+  };
+  
+  // Función para ordenar por progreso (más avanzadas primero)
+  const sortByProgress = (a, b) => {
+    return getProgress(b) - getProgress(a);
+  };
+  
   // Build cards HTML
   let cardsHtml = '';
   
@@ -1285,13 +1311,14 @@ function renderDeudas() {
     total: debtsByCard[card.id] ? debtsByCard[card.id].reduce((sum, d) => sum + d.totalAmount, 0) : 0
   })).sort((a, b) => b.total - a.total); // Ordenar de mayor a menor
   
-  // Card: Sin tarjeta (al final)
+  // Card: Sin tarjeta (al final) - ordenado por progreso
   if (debtsByCard['none'] && debtsByCard['none'].length > 0) {
+    const sortedDebts = [...debtsByCard['none']].sort(sortByProgress);
     cardsHtml += `
       <div class="debt-group">
         <div class="debt-group__header">💳 Sin Tarjeta</div>
         <div class="transaction-list">
-          ${debtsByCard['none'].map(d => buildDebtItemHtml(d)).join('')}
+          ${sortedDebts.map(d => buildDebtItemHtml(d)).join('')}
         </div>
       </div>
     `;
@@ -1300,6 +1327,7 @@ function renderDeudas() {
   // Card: credit cards (ordenados por deuda mayor)
   cardTotals.forEach(cardData => {
     if (debtsByCard[cardData.id] && debtsByCard[cardData.id].length > 0) {
+      const sortedDebts = [...debtsByCard[cardData.id]].sort(sortByProgress);
       cardsHtml += `
         <div class="debt-group">
           <div class="debt-group__header">
@@ -1307,7 +1335,7 @@ function renderDeudas() {
             <span class="debt-group__total">${formatCurrency(cardData.total)}</span>
           </div>
           <div class="transaction-list">
-            ${debtsByCard[cardData.id].map(d => buildDebtItemHtml(d)).join('')}
+            ${sortedDebts.map(d => buildDebtItemHtml(d)).join('')}
           </div>
         </div>
       `;
@@ -2095,7 +2123,7 @@ function renderAjustes() {
       <p class="text-muted mb-1" style="font-weight: 600; color: var(--primary);">App Control Finanzas</p>
       <p class="text-muted mb-1">Versión 1.0.0</p>
       <p class="text-muted" style="margin-top: var(--space-md); padding-top: var(--space-md); border-top: 1px solid var(--gray-200);">
-        Créeado por Daniel CT
+        Creado por Daniel CT
       </p>
     </div>
   `;
