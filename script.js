@@ -31,14 +31,19 @@ const elements = {
 // ===== UTILITY FUNCTIONS =====
 
 /**
- * Formatea un número como moneda
+ * Formatea un número como moneda (formato Chile)
+ * Ej: $10.900 o $1.000.000
  */
 function formatCurrency(amount) {
-  return new Intl.NumberFormat('es-AR', {
+  // Formato chileno: puntos para miles, sin decimales
+  const formatted = new Intl.NumberFormat('es-CL', {
     style: 'currency',
-    currency: 'ARS',
-    minimumFractionDigits: 2
+    currency: 'CLP',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
   }).format(amount);
+  
+  return formatted;
 }
 
 /**
