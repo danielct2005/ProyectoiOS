@@ -1060,6 +1060,17 @@ function renderFijos() {
         const editId = document.getElementById('fixedEditId').value;
         const name = document.getElementById('fixedName').value.trim();
         const amount = parseInt(document.getElementById('fixedAmount').value);
+        
+        // Validar monto
+        if (!amount || amount <= 0) {
+          Swal.fire({
+            title: 'Monto inválido',
+            text: 'Por favor ingresa un monto válido',
+            icon: 'error'
+          });
+          return;
+        }
+        
         const category = document.getElementById('fixedCategory').value.trim() || 'General';
         const dueDate = document.getElementById('fixedDueDate').value.trim();
         
@@ -1342,6 +1353,17 @@ function renderDeudas() {
       const product = document.getElementById('debtProduct').value.trim();
       const totalAmount = parseInt(document.getElementById('debtTotal').value);
       const totalInstallments = parseInt(document.getElementById('debtInstallments').value);
+      
+      // Validaciones
+      if (!totalAmount || totalAmount <= 0) {
+        Swal.fire({ title: 'Monto inválido', text: 'Ingresa un monto válido', icon: 'error' });
+        return;
+      }
+      if (!totalInstallments || totalInstallments < 1) {
+        Swal.fire({ title: 'Cuotas inválidas', text: 'Ingresa al menos 1 cuota', icon: 'error' });
+        return;
+      }
+      
       const cardId = document.getElementById('debtCard').value;
       const installmentAmount = Math.round(totalAmount / totalInstallments);
       
