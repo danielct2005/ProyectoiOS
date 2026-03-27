@@ -11,6 +11,7 @@ const MAX_TRANSACTIONS = 20;
 // ===== STATE =====
 let currentSection = 'finanzas';
 let currentSubsection = 'billetera';
+let agendaSubsection = 'calendario';
 let currentMonth = getCurrentMonthKey();
 let transactions = [];
 let fixedExpenses = [];
@@ -304,19 +305,31 @@ const sectionTitles = {
 // Subsection titles (within Finanzas)
 const subsectionTitles = {
   billetera: 'Billetera',
-  fijoss: 'Fijos',  // Note: using fijoss to match existing section names
+  fijos: 'Fijos',
   deudas: 'Deudas',
   historial: 'Historial'
 };
 
+// Agenda subsection titles
+const agendaTitles = {
+  calendario: 'Calendario',
+  agregar: 'Agregar Fecha',
+  lista: 'Lista Fechas'
+};
+
 function render() {
-  // renderNavigation removed - functionality moved to init()
   renderMenu();
   
   // Update header title
   const headerTitle = document.getElementById('headerTitle');
   if (headerTitle) {
-    headerTitle.textContent = sectionTitles[currentSection] || 'Finanzas';
+    if (currentSection === 'finanzas') {
+      headerTitle.textContent = subsectionTitles[currentSubsection] || 'Billetera';
+    } else if (currentSection === 'agenda') {
+      headerTitle.textContent = agendaTitles[agendaSubsection] || 'Agenda';
+    } else {
+      headerTitle.textContent = sectionTitles[currentSection] || 'Finanzas';
+    }
   }
   
   try {
@@ -325,7 +338,7 @@ function render() {
         renderFinanzasContainer();
         break;
       case 'agenda':
-        renderAgenda();
+        renderAgendaContainer();
         break;
       case 'ajustes':
         renderAjustes();
@@ -342,27 +355,206 @@ function renderFinanzasContainer() {
   
   // Render sub-navigation
   main.innerHTML = `
-    <!-- Sub-navigation for Finanzas -->
-    <div class="sub-nav">
-      <button class="sub-nav__item ${currentSubsection === 'billetera' ? 'active' : ''}" data-subsection="billetera">👛 Billetera</button>
-      <button class="sub-nav__item ${currentSubsection === 'fijos' ? 'active' : ''}" data-subsection="fijos">📅 Fijos</button>
-      <button class="sub-nav__item ${currentSubsection === 'deudas' ? 'active' : ''}" data-subsection="deudas">💳 Deudas</button>
-      <button class="sub-nav__item ${currentSubsection === 'historial' ? 'active' : ''}" data-subsection="historial">📦 Historial</button>
-    </div>
     <div id="subsectionContent"></div>
   `;
   
-  // Add click handlers for sub-nav
+  // Render current subsection
+  switchToSubsection(currentSubsection);
+}
+
+function renderAgendaContainer() {
+  const main = document.querySelector('.main');
+  
+  // Render based on agenda subsection
+  main.innerHTML = `<div id="agendaContent"></div>`;
+  switchAgendaSubsection(agendaSubsection);
+}
+
+function switchAgendaSubsection(subsection) {
+  agendaSubsection = subsection;
+  
+  const contentEl = document.getElementById('agendaContent');
+  if (!contentEl) {
+    render();
+    return;
+  }
+  
+  switch (subsection) {
+    case 'calendario':
+      renderAgendaCalendario(contentEl);
+      break;
+    case 'lista':
+      renderAgendaLista(contentEl);
+      break;
+  }
+}
+
+function renderAgendaLista(container) {
+  container.innerHTML = `
+    <div class="section-header">
+      <h2 class="section-title">Fechas Importantes</h2>
+      <button class="btn btn--sm btn--primary" id="addDateBtn">➕ Agregar</button>
+    </div>
+    
+    <div class="card">
+      <div class="transaction-list" id="datesList">
+        ${importantDates.length === 0 ? `
+          <div class="empty-state">
+            <span class="empty-state__icon">📅</span>
+            <p class="empty-state__text">Sin fechas importantes</p>
+            <p class="empty-state__hint">Agrega cumpleaños, pagos, etc.</p>
+          </div>
+        ` : importantDates.map(d => `
+          <div class="transaction-item" data-id="${d.id}">
+            <div class="transaction-item__icon transaction-item__icon--gasto">🎉</div>
+            <div class="transaction-item__content">
+              <div class="transaction-item__desc">${escapeHtml(d.title)}</div>
+              <div class="transaction-item__date">${d.date} ${d.notes ? '- ' + d.notes : ''}</div>
+            </div>
+            <button class="edit-debt-btn" data-edit="${d.id}">⋮</button>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+    
+    <!-- Modal Agregar/Editar Fecha -->
+    <div class="modal" id="dateModal">
+      <div class="modal__backdrop"></div>
+      <div class="modal__content">
+        <h3 class="modal__title" id="dateModalTitle">Agregar Fecha</h3>
+        <form id="dateForm">
+          <input type="hidden" id="dateEditId">
+          <div class="form-group">
+            <label class="form-label" for="dateTitle">Título</label>
+            <input type="text" id="dateTitle" class="form-input" placeholder="Ej: Cumpleaños Juan" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="dateDesc">Fecha</label>
+            <input type="text" id="dateDesc" class="form-input" placeholder="Ej: 15 de Marzo" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="dateNotes">Notas (opcional)</label>
+            <input type="text" id="dateNotes" class="form-input" placeholder="Ej: Regalo $20.000">
+          </div>
+          <div class="modal__actions">
+            <button type="button" class="btn btn--danger" id="deleteDateBtn" style="display:none;">🗑️ Eliminar</button>
+            <button type="submit" class="btn btn--primary">Guardar</button>
+          </div>
+          <button type="button" class="btn btn--secondary btn--block mt-1" id="cancelDateBtn">Cancelar</button>
+        </form>
+      </div>
+    </div>
+  `;
+  
   setTimeout(() => {
-    document.querySelectorAll('.sub-nav__item').forEach(btn => {
-      btn.onclick = () => {
-        switchToSubsection(btn.dataset.subsection);
+    const addBtn = document.getElementById('addDateBtn');
+    if (addBtn) {
+      addBtn.onclick = () => {
+        document.getElementById('dateEditId').value = '';
+        document.getElementById('dateTitle').value = '';
+        document.getElementById('dateDesc').value = '';
+        document.getElementById('dateNotes').value = '';
+        document.getElementById('dateModalTitle').textContent = 'Agregar Fecha';
+        document.getElementById('deleteDateBtn').style.display = 'none';
+        document.getElementById('dateModal').classList.add('visible');
+      };
+    }
+    
+    const cancelBtn = document.getElementById('cancelDateBtn');
+    if (cancelBtn) {
+      cancelBtn.onclick = () => document.getElementById('dateModal').classList.remove('visible');
+    }
+    
+    const backdrop = document.querySelector('#dateModal .modal__backdrop');
+    if (backdrop) {
+      backdrop.onclick = () => document.getElementById('dateModal').classList.remove('visible');
+    }
+    
+    const form = document.getElementById('dateForm');
+    if (form) {
+      form.onsubmit = (e) => {
+        e.preventDefault();
+        const editId = document.getElementById('dateEditId').value;
+        const title = document.getElementById('dateTitle').value.trim();
+        const date = document.getElementById('dateDesc').value.trim();
+        const notes = document.getElementById('dateNotes').value.trim();
+        
+        if (editId) {
+          const idx = importantDates.findIndex(d => d.id === editId);
+          if (idx >= 0) importantDates[idx] = { ...importantDates[idx], title, date, notes };
+        } else {
+          importantDates.push({ id: generateId(), title, date, notes });
+        }
+        
+        saveData();
+        document.getElementById('dateModal').classList.remove('visible');
+        render();
+      };
+    }
+    
+    const deleteBtn = document.getElementById('deleteDateBtn');
+    if (deleteBtn) {
+      deleteBtn.onclick = () => {
+        const editId = document.getElementById('dateEditId').value;
+        Swal.fire({
+          title: '¿Eliminar fecha?',
+          text: 'Esta acción no se puede deshacer',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Sí, eliminar',
+          cancelButtonText: 'Cancelar',
+          confirmButtonColor: '#ff3b30'
+        }).then((result) => {
+          if (result.isConfirmed && editId) {
+            importantDates = importantDates.filter(d => d.id !== editId);
+            saveData();
+            document.getElementById('dateModal').classList.remove('visible');
+            render();
+          }
+        });
+      };
+    }
+    
+    document.querySelectorAll('#datesList [data-edit]').forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        const date = importantDates.find(d => d.id === btn.dataset.edit);
+        if (date) {
+          document.getElementById('dateEditId').value = date.id;
+          document.getElementById('dateTitle').value = date.title;
+          document.getElementById('dateDesc').value = date.date;
+          document.getElementById('dateNotes').value = date.notes || '';
+          document.getElementById('dateModalTitle').textContent = 'Editar Fecha';
+          document.getElementById('deleteDateBtn').style.display = 'block';
+          document.getElementById('dateModal').classList.add('visible');
+        }
       };
     });
   }, 100);
+}
+
+function renderAgendaCalendario(container) {
+  container.innerHTML = `
+    <div class="card">
+      <h3 class="card__title mb-2">Calendario</h3>
+      <p class="text-muted">Vista de calendariocoming soon...</p>
+      <p class="text-muted">Por ahora usa la vista Lista</p>
+    </div>
+    <div class="card">
+      <button class="btn btn--primary btn--block" id="goToListaBtn">📋 Ver Lista de Fechas</button>
+    </div>
+  `;
   
-  // Render current subsection
-  switchToSubsection(currentSubsection);
+  setTimeout(() => {
+    const btn = document.getElementById('goToListaBtn');
+    if (btn) {
+      btn.onclick = () => {
+        currentSection = 'agenda';
+        agendaSubsection = 'lista';
+        render();
+      };
+    }
+  }, 100);
 }
 
 function switchToSubsection(subsection) {
@@ -418,6 +610,60 @@ function renderMenu() {
   document.querySelectorAll('.sub-nav__item').forEach(item => {
     item.classList.toggle('active', item.dataset.subsection === currentSubsection);
   });
+  
+  // Render bottom sub-nav based on current section
+  const subNavBottom = document.getElementById('subNavBottom');
+  if (subNavBottom) {
+    if (currentSection === 'finanzas') {
+      subNavBottom.innerHTML = `
+        <button class="nav__item ${currentSubsection === 'billetera' ? 'active' : ''}" data-section="finanzas" data-subsection="billetera">
+          <span>👛</span>
+          <span>Billetera</span>
+        </button>
+        <button class="nav__item ${currentSubsection === 'fijos' ? 'active' : ''}" data-section="finanzas" data-subsection="fijos">
+          <span>📅</span>
+          <span>Fijos</span>
+        </button>
+        <button class="nav__item ${currentSubsection === 'deudas' ? 'active' : ''}" data-section="finanzas" data-subsection="deudas">
+          <span>💳</span>
+          <span>Deudas</span>
+        </button>
+        <button class="nav__item ${currentSubsection === 'historial' ? 'active' : ''}" data-section="finanzas" data-subsection="historial">
+          <span>📦</span>
+          <span>Historial</span>
+        </button>
+      `;
+    } else if (currentSection === 'agenda') {
+      subNavBottom.innerHTML = `
+        <button class="nav__item ${agendaSubsection === 'calendario' ? 'active' : ''}" data-section="agenda" data-subsection="calendario">
+          <span>📆</span>
+          <span>Calendario</span>
+        </button>
+        <button class="nav__item ${agendaSubsection === 'lista' ? 'active' : ''}" data-section="agenda" data-subsection="lista">
+          <span>📋</span>
+          <span>Lista</span>
+        </button>
+      `;
+    } else {
+      subNavBottom.innerHTML = '';
+    }
+    
+    // Add click handlers for bottom sub-nav
+    subNavBottom.querySelectorAll('.nav__item').forEach(item => {
+      item.onclick = () => {
+        const section = item.dataset.section;
+        const subsection = item.dataset.subsection;
+        if (section === 'finanzas') {
+          currentSection = 'finanzas';
+          currentSubsection = subsection;
+        } else if (section === 'agenda') {
+          currentSection = 'agenda';
+          agendaSubsection = subsection;
+        }
+        render();
+      };
+    });
+  }
 }
 
 // Rename renderFinanzas to renderBilletera
