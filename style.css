@@ -574,22 +574,22 @@ body {
 
 /* Bottom sub-nav (integrated with main nav) */
 .nav.sub-nav-bottom {
-  padding: var(--space-md) var(--space-md);
-  padding-bottom: calc(var(--space-md) + var(--safe-bottom));
-  gap: var(--space-sm);
+  padding: var(--space-lg) var(--space-md);
+  padding-bottom: calc(var(--space-lg) + var(--safe-bottom));
+  gap: var(--space-md);
   box-shadow: none;
   border-top: 1px solid var(--gray-200);
 }
 
 .nav.sub-nav-bottom .nav__item {
-  padding: var(--space-sm) var(--space-sm);
-  font-size: 0.8125rem;
+  padding: var(--space-sm) var(--space-md);
+  font-size: 1rem;
   flex: 1;
   min-width: 0;
 }
 
 .nav.sub-nav-bottom .nav__icon {
-  font-size: 1.625rem;
+  font-size: 2rem;
 }
 
 .nav.sub-nav-bottom .nav__item.active {
