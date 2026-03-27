@@ -420,7 +420,7 @@ body {
 
 .transaction-item {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: var(--space-md);
   padding: var(--space-md);
   background: var(--gray-50);
@@ -446,10 +446,9 @@ body {
 .transaction-item__icon--ingreso { background: rgba(52, 209, 88, 0.15); }
 
 .transaction-item__content {
-  flex-grow: 1;
-  flex-shrink: 1;
-  flex-basis: 0%;
-  min-width: 50px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .transaction-item__desc {
