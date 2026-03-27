@@ -6,8 +6,13 @@
 
 // ==================== CONSTANTS ====================
 
+// URL de la serverless function en Vercel (proxy propio)
+const API_PROXY_URL = '/api/indicators';
+
+// URL original de mindicador (usar solo si el proxy local falla)
 const API_BASE_URL = 'https://mindicador.cl/api';
-// Múltiples proxies CORS para mayor confiabilidad
+
+// Fallback: proxies públicos
 const CORS_PROXIES = [
   'https://api.allorigins.win/raw?url=',
   'https://corsproxy.io/?',
@@ -21,13 +26,42 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
 // ==================== FETCH HELPERS ====================
 
 /**
- * Realiza una petición fetch con manejo de errores y proxy CORS
- * Intenta con múltiples proxies si el primero falla
+ * Realiza una petición fetch usando el proxy local de Vercel
+ * Falls back a proxies públicos si el proxy local no está disponible
  */
 async function fetchWithErrorHandling(url, options = {}) {
   const timeoutMs = 8000; // 8 segundos de timeout
   
-  // Intentar cada proxy hasta que uno funcione
+  // 1. Primero intentar con el proxy local de Vercel
+  try {
+    // Extraer el indicador de la URL (ej: "uf" de "/api/uf")
+    const indicator = url.split('/').pop();
+    const proxyUrl = `${API_PROXY_URL}?indicator=${indicator}`;
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+    
+    const response = await fetch(proxyUrl, {
+      ...options,
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeoutId);
+    
+    if (response.ok) {
+      const data = await response.json();
+      if (data.success && data.value) {
+        // Transformar al formato esperado por la app
+        return {
+          serie: [{ valor: data.value, fecha: data.fecha }]
+        };
+      }
+    }
+  } catch (error) {
+    console.warn('Proxy local (Vercel) falló, intentando proxies públicos:', error.message);
+  }
+  
+  // 2. Si el proxy local falla, intentar con proxies públicos
   for (const proxy of CORS_PROXIES) {
     const proxyUrl = proxy + encodeURIComponent(url);
     
@@ -57,13 +91,12 @@ async function fetchWithErrorHandling(url, options = {}) {
         return data;
       }
       
-      // Si los datos no son válidos, intentar con el siguiente proxy
       console.warn('Datos inválidos del proxy, intentando siguiente...');
       continue;
       
     } catch (error) {
       console.warn(`Proxy ${proxy} falló:`, error.message);
-      continue; // Intentar con el siguiente proxy
+      continue;
     }
   }
   
