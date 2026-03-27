@@ -110,7 +110,7 @@ body {
 .main {
   flex: 1;
   padding: var(--space-md);
-  padding-bottom: calc(var(--space-md) + var(--safe-bottom));
+  padding-bottom: calc(var(--space-md) + 80px);
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
@@ -574,11 +574,16 @@ body {
 
 /* Bottom sub-nav (integrated with main nav) */
 .nav.sub-nav-bottom {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
   padding: var(--space-lg) var(--space-md);
   padding-bottom: calc(var(--space-lg) + var(--safe-bottom));
   gap: var(--space-md);
-  box-shadow: none;
+  box-shadow: 0 -1px 0 var(--gray-200);
   border-top: 1px solid var(--gray-200);
+  z-index: 100;
 }
 
 .nav.sub-nav-bottom .nav__item {
