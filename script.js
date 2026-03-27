@@ -622,21 +622,22 @@ function renderFijos() {
             <div class="transaction-item__icon transaction-item__icon--gasto">📅</div>
             <div class="transaction-item__content">
               <div class="transaction-item__desc">${escapeHtml(e.name)}</div>
-              <div class="transaction-item__date">${e.category}</div>
+              <div class="transaction-item__date">${e.category}${e.dueDate ? ' • Vence: ' + e.dueDate : ''}</div>
             </div>
             <div class="transaction-item__amount transaction-item__amount--gasto">${formatCurrency(e.amount)}</div>
-            <button class="transaction-item__delete" data-delete="${e.id}">🗑️</button>
+            <button class="edit-debt-btn" data-edit="${e.id}">⋮</button>
           </div>
         `).join('')}
       </div>
     </div>
     
-    <!-- Modal -->
+    <!-- Modal Agregar/Editar Fijo -->
     <div class="modal" id="fixedModal">
       <div class="modal__backdrop"></div>
       <div class="modal__content">
-        <h3 class="modal__title">Agregar Gasto Fijo</h3>
+        <h3 class="modal__title" id="fixedModalTitle">Agregar Gasto Fijo</h3>
         <form id="fixedForm">
+          <input type="hidden" id="fixedEditId">
           <div class="form-group">
             <label class="form-label" for="fixedName">Nombre</label>
             <input type="text" id="fixedName" class="form-input" placeholder="Ej: Spotify" maxlength="50" required>
@@ -649,10 +650,15 @@ function renderFijos() {
             <label class="form-label" for="fixedCategory">Categoría</label>
             <input type="text" id="fixedCategory" class="form-input" placeholder="Ej: Streaming" maxlength="30">
           </div>
+          <div class="form-group">
+            <label class="form-label" for="fixedDueDate">Fecha de vencimiento (opcional)</label>
+            <input type="text" id="fixedDueDate" class="form-input" placeholder="Ej: 15 de cada mes">
+          </div>
           <div class="modal__actions">
-            <button type="button" class="btn btn--secondary" id="cancelFixedBtn">Cancelar</button>
+            <button type="button" class="btn btn--danger" id="deleteFixedBtn" style="display:none;">🗑️ Eliminar</button>
             <button type="submit" class="btn btn--primary">Guardar</button>
           </div>
+          <button type="button" class="btn btn--secondary btn--block mt-1" id="cancelFixedBtn">Cancelar</button>
         </form>
       </div>
     </div>
@@ -664,10 +670,19 @@ function renderFijos() {
     const cancelBtn = document.getElementById('cancelFixedBtn');
     const backdrop = document.querySelector('#fixedModal .modal__backdrop');
     const form = document.getElementById('fixedForm');
+    const deleteBtn = document.getElementById('deleteFixedBtn');
+    const modalTitle = document.getElementById('fixedModalTitle');
     
     if (addBtn) {
       addBtn.onclick = () => {
-        console.log('Add fixed clicked');
+        // Reset form for new entry
+        document.getElementById('fixedEditId').value = '';
+        document.getElementById('fixedName').value = '';
+        document.getElementById('fixedAmount').value = '';
+        document.getElementById('fixedCategory').value = '';
+        document.getElementById('fixedDueDate').value = '';
+        modalTitle.textContent = 'Agregar Gasto Fijo';
+        deleteBtn.style.display = 'none';
         document.getElementById('fixedModal').classList.add('visible');
       };
     }
@@ -687,23 +702,67 @@ function renderFijos() {
     if (form) {
       form.onsubmit = (e) => {
         e.preventDefault();
+        const editId = document.getElementById('fixedEditId').value;
         const name = document.getElementById('fixedName').value.trim();
         const amount = parseInt(document.getElementById('fixedAmount').value);
         const category = document.getElementById('fixedCategory').value.trim() || 'General';
+        const dueDate = document.getElementById('fixedDueDate').value.trim();
         
-        fixedExpenses.push({ id: generateId(), name, amount, category });
+        if (editId) {
+          // Update existing
+          const idx = fixedExpenses.findIndex(f => f.id === editId);
+          if (idx >= 0) {
+            fixedExpenses[idx] = { ...fixedExpenses[idx], name, amount, category, dueDate };
+          }
+        } else {
+          // Add new
+          fixedExpenses.push({ id: generateId(), name, amount, category, dueDate });
+        }
+        
         saveData();
         document.getElementById('fixedModal').classList.remove('visible');
         render();
       };
     }
     
-    document.querySelectorAll('#fijosList [data-delete]').forEach(btn => {
+    // Delete button in modal
+    if (deleteBtn) {
+      deleteBtn.onclick = () => {
+        const editId = document.getElementById('fixedEditId').value;
+        Swal.fire({
+          title: '¿Eliminar gasto fijo?',
+          text: 'Esta acción no se puede deshacer',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Sí, eliminar',
+          cancelButtonText: 'Cancelar',
+          confirmButtonColor: '#ff3b30'
+        }).then((result) => {
+          if (result.isConfirmed && editId) {
+            fixedExpenses = fixedExpenses.filter(f => f.id !== editId);
+            saveData();
+            document.getElementById('fixedModal').classList.remove('visible');
+            render();
+          }
+        });
+      };
+    }
+    
+    // Edit buttons - open modal for editing
+    document.querySelectorAll('#fijosList [data-edit]').forEach(btn => {
       btn.onclick = (e) => {
         e.stopPropagation();
-        fixedExpenses = fixedExpenses.filter(f => f.id !== btn.dataset.delete);
-        saveData();
-        render();
+        const expense = fixedExpenses.find(f => f.id === btn.dataset.edit);
+        if (expense) {
+          document.getElementById('fixedEditId').value = expense.id;
+          document.getElementById('fixedName').value = expense.name;
+          document.getElementById('fixedAmount').value = expense.amount;
+          document.getElementById('fixedCategory').value = expense.category || '';
+          document.getElementById('fixedDueDate').value = expense.dueDate || '';
+          modalTitle.textContent = 'Editar Gasto Fijo';
+          deleteBtn.style.display = 'block';
+          document.getElementById('fixedModal').classList.add('visible');
+        }
       };
     });
   }, 100);
