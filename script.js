@@ -72,10 +72,22 @@ function formatCurrency(amount) {
  */
 function addThousandsSeparator(input) {
   input.addEventListener('input', function(e) {
+    // Remover todo excepto dígitos
     let value = this.value.replace(/\D/g, '');
     if (value) {
-      value = parseInt(value).toString();
-      this.value = formatNumber(value);
+      // Formatear con puntos
+      let formatted = '';
+      let count = 0;
+      for (let i = value.length - 1; i >= 0; i--) {
+        if (count > 0 && count % 3 === 0) {
+          formatted = '.' + formatted;
+        }
+        formatted = value[i] + formatted;
+        count++;
+      }
+      this.value = formatted;
+    } else {
+      this.value = '';
     }
   });
 }
