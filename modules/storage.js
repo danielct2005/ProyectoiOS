@@ -1,0 +1,295 @@
+/**
+ * ===== MÓDULO DE ALMACENAMIENTO =====
+ * Gestión de localStorage para la aplicación
+ */
+
+import { generateId } from './utils.js';
+
+// ==================== CONSTANTS ====================
+
+const STORAGE_KEY = 'finanzas_app_data';
+
+// ==================== STATE ====================
+
+// Estado global de la aplicación
+export const appState = {
+  // Sección actual
+  currentSection: 'finanzas',
+  currentSubsection: 'billetera',
+  agendaSubsection: 'lista',
+  currentMonth: null,
+  
+  // Datos financieros
+  transactions: [],
+  fixedExpenses: [],
+  debts: [],
+  creditCards: [],
+  history: {},
+  
+  // Datos de agenda
+  importantDates: [],
+  
+  // Estado de pagos
+  lastPaymentMonth: null,
+  previousMonthBalance: 0,
+  
+  // Preferencias (se inicializa en false, se carga correctamente en loadData)
+  darkMode: false
+};
+
+// ==================== LOAD DATA ====================
+
+export function loadData() {
+  try {
+    const data = localStorage.getItem(STORAGE_KEY);
+    if (data) {
+      const parsed = JSON.parse(data);
+      appState.transactions = parsed.transactions || [];
+      appState.fixedExpenses = parsed.fixedExpenses || [];
+      appState.debts = parsed.debts || [];
+      appState.creditCards = parsed.creditCards || [];
+      appState.history = parsed.history || {};
+      appState.lastPaymentMonth = parsed.lastPaymentMonth || null;
+      appState.importantDates = parsed.importantDates || [];
+      appState.previousMonthBalance = parsed.previousMonthBalance || 0;
+    } else {
+      resetState();
+    }
+    
+    // Cargar preferencia de modo oscuro
+    appState.darkMode = localStorage.getItem('darkMode') === 'true';
+  } catch (error) {
+    console.error('Error al cargar datos:', error);
+    resetState();
+  }
+}
+
+function resetState() {
+  appState.transactions = [];
+  appState.fixedExpenses = [];
+  appState.debts = [];
+  appState.creditCards = [];
+  appState.history = {};
+  appState.lastPaymentMonth = null;
+  appState.importantDates = [];
+  appState.previousMonthBalance = 0;
+}
+
+// ==================== SAVE DATA ====================
+
+export function saveData() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      transactions: appState.transactions,
+      fixedExpenses: appState.fixedExpenses,
+      debts: appState.debts,
+      creditCards: appState.creditCards,
+      history: appState.history,
+      lastPaymentMonth: appState.lastPaymentMonth,
+      importantDates: appState.importantDates,
+      previousMonthBalance: appState.previousMonthBalance
+    }));
+  } catch (error) {
+    console.error('Error al guardar datos:', error);
+  }
+}
+
+// ==================== DATA OPERATIONS ====================
+
+// --- Transacciones ---
+
+export function addTransaction(amount, description, type) {
+  appState.transactions.unshift({
+    id: generateId(),
+    amount,
+    description,
+    type,
+    date: new Date().toISOString()
+  });
+  saveData();
+}
+
+export function updateTransaction(id, amount, description, type) {
+  const idx = appState.transactions.findIndex(t => t.id === id);
+  if (idx >= 0) {
+    appState.transactions[idx] = { 
+      ...appState.transactions[idx], 
+      amount, 
+      description, 
+      type 
+    };
+    saveData();
+  }
+}
+
+export function deleteTransaction(id) {
+  appState.transactions = appState.transactions.filter(t => t.id !== id);
+  saveData();
+}
+
+// --- Gastos Fijos ---
+
+export function addFixedExpense(name, amount, category, dueDate) {
+  appState.fixedExpenses.push({
+    id: generateId(),
+    name,
+    amount,
+    category: category || 'General',
+    dueDate
+  });
+  saveData();
+}
+
+export function updateFixedExpense(id, name, amount, category, dueDate) {
+  const idx = appState.fixedExpenses.findIndex(f => f.id === id);
+  if (idx >= 0) {
+    appState.fixedExpenses[idx] = {
+      ...appState.fixedExpenses[idx],
+      name,
+      amount,
+      category,
+      dueDate
+    };
+    saveData();
+  }
+}
+
+export function deleteFixedExpense(id) {
+  appState.fixedExpenses = appState.fixedExpenses.filter(f => f.id !== id);
+  saveData();
+}
+
+// --- Deudas ---
+
+export function addDebt(product, totalAmount, totalInstallments, cardId) {
+  const installmentAmount = Math.round(totalAmount / totalInstallments);
+  appState.debts.push({
+    id: generateId(),
+    product,
+    totalAmount,
+    totalInstallments,
+    installmentAmount,
+    paidInstallments: 0,
+    cardId: cardId || 'none'
+  });
+  saveData();
+}
+
+export function updateDebt(id, product, totalAmount, totalInstallments, paidInstallments, cardId) {
+  const idx = appState.debts.findIndex(d => d.id === id);
+  if (idx >= 0) {
+    appState.debts[idx] = {
+      ...appState.debts[idx],
+      cardId,
+      product,
+      totalAmount,
+      totalInstallments,
+      paidInstallments,
+      installmentAmount: Math.round(totalAmount / totalInstallments)
+    };
+    saveData();
+  }
+}
+
+export function deleteDebt(id) {
+  appState.debts = appState.debts.filter(d => d.id !== id);
+  saveData();
+}
+
+// --- Tarjetas ---
+
+export function addCreditCard(name) {
+  appState.creditCards.push({ id: generateId(), name });
+  saveData();
+}
+
+export function deleteCreditCard(id) {
+  // Mover deudas asociadas a "sin tarjeta"
+  appState.debts.forEach(d => {
+    if (d.cardId === id) d.cardId = 'none';
+  });
+  appState.creditCards = appState.creditCards.filter(c => c.id !== id);
+  saveData();
+}
+
+// --- Fechas Importantes ---
+
+export function addImportantDate(title, date, notes) {
+  appState.importantDates.push({
+    id: generateId(),
+    title,
+    date,
+    notes
+  });
+  saveData();
+}
+
+export function updateImportantDate(id, title, date, notes) {
+  const idx = appState.importantDates.findIndex(d => d.id === id);
+  if (idx >= 0) {
+    appState.importantDates[idx] = { ...appState.importantDates[idx], title, date, notes };
+    saveData();
+  }
+}
+
+export function deleteImportantDate(id) {
+  appState.importantDates = appState.importantDates.filter(d => d.id !== id);
+  saveData();
+}
+
+// --- Historial ---
+
+export function archiveMonth(monthKey, income, expense, transactions, balance) {
+  if (income > 0 || expense > 0) {
+    appState.history[monthKey] = {
+      income,
+      expense,
+      balance,
+      transactions: [...transactions],
+      date: new Date().toISOString()
+    };
+  }
+  saveData();
+}
+
+// ==================== EXPORT/IMPORT ====================
+
+export function exportAllData() {
+  return JSON.stringify({
+    transactions: appState.transactions,
+    fixedExpenses: appState.fixedExpenses,
+    debts: appState.debts,
+    creditCards: appState.creditCards,
+    history: appState.history,
+    importantDates: appState.importantDates
+  }, null, 2);
+}
+
+export function importData(data) {
+  try {
+    const parsed = JSON.parse(data);
+    if (parsed.transactions) appState.transactions = parsed.transactions;
+    if (parsed.fixedExpenses) appState.fixedExpenses = parsed.fixedExpenses;
+    if (parsed.debts) appState.debts = parsed.debts;
+    if (parsed.creditCards) appState.creditCards = parsed.creditCards;
+    if (parsed.history) appState.history = parsed.history;
+    if (parsed.importantDates) appState.importantDates = parsed.importantDates;
+    saveData();
+    return true;
+  } catch (error) {
+    console.error('Error al importar datos:', error);
+    return false;
+  }
+}
+
+export function clearAllData() {
+  appState.transactions = [];
+  appState.fixedExpenses = [];
+  appState.debts = [];
+  appState.creditCards = [];
+  appState.history = {};
+  appState.lastPaymentMonth = null;
+  appState.importantDates = [];
+  appState.previousMonthBalance = 0;
+  saveData();
+}
