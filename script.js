@@ -1386,9 +1386,10 @@ function renderDeudas() {
             <input type="number" id="editDebtPaidInstallments" class="form-input" min="0" required inputmode="numeric">
           </div>
           <div class="modal__actions">
-            <button type="button" class="btn btn--secondary" id="cancelEditDebtBtn">Cancelar</button>
+            <button type="button" class="btn btn--danger" id="deleteDebtBtn">🗑️ Eliminar</button>
             <button type="submit" class="btn btn--primary">Guardar</button>
           </div>
+          <button type="button" class="btn btn--secondary btn--block mt-1" id="cancelEditDebtBtn">Cancelar</button>
         </form>
       </div>
     </div>
@@ -1417,6 +1418,26 @@ function renderDeudas() {
     
     document.getElementById('cancelEditDebtBtn').onclick = () => {
       document.getElementById('editDebtModal').classList.remove('visible');
+    };
+    
+    document.getElementById('deleteDebtBtn').onclick = () => {
+      const debtId = document.getElementById('editDebtId').value;
+      Swal.fire({
+        title: '¿Eliminar deuda?',
+        text: 'Esta acción no se puede deshacer',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#ff3b30'
+      }).then((result) => {
+        if (result.isConfirmed && debtId) {
+          debts = debts.filter(d => d.id !== debtId);
+          saveData();
+          document.getElementById('editDebtModal').classList.remove('visible');
+          render();
+        }
+      });
     };
     
     document.querySelectorAll('#debtModal .modal__backdrop, #cardsModal .modal__backdrop, #editDebtModal .modal__backdrop').forEach(el => {
