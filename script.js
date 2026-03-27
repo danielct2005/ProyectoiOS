@@ -14,6 +14,7 @@ let currentMonth = getCurrentMonthKey();
 let transactions = [];
 let fixedExpenses = [];
 let debts = [];
+let creditCards = [];
 let history = {};
 
 // ===== DOM ELEMENTS =====
@@ -97,11 +98,13 @@ function loadData() {
       transactions = parsed.transactions || [];
       fixedExpenses = parsed.fixedExpenses || [];
       debts = parsed.debts || [];
+      creditCards = parsed.creditCards || [];
       history = parsed.history || {};
     } else {
       transactions = [];
       fixedExpenses = [];
       debts = [];
+      creditCards = [];
       history = {};
     }
   } catch (error) {
@@ -109,6 +112,7 @@ function loadData() {
     transactions = [];
     fixedExpenses = [];
     debts = [];
+    creditCards = [];
     history = {};
   }
 }
@@ -119,6 +123,7 @@ function saveData() {
       transactions,
       fixedExpenses,
       debts,
+      creditCards,
       history
     }));
   } catch (error) {
@@ -554,10 +559,72 @@ function renderDeudas() {
   const monthlyInstallments = calculateDebtsMonthly();
   console.log('Rendering Deudas, total:', totalDebt, 'items:', debts.length);
   
+  // Get card name by ID
+  const getCardName = (cardId) => {
+    const card = creditCards.find(c => c.id === cardId);
+    return card ? card.name : 'Sin tarjeta';
+  };
+  
+  // Group debts by card
+  const debtsByCard = {};
+  debts.forEach(d => {
+    const cardId = d.cardId || 'none';
+    if (!debtsByCard[cardId]) {
+      debtsByCard[cardId] = [];
+    }
+    debtsByCard[cardId].push(d);
+  });
+  
+  // Build cards HTML
+  let cardsHtml = '';
+  
+  // Card: Sin tarjeta
+  if (debtsByCard['none'] && debtsByCard['none'].length > 0) {
+    cardsHtml += `
+      <div class="debt-group">
+        <div class="debt-group__header">💳 Sin Tarjeta</div>
+        <div class="transaction-list">
+          ${debtsByCard['none'].map(d => buildDebtItemHtml(d)).join('')}
+        </div>
+      </div>
+    `;
+  }
+  
+  // Card: credit cards
+  creditCards.forEach(card => {
+    if (debtsByCard[card.id] && debtsByCard[card.id].length > 0) {
+      const cardTotal = debtsByCard[card.id].reduce((sum, d) => sum + d.totalAmount, 0);
+      cardsHtml += `
+        <div class="debt-group">
+          <div class="debt-group__header">
+            <span>💳 ${escapeHtml(card.name)}</span>
+            <span class="debt-group__total">${formatCurrency(cardTotal)}</span>
+          </div>
+          <div class="transaction-list">
+            ${debtsByCard[card.id].map(d => buildDebtItemHtml(d)).join('')}
+          </div>
+        </div>
+      `;
+    }
+  });
+  
+  if (debts.length === 0) {
+    cardsHtml = `
+      <div class="empty-state">
+        <span class="empty-state__icon">💳</span>
+        <p class="empty-state__text">Sin deudas registradas</p>
+        <p class="empty-state__hint">Agrega tus compras en cuotas</p>
+      </div>
+    `;
+  }
+  
   main.innerHTML = `
     <div class="section-header">
       <h2 class="section-title">Deudas Tarjetas</h2>
-      <button class="btn btn--sm btn--primary" id="addDebtBtn">➕ Agregar</button>
+      <div class="section-header__actions">
+        <button class="btn btn--sm btn--ghost" id="manageCardsBtn">💳 Mis Tarjetas</button>
+        <button class="btn btn--sm btn--primary" id="addDebtBtn">➕ Agregar</button>
+      </div>
     </div>
     
     <div class="balance-card balance-card--purple">
@@ -569,33 +636,23 @@ function renderDeudas() {
     </div>
     
     <div class="card">
-      <div class="transaction-list" id="deudasList">
-        ${debts.length === 0 ? `
-          <div class="empty-state">
-            <span class="empty-state__icon">💳</span>
-            <p class="empty-state__text">Sin deudas registradas</p>
-            <p class="empty-state__hint">Agrega tus compras en cuotas</p>
-          </div>
-        ` : debts.map(d => `
-          <div class="transaction-item" data-id="${d.id}">
-            <div class="transaction-item__icon transaction-item__icon--gasto">💳</div>
-            <div class="transaction-item__content">
-              <div class="transaction-item__desc">${escapeHtml(d.product)}</div>
-              <div class="transaction-item__date">${d.paidInstallments || 0}/${d.totalInstallments} cuotas (${formatCurrency(d.installmentAmount)})</div>
-            </div>
-            <div class="transaction-item__amount transaction-item__amount--gasto">${formatCurrency(d.totalAmount)}</div>
-            <button class="transaction-item__delete" data-delete="${d.id}">🗑️</button>
-          </div>
-        `).join('')}
-      </div>
+      ${cardsHtml}
     </div>
     
-    <!-- Modal -->
+    <!-- Modal Agregar Deuda -->
     <div class="modal" id="debtModal">
       <div class="modal__backdrop"></div>
       <div class="modal__content">
         <h3 class="modal__title">Agregar Deuda</h3>
         <form id="debtForm">
+          <div class="form-group">
+            <label class="form-label" for="debtCard">Tarjeta</label>
+            <select id="debtCard" class="form-input" required>
+              <option value="">Seleccionar tarjeta</option>
+              ${creditCards.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('')}
+              <option value="none">Sin tarjeta</option>
+            </select>
+          </div>
           <div class="form-group">
             <label class="form-label" for="debtProduct">Producto</label>
             <input type="text" id="debtProduct" class="form-input" placeholder="Ej: iPhone 15" maxlength="50" required>
@@ -615,57 +672,194 @@ function renderDeudas() {
         </form>
       </div>
     </div>
+    
+    <!-- Modal Gestionar Tarjetas -->
+    <div class="modal" id="cardsModal">
+      <div class="modal__backdrop"></div>
+      <div class="modal__content">
+        <h3 class="modal__title">Mis Tarjetas</h3>
+        <div class="card-list" id="cardList">
+          ${creditCards.length === 0 ? '<p class="text-muted">No hay tarjetas</p>' : 
+            creditCards.map(c => `
+              <div class="card-item">
+                <span>💳 ${escapeHtml(c.name)}</span>
+                <button class="delete-card-btn" data-delete="${c.id}">🗑️</button>
+              </div>
+            `).join('')}
+        </div>
+        <form id="addCardForm" class="mt-2">
+          <div class="form-group">
+            <input type="text" id="newCardName" class="form-input" placeholder="Nombre del banco" required>
+          </div>
+          <button type="submit" class="btn btn--primary btn--block">➕ Agregar Tarjeta</button>
+        </form>
+        <button class="btn btn--secondary btn--block mt-1" id="closeCardsModal">Cerrar</button>
+      </div>
+    </div>
+    
+    <!-- Modal Editar Deuda -->
+    <div class="modal" id="editDebtModal">
+      <div class="modal__backdrop"></div>
+      <div class="modal__content">
+        <h3 class="modal__title">Editar Deuda</h3>
+        <form id="editDebtForm">
+          <input type="hidden" id="editDebtId">
+          <div class="form-group">
+            <label class="form-label" for="editDebtCard">Tarjeta</label>
+            <select id="editDebtCard" class="form-input" required>
+              ${creditCards.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('')}
+              <option value="none">Sin tarjeta</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="editDebtProduct">Producto</label>
+            <input type="text" id="editDebtProduct" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="editDebtTotal">Precio Total</label>
+            <input type="number" id="editDebtTotal" class="form-input" required inputmode="numeric">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="editDebtInstallments">Cuotas</label>
+            <input type="number" id="editDebtInstallments" class="form-input" required inputmode="numeric">
+          </div>
+          <div class="modal__actions">
+            <button type="button" class="btn btn--secondary" id="cancelEditDebtBtn">Cancelar</button>
+            <button type="submit" class="btn btn--primary">Guardar</button>
+          </div>
+        </form>
+      </div>
+    </div>
   `;
   
   // Event listeners
   setTimeout(() => {
-    const addBtn = document.getElementById('addDebtBtn');
-    const cancelBtn = document.getElementById('cancelDebtBtn');
-    const backdrop = document.querySelector('#debtModal .modal__backdrop');
-    const form = document.getElementById('debtForm');
+    // Add debt button
+    document.getElementById('addDebtBtn').onclick = () => {
+      document.getElementById('debtModal').classList.add('visible');
+    };
     
-    if (addBtn) {
-      addBtn.onclick = () => {
-        console.log('Add debt clicked');
-        document.getElementById('debtModal').classList.add('visible');
-      };
-    }
+    // Manage cards button
+    document.getElementById('manageCardsBtn').onclick = () => {
+      document.getElementById('cardsModal').classList.add('visible');
+    };
     
-    if (cancelBtn) {
-      cancelBtn.onclick = () => {
+    // Close modals
+    document.getElementById('cancelDebtBtn').onclick = () => {
+      document.getElementById('debtModal').classList.remove('visible');
+    };
+    
+    document.getElementById('closeCardsModal').onclick = () => {
+      document.getElementById('cardsModal').classList.remove('visible');
+    };
+    
+    document.getElementById('cancelEditDebtBtn').onclick = () => {
+      document.getElementById('editDebtModal').classList.remove('visible');
+    };
+    
+    document.querySelectorAll('#debtModal .modal__backdrop, #cardsModal .modal__backdrop, #editDebtModal .modal__backdrop').forEach(el => {
+      el.onclick = () => {
         document.getElementById('debtModal').classList.remove('visible');
+        document.getElementById('cardsModal').classList.remove('visible');
+        document.getElementById('editDebtModal').classList.remove('visible');
       };
-    }
+    });
     
-    if (backdrop) {
-      backdrop.onclick = () => {
-        document.getElementById('debtModal').classList.remove('visible');
-      };
-    }
+    // Add new debt form
+    document.getElementById('debtForm').onsubmit = (e) => {
+      e.preventDefault();
+      const product = document.getElementById('debtProduct').value.trim();
+      const totalAmount = parseInt(document.getElementById('debtTotal').value);
+      const totalInstallments = parseInt(document.getElementById('debtInstallments').value);
+      const cardId = document.getElementById('debtCard').value;
+      const installmentAmount = Math.round(totalAmount / totalInstallments);
+      
+      debts.push({ 
+        id: generateId(), 
+        product, 
+        totalAmount, 
+        totalInstallments, 
+        installmentAmount,
+        paidInstallments: 0,
+        cardId: cardId || 'none'
+      });
+      
+      saveData();
+      document.getElementById('debtModal').classList.remove('visible');
+      document.getElementById('debtForm').reset();
+      render();
+    };
     
-    if (form) {
-      form.onsubmit = (e) => {
-        e.preventDefault();
-        const product = document.getElementById('debtProduct').value.trim();
-        const totalAmount = parseInt(document.getElementById('debtTotal').value);
-        const totalInstallments = parseInt(document.getElementById('debtInstallments').value);
-        const installmentAmount = Math.round(totalAmount / totalInstallments);
-        
-        debts.push({ 
-          id: generateId(), 
-          product, 
-          totalAmount, 
-          totalInstallments, 
-          installmentAmount,
-          paidInstallments: 0
-        });
-        
+    // Add new card form
+    document.getElementById('addCardForm').onsubmit = (e) => {
+      e.preventDefault();
+      const name = document.getElementById('newCardName').value.trim();
+      if (name) {
+        creditCards.push({ id: generateId(), name });
         saveData();
-        document.getElementById('debtModal').classList.remove('visible');
+        document.getElementById('newCardName').value = '';
         render();
-      };
-    }
+      }
+    };
     
+    // Delete card
+    document.querySelectorAll('.delete-card-btn').forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        if (confirm('¿Eliminar esta tarjeta? Las deudas asociadas se moverán a "Sin tarjeta"')) {
+          const cardId = btn.dataset.delete;
+          // Move debts to no card
+          debts.forEach(d => {
+            if (d.cardId === cardId) d.cardId = 'none';
+          });
+          creditCards = creditCards.filter(c => c.id !== cardId);
+          saveData();
+          render();
+        }
+      };
+    });
+    
+    // Edit debt buttons
+    document.querySelectorAll('.edit-debt-btn').forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        const debtId = btn.dataset.edit;
+        const debt = debts.find(d => d.id === debtId);
+        if (debt) {
+          document.getElementById('editDebtId').value = debt.id;
+          document.getElementById('editDebtCard').value = debt.cardId || 'none';
+          document.getElementById('editDebtProduct').value = debt.product;
+          document.getElementById('editDebtTotal').value = debt.totalAmount;
+          document.getElementById('editDebtInstallments').value = debt.totalInstallments;
+          document.getElementById('editDebtModal').classList.add('visible');
+        }
+      };
+    });
+    
+    // Save edit debt form
+    document.getElementById('editDebtForm').onsubmit = (e) => {
+      e.preventDefault();
+      const debtId = document.getElementById('editDebtId').value;
+      const idx = debts.findIndex(d => d.id === debtId);
+      if (idx >= 0) {
+        const totalAmount = parseInt(document.getElementById('editDebtTotal').value);
+        const totalInstallments = parseInt(document.getElementById('editDebtInstallments').value);
+        
+        debts[idx] = {
+          ...debts[idx],
+          cardId: document.getElementById('editDebtCard').value,
+          product: document.getElementById('editDebtProduct').value.trim(),
+          totalAmount,
+          totalInstallments,
+          installmentAmount: Math.round(totalAmount / totalInstallments)
+        };
+        saveData();
+        document.getElementById('editDebtModal').classList.remove('visible');
+        render();
+      }
+    };
+    
+    // Delete debt
     document.querySelectorAll('#deudasList [data-delete]').forEach(btn => {
       btn.onclick = (e) => {
         e.stopPropagation();
@@ -675,6 +869,22 @@ function renderDeudas() {
       };
     });
   }, 100);
+}
+
+// Helper function to build debt item HTML
+function buildDebtItemHtml(d) {
+  return `
+    <div class="transaction-item" data-id="${d.id}">
+      <div class="transaction-item__icon transaction-item__icon--gasto">💳</div>
+      <div class="transaction-item__content">
+        <div class="transaction-item__desc">${escapeHtml(d.product)}</div>
+        <div class="transaction-item__date">${d.paidInstallments || 0}/${d.totalInstallments} cuotas (${formatCurrency(d.installmentAmount)})</div>
+      </div>
+      <div class="transaction-item__amount transaction-item__amount--gasto">${formatCurrency(d.totalAmount)}</div>
+      <button class="edit-debt-btn" data-edit="${d.id}">⋮</button>
+      <button class="transaction-item__delete" data-delete="${d.id}">🗑️</button>
+    </div>
+  `;
 }
 
 // ===== HISTORIAL SECTION =====

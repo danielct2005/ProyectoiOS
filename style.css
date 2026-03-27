@@ -649,3 +649,93 @@ body {
 }
 
 .transaction-item { animation: fadeIn 0.3s ease; }
+
+/* ===== SECTION HEADER ===== */
+.section-header__actions {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+/* ===== DEBT GROUP ===== */
+.debt-group {
+  margin-bottom: var(--space-md);
+}
+
+.debt-group:last-child {
+  margin-bottom: 0;
+}
+
+.debt-group__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--gray-100);
+  border-radius: var(--radius);
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--gray-700);
+  margin-bottom: var(--space-sm);
+}
+
+.debt-group__total {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+/* ===== CARD ITEM ===== */
+.card-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-md);
+  background: var(--gray-50);
+  border-radius: var(--radius);
+  margin-bottom: var(--space-sm);
+}
+
+.card-item:last-child {
+  margin-bottom: 0;
+}
+
+.delete-card-btn {
+  background: transparent;
+  border: none;
+  font-size: 1rem;
+  padding: var(--space-xs);
+  cursor: pointer;
+  opacity: 0.6;
+}
+
+.delete-card-btn:active { opacity: 1; }
+
+/* ===== EDIT BUTTON (⋮) ===== */
+.edit-debt-btn {
+  background: var(--gray-200);
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.transaction-item:active .edit-debt-btn {
+  opacity: 1;
+}
+
+/* ===== SELECT INPUT ===== */
+select.form-input {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238e8e93' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  padding-right: 40px;
+}
