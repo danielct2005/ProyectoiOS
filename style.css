@@ -470,12 +470,12 @@ body {
   font-size: 1rem;
   padding: var(--space-sm);
   cursor: pointer;
-  opacity: 0;
+  opacity: 0.5;
   transition: opacity 0.2s;
   -webkit-tap-highlight-color: transparent;
 }
 
-.transaction-item:active .transaction-item__delete { opacity: 1; }
+.transaction-item__delete:active { opacity: 1; color: var(--danger); }
 
 /* ===== EMPTY STATE ===== */
 .empty-state {

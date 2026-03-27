@@ -460,7 +460,20 @@ function renderFinanzas() {
     document.querySelectorAll('#transactionList [data-delete]').forEach(btn => {
       btn.onclick = (e) => {
         e.stopPropagation();
-        deleteTransaction(btn.dataset.delete);
+        const transaction = transactions.find(t => t.id === btn.dataset.delete);
+        Swal.fire({
+          title: '¿Eliminar movimiento?',
+          text: transaction ? `"${transaction.description}"` : 'Este movimiento',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Sí, eliminar',
+          cancelButtonText: 'Cancelar',
+          confirmButtonColor: '#ff3b30'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            deleteTransaction(btn.dataset.delete);
+          }
+        });
       };
     });
     
