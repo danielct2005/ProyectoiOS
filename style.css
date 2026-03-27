@@ -420,12 +420,13 @@ body {
 
 .transaction-item {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: var(--space-md);
   padding: var(--space-md);
   background: var(--gray-50);
   border-radius: var(--radius);
   transition: background 0.15s ease;
+  overflow: hidden;
 }
 
 .transaction-item:active { background: var(--gray-200); }
@@ -448,7 +449,6 @@ body {
 .transaction-item__content {
   flex: 1;
   min-width: 0;
-  overflow: hidden;
 }
 
 .transaction-item__desc {
@@ -458,8 +458,6 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  display: block;
-  width: 100%;
 }
 
 .transaction-item__date {
