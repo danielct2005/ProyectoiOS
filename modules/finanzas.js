@@ -31,6 +31,7 @@ import {
   createEmptyState,
   getMonthName
 } from './utils.js';
+import * as API from './api.js';
 
 // ==================== CALCULATIONS ====================
 
@@ -249,6 +250,32 @@ export function renderBilletera() {
       ` : ''}
     </div>
     
+    <!-- Indicadores Económicos -->
+    <div class="card" id="indicatorsCard">
+      <div class="card__header">
+        <h3 class="card__title">📊 Indicadores Económicos</h3>
+        <button class="btn btn--sm btn--ghost" id="refreshIndicatorsBtn" title="Actualizar">🔄</button>
+      </div>
+      <div class="indicators-grid" id="indicatorsGrid">
+        <div class="indicator-item">
+          <span class="indicator-item__label">UF</span>
+          <span class="indicator-item__value" id="ufValue">Cargando...</span>
+        </div>
+        <div class="indicator-item">
+          <span class="indicator-item__label">USD</span>
+          <span class="indicator-item__value" id="dolarValue">Cargando...</span>
+        </div>
+        <div class="indicator-item">
+          <span class="indicator-item__label">EUR</span>
+          <span class="indicator-item__value" id="euroValue">Cargando...</span>
+        </div>
+        <div class="indicator-item">
+          <span class="indicator-item__label">UTM</span>
+          <span class="indicator-item__value" id="utmValue">Cargando...</span>
+        </div>
+      </div>
+    </div>
+    
     ${appState.history[appState.currentMonth] ? `
       <div class="archive-notice">
         📦 Este mes está en historial
@@ -362,6 +389,60 @@ export function renderBilletera() {
   
   // Event listeners
   setupBilleteraEvents();
+  
+  // Cargar indicadores económicos
+  loadEconomicIndicators();
+}
+
+// ==================== ECONOMIC INDICATORS ====================
+
+async function loadEconomicIndicators() {
+  // Obtener valores de la API
+  const [uf, dolar, euro, utm] = await Promise.allSettled([
+    API.getCurrentUF(),
+    API.getCurrentDolar(),
+    API.getCurrentEuro(),
+    API.getCurrentUTM()
+  ]);
+  
+  // Actualizar UI con los valores
+  const ufEl = document.getElementById('ufValue');
+  const dolarEl = document.getElementById('dolarValue');
+  const euroEl = document.getElementById('euroValue');
+  const utmEl = document.getElementById('utmValue');
+  const refreshBtn = document.getElementById('refreshIndicatorsBtn');
+  
+  if (ufEl) {
+    ufEl.textContent = uf.status === 'fulfilled' && uf.value 
+      ? formatCurrency(Math.round(uf.value)) 
+      : 'Sin conexión';
+  }
+  
+  if (dolarEl) {
+    dolarEl.textContent = dolar.status === 'fulfilled' && dolar.value 
+      ? formatCurrency(Math.round(dolar.value)) 
+      : 'Sin conexión';
+  }
+  
+  if (euroEl) {
+    euroEl.textContent = euro.status === 'fulfilled' && euro.value 
+      ? formatCurrency(Math.round(euro.value)) 
+      : 'Sin conexión';
+  }
+  
+  if (utmEl) {
+    utmEl.textContent = utm.status === 'fulfilled' && utm.value 
+      ? formatCurrency(Math.round(utm.value)) 
+      : 'Sin conexión';
+  }
+  
+  // Botón de actualizar
+  if (refreshBtn) {
+    refreshBtn.addEventListener('click', () => {
+      API.clearCache();
+      loadEconomicIndicators();
+    });
+  }
 }
 
 function setupBilleteraEvents() {

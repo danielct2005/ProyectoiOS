@@ -1146,6 +1146,75 @@ body.dark-mode .sub-nav__item {
 body.dark-mode .sub-nav__item:active {
   background: var(--gray-700);
 }
-  background: rgba(0, 122, 255, 0.15);
+
+/* ===== INDICADORES ECONÓMICOS ===== */
+
+.indicators-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-sm);
+}
+
+.indicator-item {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--gray-100);
+  border-radius: var(--radius);
+  text-align: center;
+}
+
+body.dark-mode .indicator-item {
+  background: var(--gray-800);
+}
+
+.indicator-item__label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.indicator-item__value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin-top: 2px;
+}
+
+.indicator-item__value:empty::after {
+  content: '...';
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-md);
+}
+
+.card__title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* Botón ghost para refresh */
+.btn--ghost {
+  background: transparent;
+  border: 1px solid var(--gray-300);
+  color: var(--text-secondary);
+}
+
+body.dark-mode .btn--ghost {
+  border-color: var(--gray-600);
+  color: var(--gray-400);
 }
 
