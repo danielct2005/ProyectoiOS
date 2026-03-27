@@ -972,6 +972,9 @@ function renderFijos() {
   const main = document.querySelector('.main');
   const total = calculateFixedExpensesTotal();
   
+  // Ordenar gastos fijos de mayor a menor monto
+  const sortedExpenses = [...fixedExpenses].sort((a, b) => b.amount - a.amount);
+  
   main.innerHTML = `
     <div class="section-header">
       <h2 class="section-title">Gastos Fijos</h2>
@@ -985,13 +988,13 @@ function renderFijos() {
     
     <div class="card">
       <div class="transaction-list" id="fijosList">
-        ${fixedExpenses.length === 0 ? `
+        ${sortedExpenses.length === 0 ? `
           <div class="empty-state">
             <span class="empty-state__icon">📅</span>
             <p class="empty-state__text">Sin gastos fijos</p>
             <p class="empty-state__hint">Agrega Spotify, bencina, celular, etc.</p>
           </div>
-        ` : fixedExpenses.map(e => `
+        ` : sortedExpenses.map(e => `
           <div class="transaction-item" data-id="${e.id}">
             <div class="transaction-item__icon transaction-item__icon--gasto">📅</div>
             <div class="transaction-item__content">
@@ -1185,7 +1188,14 @@ function renderDeudas() {
   // Build cards HTML
   let cardsHtml = '';
   
-  // Card: Sin tarjeta
+  // Calcular total por tarjeta para ordenar
+  const cardTotals = creditCards.map(card => ({
+    id: card.id,
+    name: card.name,
+    total: debtsByCard[card.id] ? debtsByCard[card.id].reduce((sum, d) => sum + d.totalAmount, 0) : 0
+  })).sort((a, b) => b.total - a.total); // Ordenar de mayor a menor
+  
+  // Card: Sin tarjeta (al final)
   if (debtsByCard['none'] && debtsByCard['none'].length > 0) {
     cardsHtml += `
       <div class="debt-group">
@@ -1197,18 +1207,17 @@ function renderDeudas() {
     `;
   }
   
-  // Card: credit cards
-  creditCards.forEach(card => {
-    if (debtsByCard[card.id] && debtsByCard[card.id].length > 0) {
-      const cardTotal = debtsByCard[card.id].reduce((sum, d) => sum + d.totalAmount, 0);
+  // Card: credit cards (ordenados por deuda mayor)
+  cardTotals.forEach(cardData => {
+    if (debtsByCard[cardData.id] && debtsByCard[cardData.id].length > 0) {
       cardsHtml += `
         <div class="debt-group">
           <div class="debt-group__header">
-            <span>💳 ${escapeHtml(card.name)}</span>
-            <span class="debt-group__total">${formatCurrency(cardTotal)}</span>
+            <span>💳 ${escapeHtml(cardData.name)}</span>
+            <span class="debt-group__total">${formatCurrency(cardData.total)}</span>
           </div>
           <div class="transaction-list">
-            ${debtsByCard[card.id].map(d => buildDebtItemHtml(d)).join('')}
+            ${debtsByCard[cardData.id].map(d => buildDebtItemHtml(d)).join('')}
           </div>
         </div>
       `;
@@ -1948,9 +1957,11 @@ function renderAjustes() {
     
     <div class="card">
       <h3 class="card__title mb-2">Información</h3>
-      <p class="text-muted mb-1">App de Finanzas Personales</p>
+      <p class="text-muted mb-1" style="font-weight: 600; color: var(--primary);">App Control Finanzas</p>
       <p class="text-muted mb-1">Versión 1.0.0</p>
-      <p class="text-muted">Todos los datos se almacenan localmente en tu dispositivo.</p>
+      <p class="text-muted" style="margin-top: var(--space-md); padding-top: var(--space-md); border-top: 1px solid var(--gray-200);">
+        Créeado por Daniel CT
+      </p>
     </div>
   `;
   
