@@ -53,10 +53,34 @@ function formatNumber(num) {
 }
 
 /**
+ * Limpia un número eliminando separadores de miles
+ */
+function parseNumber(str) {
+  return parseInt(str.replace(/\./g, '')) || 0;
+}
+
+/**
  * Formatea un número como moneda (formato Chile)
  */
 function formatCurrency(amount) {
   return '$' + formatNumber(amount);
+}
+
+/**
+ * Formatea input con separador de miles al perder foco
+ */
+function formatInputOnBlur(input) {
+  input.addEventListener('blur', function() {
+    const value = parseNumber(this.value);
+    if (value > 0) {
+      this.value = formatNumber(value);
+    }
+  });
+  
+  input.addEventListener('focus', function() {
+    const value = parseNumber(this.value);
+    this.value = value;
+  });
 }
 
 /**
@@ -875,6 +899,10 @@ function renderBilletera() {
     document.getElementById('typeGasto').onclick = () => handleTypeChange('gasto');
     document.getElementById('typeIngreso').onclick = () => handleTypeChange('ingreso');
     
+    // Formatear input de monto con separador de miles
+    formatInputOnBlur(document.getElementById('amount'));
+    formatInputOnBlur(document.getElementById('editTransactionAmount'));
+    
     document.getElementById('transactionForm').onsubmit = handleFormSubmit;
     
     // Edit transaction button - open modal
@@ -920,7 +948,7 @@ function renderBilletera() {
     document.getElementById('editTransactionForm').onsubmit = (e) => {
       e.preventDefault();
       const id = document.getElementById('editTransactionId').value;
-      const amount = parseInt(document.getElementById('editTransactionAmount').value);
+      const amount = parseNumber(document.getElementById('editTransactionAmount').value);
       const description = document.getElementById('editTransactionDesc').value.trim();
       
       // Validar monto
@@ -1093,6 +1121,9 @@ function renderFijos() {
     const deleteBtn = document.getElementById('deleteFixedBtn');
     const modalTitle = document.getElementById('fixedModalTitle');
     
+    // Formatear input con separador de miles
+    formatInputOnBlur(document.getElementById('fixedAmount'));
+    
     if (addBtn) {
       addBtn.onclick = () => {
         // Reset form for new entry
@@ -1124,7 +1155,7 @@ function renderFijos() {
         e.preventDefault();
         const editId = document.getElementById('fixedEditId').value;
         const name = document.getElementById('fixedName').value.trim();
-        const amount = parseInt(document.getElementById('fixedAmount').value);
+        const amount = parseNumber(document.getElementById('fixedAmount').value);
         
         // Validar nombre
         if (!name) {
@@ -1403,6 +1434,10 @@ function renderDeudas() {
       document.getElementById('debtModal').classList.add('visible');
     };
     
+    // Formatear inputs con separador de miles
+    formatInputOnBlur(document.getElementById('debtTotal'));
+    formatInputOnBlur(document.getElementById('editDebtTotal'));
+    
     // Manage cards button
     document.getElementById('manageCardsBtn').onclick = () => {
       document.getElementById('cardsModal').classList.add('visible');
@@ -1453,8 +1488,8 @@ function renderDeudas() {
     document.getElementById('debtForm').onsubmit = (e) => {
       e.preventDefault();
       const product = document.getElementById('debtProduct').value.trim();
-      const totalAmount = parseInt(document.getElementById('debtTotal').value);
-      const totalInstallments = parseInt(document.getElementById('debtInstallments').value);
+      const totalAmount = parseNumber(document.getElementById('debtTotal').value);
+      const totalInstallments = parseNumber(document.getElementById('debtInstallments').value);
       
       // Validar producto
       if (!product) {
@@ -1553,9 +1588,9 @@ function renderDeudas() {
       const idx = debts.findIndex(d => d.id === debtId);
       if (idx >= 0) {
         const product = document.getElementById('editDebtProduct').value.trim();
-        const totalAmount = parseInt(document.getElementById('editDebtTotal').value);
-        const totalInstallments = parseInt(document.getElementById('editDebtInstallments').value);
-        const paidInstallments = parseInt(document.getElementById('editDebtPaidInstallments').value);
+        const totalAmount = parseNumber(document.getElementById('editDebtTotal').value);
+        const totalInstallments = parseNumber(document.getElementById('editDebtInstallments').value);
+        const paidInstallments = parseNumber(document.getElementById('editDebtPaidInstallments').value);
         
         // Validar producto
         if (!product) {
@@ -1730,7 +1765,7 @@ function handleTypeChange(type) {
 function handleFormSubmit(e) {
   e.preventDefault();
   
-  const amount = parseInt(document.getElementById('amount').value);
+  const amount = parseNumber(document.getElementById('amount').value);
   const description = document.getElementById('description').value.trim();
   
   if (!amount || amount <= 0) {
