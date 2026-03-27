@@ -419,14 +419,14 @@ body {
 }
 
 .transaction-item {
-  display: flex;
-  align-items: center;
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
   gap: 12px;
   padding: var(--space-md);
   background: var(--gray-50);
   border-radius: var(--radius);
   transition: background 0.15s ease;
-  overflow: hidden;
+  align-items: center;
 }
 
 .transaction-item:active { background: var(--gray-200); }
@@ -447,9 +447,8 @@ body {
 .transaction-item__icon--ingreso { background: rgba(52, 209, 88, 0.15); }
 
 .transaction-item__content {
-  flex: 1;
   min-width: 0;
-  flex-shrink: 1;
+  overflow: hidden;
 }
 
 .transaction-item__desc {
@@ -470,10 +469,8 @@ body {
 .transaction-item__amount {
   font-size: 1rem;
   font-weight: 700;
-  flex-shrink: 0;
-  min-width: 80px;
   text-align: right;
-  margin-left: 8px;
+  white-space: nowrap;
 }
 
 .transaction-item__amount--gasto { color: var(--danger); }
