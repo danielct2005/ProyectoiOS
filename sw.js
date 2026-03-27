@@ -1,8 +1,9 @@
-const CACHE_NAME = 'pwa-proyectoiOS-v1';
+const CACHE_NAME = 'mis-finanzas-v1';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/style.css',
+  '/script.js',
   '/manifest.json'
 ];
 
@@ -11,7 +12,7 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        console.log('[SW] Cache opened');
+        console.log('[SW] Cache abierto');
         return cache.addAll(STATIC_ASSETS);
       })
       .then(() => self.skipWaiting())

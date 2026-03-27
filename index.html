@@ -5,34 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   
   <!-- Primary Meta Tags -->
-  <title>ProyectoiOS - PWA</title>
-  <meta name="title" content="ProyectoiOS - PWA">
-  <meta name="description" content="Progressive Web App mínima y moderna">
-  
-  <!-- Open Graph / Facebook -->
-  <meta property="og:type" content="website">
-  <meta property="og:title" content="ProyectoiOS - PWA">
-  <meta property="og:description" content="Progressive Web App mínima y moderna">
-  <meta property="og:image" content="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23007aff' width='100' height='100' rx='20'/><text x='50' y='65' font-size='50' text-anchor='middle' fill='white'>P</text></svg>">
-  
-  <!-- Twitter -->
-  <meta property="twitter:card" content="summary_large_image">
-  <meta property="twitter:title" content="ProyectoiOS - PWA">
-  <meta property="twitter:description" content="Progressive Web App mínima y moderna">
+  <title>Mis Finanzas</title>
+  <meta name="title" content="Mis Finanzas - Gestión Personal">
+  <meta name="description" content="App personal de gestión de finanzas y agenda">
   
   <!-- PWA Meta Tags -->
   <meta name="theme-color" content="#007aff">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="ProyectoiOS">
+  <meta name="apple-mobile-web-app-title" content="Mis Finanzas">
   <meta name="mobile-web-app-capable" content="yes">
-  <meta name="application-name" content="ProyectoiOS">
+  <meta name="application-name" content="Mis Finanzas">
   <meta name="msapplication-TileColor" content="#007aff">
   <meta name="msapplication-tap-highlight" content="no">
   
   <!-- Favicon & Icons -->
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23007aff' width='100' height='100' rx='20'/><text x='50' y='65' font-size='50' text-anchor='middle' fill='white'>P</text></svg>">
-  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23007aff' width='100' height='100' rx='20'/><text x='50' y='65' font-size='50' text-anchor='middle' fill='white'>P</text></svg>">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23007aff' width='100' height='100' rx='20'/><text x='50' y='65' font-size='50' text-anchor='middle' fill='white'>💰</text></svg>">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23007aff' width='100' height='100' rx='20'/><text x='50' y='65' font-size='50' text-anchor='middle' fill='white'>💰</text></svg>">
   
   <!-- PWA Manifest -->
   <link rel="manifest" href="manifest.json">
@@ -41,21 +30,6 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- Modal de instalación iOS -->
-  <div class="modal" id="iOSModal">
-    <div class="modal__backdrop"></div>
-    <div class="modal__content">
-      <h3 class="modal__title">📱 Cómo instalar en iOS</h3>
-      <ol class="modal__steps">
-        <li>Toca el botón <strong>Compartir</strong> <span style="font-size:1.2em">📤</span></li>
-        <li>Desliza hacia abajo para ver más opciones</li>
-        <li>Toca <strong>"Agregar a Inicio"</strong></li>
-        <li>Toca <strong>"Agregar"</strong> en la esquina superior</li>
-      </ol>
-      <button class="btn btn--primary" id="closeIOSModal">¡Entendido!</button>
-    </div>
-  </div>
-
   <!-- Offline Banner -->
   <div class="offline-banner" id="offlineBanner">
     Sin conexión - Modo offline activo
@@ -64,81 +38,89 @@
   <div class="app">
     <!-- Header -->
     <header class="header">
-      <div class="header__title">ProyectoiOS</div>
-      <div class="header__icon" id="statusIndicator">
-        <span class="status__dot"></span>
-      </div>
+      <div class="header__title">Mis Finanzas</div>
+      <button class="header__btn" id="clearDataBtn" title="Borrar datos">🗑️</button>
     </header>
 
     <!-- Main Content -->
     <main class="main">
-      <!-- Welcome Card -->
-      <div class="card card--elevated">
+      <!-- Balance Card -->
+      <div class="balance-card">
+        <div class="balance-card__label">Saldo Total</div>
+        <div class="balance-card__amount" id="totalBalance">$0</div>
+        <div class="balance-card__info">
+          <span class="balance-card__income">💚 Ingresos: <span id="totalIncome">$0</span></span>
+          <span class="balance-card__expense">❤️ Gastos: <span id="totalExpense">$0</span></span>
+        </div>
+      </div>
+
+      <!-- Add Transaction Form -->
+      <div class="card">
+        <h3 class="card__title mb-2">Agregar Movimiento</h3>
+        <form id="transactionForm">
+          <div class="form-group">
+            <label class="form-label">Tipo</label>
+            <div class="type-selector">
+              <button type="button" class="type-btn active" data-type="gasto" id="typeGasto">
+                💸 Gasto
+              </button>
+              <button type="button" class="type-btn" data-type="ingreso" id="typeIngreso">
+                💚 Ingreso
+              </button>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label" for="amount">Monto</label>
+            <input 
+              type="number" 
+              id="amount" 
+              class="form-input" 
+              placeholder="0.00" 
+              min="0" 
+              step="0.01" 
+              required
+              inputmode="decimal"
+            >
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label" for="description">Descripción</label>
+            <input 
+              type="text" 
+              id="description" 
+              class="form-input" 
+              placeholder="Ej: Mercado Libre cuota 2" 
+              maxlength="100"
+              required
+            >
+          </div>
+          
+          <button type="submit" class="btn btn--primary btn--block">
+            ➕ Agregar
+          </button>
+        </form>
+      </div>
+
+      <!-- Recent Transactions -->
+      <div class="card">
         <div class="card__header">
-          <div class="card__icon card__icon--blue">👋</div>
-          <div>
-            <div class="card__title">¡Bienvenido!</div>
-            <div class="card__subtitle">Tu PWA está lista</div>
+          <h3 class="card__title">Últimos Movimientos</h3>
+          <span class="card__badge" id="transactionCount">0</span>
+        </div>
+        
+        <div class="transaction-list" id="transactionList">
+          <!-- Transactions will be rendered here -->
+          <div class="empty-state" id="emptyState">
+            <span class="empty-state__icon">📝</span>
+            <p class="empty-state__text">No hay movimientos aún</p>
+            <p class="empty-state__hint">Agrega tu primer movimiento arriba</p>
           </div>
         </div>
-        <p class="card__text">
-          Esta es una Progressive Web App básica lista para desplegar en Vercel. 
-          Instálala en tu dispositivo para una experiencia tipo app nativa.
-        </p>
-      </div>
-
-      <!-- Stats Grid -->
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-card__value" id="onlineStatus">--</div>
-          <div class="stat-card__label">Estado</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-card__value" id="installPrompt">?</div>
-          <div class="stat-card__label">Instalable</div>
-        </div>
-      </div>
-
-      <!-- Features Card -->
-      <div class="card mt-2">
-        <div class="card__header">
-          <div class="card__icon card__icon--green">⚡</div>
-          <div>
-            <div class="card__title">Características</div>
-            <div class="card__subtitle">Funcionalidades PWA</div>
-          </div>
-        </div>
-        <div class="action-list">
-          <div class="action-item">
-            <span class="action-item__icon">📶</span>
-            <span class="action-item__text">Funciona Offline</span>
-            <span class="action-item__arrow">✓</span>
-          </div>
-          <div class="action-item">
-            <span class="action-item__icon">📱</span>
-            <span class="action-item__text">Instalable en Home</span>
-            <span class="action-item__arrow">✓</span>
-          </div>
-          <div class="action-item">
-            <span class="action-item__icon">🔄</span>
-            <span class="action-item__text">Service Worker</span>
-            <span class="action-item__arrow">✓</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Actions -->
-      <div class="mt-2">
-        <button class="btn btn--primary" id="installBtn" style="display: none;">
-          📲 Instalar App
-        </button>
-        <button class="btn btn--secondary mt-1" id="iOSInstallBtn">
-          📱 Agregar a Inicio (iOS)
-        </button>
       </div>
 
       <!-- Debug Info (solo desarrollo) -->
-      <div class="card mt-2">
+      <div class="card mt-2" id="debugSection" style="display: none;">
         <div class="card__header">
           <div class="card__icon card__icon--orange">🔧</div>
           <div>
@@ -147,28 +129,30 @@
           </div>
         </div>
         <div class="card__text text-muted" id="debugInfo">
-          <p>Cargando información...</p>
+          <p>Cargando...</p>
         </div>
       </div>
     </main>
 
     <!-- Bottom Navigation -->
     <nav class="nav">
-      <a href="#" class="nav__item nav__item--active">
-        <span class="nav__icon">🏠</span>
-        <span>Inicio</span>
+      <a href="#" class="nav__item nav__item--active" data-section="finanzas">
+        <span class="nav__icon">💰</span>
+        <span>Finanzas</span>
       </a>
-      <a href="#" class="nav__item">
-        <span class="nav__icon">📋</span>
-        <span>Notas</span>
+      <a href="#" class="nav__item" data-section="agenda">
+        <span class="nav__icon">📅</span>
+        <span>Agenda</span>
       </a>
-      <a href="#" class="nav__item">
+      <a href="#" class="nav__item" data-section="ajustes">
         <span class="nav__icon">⚙️</span>
         <span>Ajustes</span>
       </a>
     </nav>
   </div>
 
+  <!-- Scripts -->
+  <script src="script.js"></script>
   <script>
     // ===== PWA Service Worker Registration =====
     if ('serviceWorker' in navigator) {
@@ -185,14 +169,11 @@
     // ===== Online/Offline Status =====
     const updateOnlineStatus = () => {
       const isOnline = navigator.onLine;
-      const statusEl = document.getElementById('onlineStatus');
       const bannerEl = document.getElementById('offlineBanner');
       
       if (isOnline) {
-        statusEl.textContent = 'Online';
         bannerEl.classList.remove('visible');
       } else {
-        statusEl.textContent = 'Offline';
         bannerEl.classList.add('visible');
       }
     };
@@ -201,80 +182,20 @@
     window.addEventListener('offline', updateOnlineStatus);
     updateOnlineStatus();
 
-    // ===== PWA Install Prompt =====
-    let deferredPrompt;
-    const installBtn = document.getElementById('installBtn');
-    const iOSInstallBtn = document.getElementById('iOSInstallBtn');
-    const installPromptEl = document.getElementById('installPrompt');
-
-    // Detectar si es iOS
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-
-    if (isIOS) {
-      installPromptEl.textContent = 'Sí';
-      iOSInstallBtn.style.display = 'flex';
-      installBtn.style.display = 'none';
-      
-      // Mostrar automáticamente el modal instructivo en iOS
-      // (Solo una vez, usando localStorage)
-      const hasSeenIOSModal = localStorage.getItem('iosPwaModalShown');
-      if (!hasSeenIOSModal) {
-        setTimeout(() => {
-          document.getElementById('iOSModal').classList.add('visible');
-        }, 1500); // Esperar 1.5s para que cargue la UI
-        localStorage.setItem('iosPwaModalShown', 'true');
-      }
-      
-      iOSInstallBtn.addEventListener('click', () => {
-        document.getElementById('iOSModal').classList.add('visible');
-      });
-      
-      document.getElementById('closeIOSModal').addEventListener('click', () => {
-        document.getElementById('iOSModal').classList.remove('visible');
-      });
-      
-      document.querySelector('.modal__backdrop').addEventListener('click', () => {
-        document.getElementById('iOSModal').classList.remove('visible');
-      });
-    } else {
-      // Android/Chrome - usar beforeinstallprompt
-      window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        installPromptEl.textContent = 'Sí';
-        installBtn.style.display = 'flex';
-        iOSInstallBtn.style.display = 'none';
-      });
-
-      document.getElementById('installBtn').addEventListener('click', async () => {
-        if (!deferredPrompt) return;
-        
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        
-        if (outcome === 'accepted') {
-          installPromptEl.textContent = 'Sí';
-        }
-        deferredPrompt = null;
-        installBtn.style.display = 'none';
-      });
-    }
-
-    window.addEventListener('appinstalled', () => {
-      installPromptEl.textContent = 'Sí';
-      installBtn.style.display = 'none';
-      iOSInstallBtn.style.display = 'none';
-      console.log('PWA instalada');
-    });
-
     // ===== Debug Info =====
     const debugInfo = document.getElementById('debugInfo');
-    debugInfo.innerHTML = `
-      <p><strong>Service Worker:</strong> ${'serviceWorker' in navigator ? '✓ Soportado' : '✗ No soportado'}</p>
-      <p><strong>Manifest:</strong> ${window.matchMedia('(display-mode: standalone)').matches ? '✓ Instalado' : '✗ No instalado'}</p>
-      <p><strong>Online:</strong> ${navigator.onLine ? '✓ Sí' : '✗ No'}</p>
-      <p><strong>Display Mode:</strong> ${window.matchMedia('(display-mode: standalone)').matches ? 'standalone' : 'browser'}</p>
-    `;
+    const debugSection = document.getElementById('debugSection');
+    
+    // Mostrar debug solo en desarrollo (localhost)
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      debugSection.style.display = 'block';
+      debugInfo.innerHTML = `
+        <p><strong>Service Worker:</strong> ${'serviceWorker' in navigator ? '✓' : '✗'}</p>
+        <p><strong>LocalStorage:</strong> ${typeof localStorage !== 'undefined' ? '✓' : '✗'}</p>
+        <p><strong>Display Mode:</strong> ${window.matchMedia('(display-mode: standalone)').matches ? 'standalone' : 'browser'}</p>
+        <p><strong>Online:</strong> ${navigator.onLine ? '✓' : '✗'}</p>
+      `;
+    }
   </script>
 </body>
 </html>
