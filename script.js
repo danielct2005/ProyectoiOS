@@ -901,6 +901,26 @@ function renderBilletera() {
     };
     
     document.getElementById('archiveMonthBtn').onclick = () => {
+      // Check if already archived
+      if (history[currentMonth]) {
+        Swal.fire({
+          title: '¡Ya archivado!',
+          text: 'Este mes ya está en el historial',
+          icon: 'warning'
+        });
+        return;
+      }
+      
+      // Check if there are transactions to archive
+      if (transactions.length === 0) {
+        Swal.fire({
+          title: 'Sin movimientos',
+          text: 'No hay movimientos para archivar',
+          icon: 'info'
+        });
+        return;
+      }
+      
       Swal.fire({
         title: '¿Archivar mes?',
         text: 'Los movimientos se guardarán en historial y comenzarás un nuevo mes',
