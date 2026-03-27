@@ -9,7 +9,8 @@ const STORAGE_KEY = 'finanzas_app_data';
 const MAX_TRANSACTIONS = 20;
 
 // ===== STATE =====
-let currentSection = 'billetera';
+let currentSection = 'finanzas';
+let currentSubsection = 'billetera';
 let currentMonth = getCurrentMonthKey();
 let transactions = [];
 let fixedExpenses = [];
@@ -295,9 +296,17 @@ function loadMonthData() {
 
 // Section titles
 const sectionTitles = {
-  billetera: 'Billetera',
+  finanzas: 'Finanzas',
   agenda: 'Agenda',
   ajustes: 'Ajustes'
+};
+
+// Subsection titles (within Finanzas)
+const subsectionTitles = {
+  billetera: 'Billetera',
+  fijoss: 'Fijos',  // Note: using fijoss to match existing section names
+  deudas: 'Deudas',
+  historial: 'Historial'
 };
 
 function render() {
@@ -307,13 +316,13 @@ function render() {
   // Update header title
   const headerTitle = document.getElementById('headerTitle');
   if (headerTitle) {
-    headerTitle.textContent = sectionTitles[currentSection] || 'Billetera';
+    headerTitle.textContent = sectionTitles[currentSection] || 'Finanzas';
   }
   
   try {
     switch (currentSection) {
-      case 'billetera':
-        renderBilletera();
+      case 'finanzas':
+        renderFinanzasContainer();
         break;
       case 'agenda':
         renderAgenda();
@@ -325,6 +334,76 @@ function render() {
   } catch (error) {
     console.error('Error rendering section:', error);
     document.querySelector('.main').innerHTML = '<div class="card"><p>Error: ' + error.message + '</p></div>';
+  }
+}
+
+function renderFinanzasContainer() {
+  const main = document.querySelector('.main');
+  
+  // Render sub-navigation
+  main.innerHTML = `
+    <!-- Sub-navigation for Finanzas -->
+    <div class="sub-nav">
+      <button class="sub-nav__item ${currentSubsection === 'billetera' ? 'active' : ''}" data-subsection="billetera">👛 Billetera</button>
+      <button class="sub-nav__item ${currentSubsection === 'fijos' ? 'active' : ''}" data-subsection="fijos">📅 Fijos</button>
+      <button class="sub-nav__item ${currentSubsection === 'deudas' ? 'active' : ''}" data-subsection="deudas">💳 Deudas</button>
+      <button class="sub-nav__item ${currentSubsection === 'historial' ? 'active' : ''}" data-subsection="historial">📦 Historial</button>
+    </div>
+    <div id="subsectionContent"></div>
+  `;
+  
+  // Add click handlers for sub-nav
+  setTimeout(() => {
+    document.querySelectorAll('.sub-nav__item').forEach(btn => {
+      btn.onclick = () => {
+        switchToSubsection(btn.dataset.subsection);
+      };
+    });
+  }, 100);
+  
+  // Render current subsection
+  switchToSubsection(currentSubsection);
+}
+
+function switchToSubsection(subsection) {
+  currentSubsection = subsection;
+  
+  // Update active state in submenu
+  document.querySelectorAll('.sub-nav__item').forEach(item => {
+    item.classList.toggle('active', item.dataset.subsection === subsection);
+  });
+  
+  // Update header title
+  const headerTitle = document.getElementById('headerTitle');
+  if (headerTitle) {
+    headerTitle.textContent = subsectionTitles[subsection] || 'Billetera';
+  }
+  
+  // Render the subsection content
+  const contentEl = document.getElementById('subsectionContent');
+  if (!contentEl) {
+    // If container doesn't exist yet, re-render
+    render();
+    return;
+  }
+  
+  // Clear content and render new subsection
+  contentEl.innerHTML = '<div class="subsection-content"></div>';
+  const subsectionContainer = contentEl.querySelector('.subsection-content');
+  
+  switch (subsection) {
+    case 'billetera':
+      renderBilletera();
+      break;
+    case 'fijos':
+      renderFijos();
+      break;
+    case 'deudas':
+      renderDeudas();
+      break;
+    case 'historial':
+      renderHistorial();
+      break;
   }
 }
 
