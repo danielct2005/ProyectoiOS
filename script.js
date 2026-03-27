@@ -156,6 +156,47 @@ function calculateDebtsMonthly() {
   return debts.reduce((sum, d) => sum + d.installmentAmount, 0);
 }
 
+function calculateTotalCuentas() {
+  return calculateFixedExpensesTotal() + calculateDebtsMonthly();
+}
+
+// Función para pagar todas las cuentas del mes
+function payAllCuentas() {
+  const fixedTotal = calculateFixedExpensesTotal();
+  const debtsMonthly = calculateDebtsMonthly();
+  const total = fixedTotal + debtsMonthly;
+  
+  if (total === 0) {
+    alert('No hay cuentas por pagar');
+    return;
+  }
+  
+  if (!confirm(`¿Pagar todas las cuentas?\n\n📅 Fijos: ${formatCurrency(fixedTotal)}\n💳 Cuotas: ${formatCurrency(debtsMonthly)}\n\nTotal: ${formatCurrency(total)}`)) {
+    return;
+  }
+  
+  // Agregar movimiento de gasto por cada cuenta fija
+  fixedExpenses.forEach(expense => {
+    transactions.unshift({
+      id: generateId(),
+      amount: expense.amount,
+      description: `Pago ${expense.name}`,
+      type: 'gasto',
+      date: new Date().toISOString()
+    });
+  });
+  
+  // Actualizar cuotas pagadas en deudas
+  debts.forEach(debt => {
+    if (debt.paidInstallments < debt.totalInstallments) {
+      debt.paidInstallments++;
+    }
+  });
+  
+  saveData();
+  render();
+}
+
 // ===== MONTH MANAGEMENT =====
 
 function archiveCurrentMonth() {
@@ -343,6 +384,13 @@ function renderFinanzas() {
       </div>
     </div>
     
+    <!-- Pagar Cuentas Button -->
+    <div class="card">
+      <button class="btn btn--primary btn--block" id="payCuentasBtn">
+        💸 Pagar Cuentas (Fijos + Cuotas)
+      </button>
+    </div>
+    
     <!-- Actions -->
     <div class="card">
       <button class="btn btn--secondary btn--block" id="archiveMonthBtn">
@@ -351,27 +399,33 @@ function renderFinanzas() {
     </div>
   `;
   
-  // Event listeners
-  document.getElementById('prevMonth').onclick = () => changeMonth(-1);
-  document.getElementById('nextMonth').onclick = () => changeMonth(1);
-  document.getElementById('typeGasto').onclick = () => handleTypeChange('gasto');
-  document.getElementById('typeIngreso').onclick = () => handleTypeChange('ingreso');
-  
-  document.getElementById('transactionForm').onsubmit = handleFormSubmit;
-  
-  document.querySelectorAll('[data-delete]').forEach(btn => {
-    btn.onclick = (e) => {
-      e.stopPropagation();
-      deleteTransaction(btn.dataset.delete);
+  // Event listeners with setTimeout to ensure DOM is ready
+  setTimeout(() => {
+    document.getElementById('prevMonth').onclick = () => changeMonth(-1);
+    document.getElementById('nextMonth').onclick = () => changeMonth(1);
+    document.getElementById('typeGasto').onclick = () => handleTypeChange('gasto');
+    document.getElementById('typeIngreso').onclick = () => handleTypeChange('ingreso');
+    
+    document.getElementById('transactionForm').onsubmit = handleFormSubmit;
+    
+    document.querySelectorAll('[data-delete]').forEach(btn => {
+      btn.onclick = (e => {
+        e.stopPropagation();
+        deleteTransaction(btn.dataset.delete);
+      });
+    });
+    
+    document.getElementById('archiveMonthBtn').onclick = () => {
+      if (confirm('¿Archivar este mes? Los movimientos se guardarán en historial y começarás un nuevo mes.')) {
+        archiveCurrentMonth();
+        render();
+      }
     };
-  });
-  
-  document.getElementById('archiveMonthBtn').onclick = () => {
-    if (confirm('¿Archivar este mes? Los movimientos se guardarán en historial y começarás un nuevo mes.')) {
-      archiveCurrentMonth();
-      render();
-    }
-  };
+    
+    document.getElementById('payCuentasBtn').onclick = () => {
+      payAllCuentas();
+    };
+  }, 100);
 }
 
 // ===== FIJOS SECTION =====
@@ -527,7 +581,7 @@ function renderDeudas() {
             <div class="transaction-item__icon transaction-item__icon--gasto">💳</div>
             <div class="transaction-item__content">
               <div class="transaction-item__desc">${escapeHtml(d.product)}</div>
-              <div class="transaction-item__date">${d.totalInstallments} cuotas de ${formatCurrency(d.installmentAmount)}</div>
+              <div class="transaction-item__date">${d.paidInstallments || 0}/${d.totalInstallments} cuotas (${formatCurrency(d.installmentAmount)})</div>
             </div>
             <div class="transaction-item__amount transaction-item__amount--gasto">${formatCurrency(d.totalAmount)}</div>
             <button class="transaction-item__delete" data-delete="${d.id}">🗑️</button>
