@@ -56,6 +56,7 @@ function formatNumber(num) {
  * Limpia un número eliminando separadores de miles
  */
 function parseNumber(str) {
+  if (typeof str === 'number') return str;
   return parseInt(str.replace(/\./g, '')) || 0;
 }
 
@@ -64,23 +65,6 @@ function parseNumber(str) {
  */
 function formatCurrency(amount) {
   return '$' + formatNumber(amount);
-}
-
-/**
- * Formatea input con separador de miles al perder foco
- */
-function formatInputOnBlur(input) {
-  input.addEventListener('blur', function() {
-    const value = parseNumber(this.value);
-    if (value > 0) {
-      this.value = formatNumber(value);
-    }
-  });
-  
-  input.addEventListener('focus', function() {
-    const value = parseNumber(this.value);
-    this.value = value;
-  });
 }
 
 /**
@@ -900,8 +884,7 @@ function renderBilletera() {
     document.getElementById('typeIngreso').onclick = () => handleTypeChange('ingreso');
     
     // Formatear input de monto con separador de miles
-    formatInputOnBlur(document.getElementById('amount'));
-    formatInputOnBlur(document.getElementById('editTransactionAmount'));
+
     
     document.getElementById('transactionForm').onsubmit = handleFormSubmit;
     
@@ -1122,7 +1105,7 @@ function renderFijos() {
     const modalTitle = document.getElementById('fixedModalTitle');
     
     // Formatear input con separador de miles
-    formatInputOnBlur(document.getElementById('fixedAmount'));
+
     
     if (addBtn) {
       addBtn.onclick = () => {
@@ -1435,8 +1418,7 @@ function renderDeudas() {
     };
     
     // Formatear inputs con separador de miles
-    formatInputOnBlur(document.getElementById('debtTotal'));
-    formatInputOnBlur(document.getElementById('editDebtTotal'));
+
     
     // Manage cards button
     document.getElementById('manageCardsBtn').onclick = () => {
