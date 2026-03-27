@@ -17,6 +17,7 @@ let debts = [];
 let creditCards = [];
 let history = {};
 let darkMode = localStorage.getItem('darkMode') === 'true';
+let lastPaymentMonth = null; // Track last month when cuentas were paid
 
 // ===== DOM ELEMENTS =====
 const elements = {};
@@ -101,12 +102,14 @@ function loadData() {
       debts = parsed.debts || [];
       creditCards = parsed.creditCards || [];
       history = parsed.history || {};
+      lastPaymentMonth = parsed.lastPaymentMonth || null;
     } else {
       transactions = [];
       fixedExpenses = [];
       debts = [];
       creditCards = [];
       history = {};
+      lastPaymentMonth = null;
     }
   } catch (error) {
     console.error('Error al cargar datos:', error);
@@ -115,6 +118,7 @@ function loadData() {
     debts = [];
     creditCards = [];
     history = {};
+    lastPaymentMonth = null;
   }
 }
 
@@ -125,7 +129,8 @@ function saveData() {
       fixedExpenses,
       debts,
       creditCards,
-      history
+      history,
+      lastPaymentMonth
     }));
   } catch (error) {
     console.error('Error al guardar datos:', error);
@@ -177,6 +182,12 @@ function payAllCuentas() {
     return;
   }
   
+  // Check if already paid this month
+  if (lastPaymentMonth === currentMonth) {
+    alert('Ya pagaste las cuentas este mes');
+    return;
+  }
+  
   if (!confirm(`¿Pagar todas las cuentas?\n\n📅 Fijos: ${formatCurrency(fixedTotal)}\n💳 Cuotas: ${formatCurrency(debtsMonthly)}\n\nTotal: ${formatCurrency(total)}`)) {
     return;
   }
@@ -199,6 +210,9 @@ function payAllCuentas() {
     }
   });
   
+  // Mark as paid this month
+  lastPaymentMonth = currentMonth;
+  
   saveData();
   render();
 }
@@ -220,6 +234,7 @@ function archiveCurrentMonth() {
   }
   
   transactions = [];
+  lastPaymentMonth = null;
   saveData();
 }
 
@@ -392,9 +407,15 @@ function renderFinanzas() {
     
     <!-- Pagar Cuentas Button -->
     <div class="card">
-      <button class="btn btn--primary btn--block" id="payCuentasBtn">
-        💸 Pagar Cuentas (Fijos + Cuotas)
-      </button>
+      ${lastPaymentMonth === currentMonth ? `
+        <button class="btn btn--secondary btn--block" disabled>
+          ✓ Cuentas Pagadas Este Mes
+        </button>
+      ` : `
+        <button class="btn btn--primary btn--block" id="payCuentasBtn">
+          💸 Pagar Cuentas (Fijos + Cuotas)
+        </button>
+      `}
     </div>
     
     <!-- Actions -->
