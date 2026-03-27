@@ -600,8 +600,8 @@ function switchToSubsection(subsection) {
 }
 
 function renderMenu() {
-  // Update both menu and nav
-  document.querySelectorAll('.menu-item, .nav__item').forEach(item => {
+  // Update menu items active state
+  document.querySelectorAll('.menu-item').forEach(item => {
     const section = item.dataset.section;
     item.classList.toggle('active', section === currentSection);
   });
@@ -1656,14 +1656,6 @@ function init() {
       currentSection = item.dataset.section;
       document.getElementById('hamburgerMenu').classList.remove('visible');
       document.getElementById('menuOverlay').classList.remove('visible');
-      render();
-    };
-  });
-  
-  // Bottom nav item clicks
-  document.querySelectorAll('.nav__item').forEach(item => {
-    item.onclick = () => {
-      currentSection = item.dataset.section;
       render();
     };
   });
