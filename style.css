@@ -421,7 +421,7 @@ body {
 .transaction-item {
   display: flex;
   align-items: center;
-  gap: var(--space-md);
+  gap: 12px;
   padding: var(--space-md);
   background: var(--gray-50);
   border-radius: var(--radius);
@@ -456,8 +456,9 @@ body {
   font-size: 0.9375rem;
   font-weight: 500;
   color: var(--gray-900);
-  white-space: normal;
-  word-break: break-word;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .transaction-item__date {
@@ -470,9 +471,9 @@ body {
   font-size: 1rem;
   font-weight: 700;
   flex-shrink: 0;
-  min-width: 60px;
+  min-width: 80px;
   text-align: right;
-  margin-left: auto;
+  margin-left: 8px;
 }
 
 .transaction-item__amount--gasto { color: var(--danger); }
