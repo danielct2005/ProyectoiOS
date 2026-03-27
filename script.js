@@ -301,7 +301,7 @@ const sectionTitles = {
 };
 
 function render() {
-  renderNavigation();
+  // renderNavigation removed - functionality moved to init()
   renderMenu();
   
   // Update header title
@@ -1326,6 +1326,14 @@ function init() {
       currentSection = item.dataset.section;
       document.getElementById('hamburgerMenu').classList.remove('visible');
       document.getElementById('menuOverlay').classList.remove('visible');
+      render();
+    };
+  });
+  
+  // Bottom nav item clicks
+  document.querySelectorAll('.nav__item').forEach(item => {
+    item.onclick = () => {
+      currentSection = item.dataset.section;
       render();
     };
   });
