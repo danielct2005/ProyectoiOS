@@ -178,43 +178,64 @@ function payAllCuentas() {
   const total = fixedTotal + debtsMonthly;
   
   if (total === 0) {
-    alert('No hay cuentas por pagar');
+    Swal.fire({
+      title: 'Sin cuentas',
+      text: 'No hay cuentas por pagar',
+      icon: 'info'
+    });
     return;
   }
   
   // Check if already paid this month
   if (lastPaymentMonth === currentMonth) {
-    alert('Ya pagaste las cuentas este mes');
+    Swal.fire({
+      title: '¡Ya pagaste!',
+      text: 'Las cuentas de este mes ya fueron pagadas',
+      icon: 'warning'
+    });
     return;
   }
   
-  if (!confirm(`¿Pagar todas las cuentas?\n\n📅 Fijos: ${formatCurrency(fixedTotal)}\n💳 Cuotas: ${formatCurrency(debtsMonthly)}\n\nTotal: ${formatCurrency(total)}`)) {
-    return;
-  }
-  
-  // Agregar movimiento de gasto por cada cuenta fija
-  fixedExpenses.forEach(expense => {
-    transactions.unshift({
-      id: generateId(),
-      amount: expense.amount,
-      description: `Pago ${expense.name}`,
-      type: 'gasto',
-      date: new Date().toISOString()
+  Swal.fire({
+    title: '¿Pagar todas las cuentas?',
+    html: `📅 Fijos: ${formatCurrency(fixedTotal)}<br>💳 Cuotas: ${formatCurrency(debtsMonthly)}<br><br><strong>Total: ${formatCurrency(total)}</strong>`,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonText: 'Sí, pagar',
+    cancelButtonText: 'Cancelar'
+  }).then((result) => {
+    if (!result.isConfirmed) return;
+    
+    // Agregar movimiento de gasto por cada cuenta fija
+    fixedExpenses.forEach(expense => {
+      transactions.unshift({
+        id: generateId(),
+        amount: expense.amount,
+        description: `Pago ${expense.name}`,
+        type: 'gasto',
+        date: new Date().toISOString()
+      });
+    });
+    
+    // Actualizar cuotas pagadas en deudas
+    debts.forEach(debt => {
+      if (debt.paidInstallments < debt.totalInstallments) {
+        debt.paidInstallments++;
+      }
+    });
+    
+    // Mark as paid this month
+    lastPaymentMonth = currentMonth;
+    
+    saveData();
+    render();
+    
+    Swal.fire({
+      title: '¡Pagado!',
+      text: 'Las cuentas han sido pagadas',
+      icon: 'success'
     });
   });
-  
-  // Actualizar cuotas pagadas en deudas
-  debts.forEach(debt => {
-    if (debt.paidInstallments < debt.totalInstallments) {
-      debt.paidInstallments++;
-    }
-  });
-  
-  // Mark as paid this month
-  lastPaymentMonth = currentMonth;
-  
-  saveData();
-  render();
 }
 
 // ===== MONTH MANAGEMENT =====
@@ -443,10 +464,24 @@ function renderFinanzas() {
     });
     
     document.getElementById('archiveMonthBtn').onclick = () => {
-      if (confirm('¿Archivar este mes? Los movimientos se guardarán en historial y começarás un nuevo mes.')) {
-        archiveCurrentMonth();
-        render();
-      }
+      Swal.fire({
+        title: '¿Archivar mes?',
+        text: 'Los movimientos se guardarán en historial y comenzarás un nuevo mes',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, archivar',
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          archiveCurrentMonth();
+          render();
+          Swal.fire({
+            title: '¡Archivado!',
+            text: 'El mes ha sido guardado en historial',
+            icon: 'success'
+          });
+        }
+      });
     };
     
     document.getElementById('payCuentasBtn').onclick = () => {
@@ -828,16 +863,23 @@ function renderDeudas() {
     document.querySelectorAll('.delete-card-btn').forEach(btn => {
       btn.onclick = (e) => {
         e.stopPropagation();
-        if (confirm('¿Eliminar esta tarjeta? Las deudas asociadas se moverán a "Sin tarjeta"')) {
+        Swal.fire({
+          title: '¿Eliminar tarjeta?',
+          text: 'Las deudas asociadas se moverán a "Sin tarjeta"',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Sí, eliminar',
+          cancelButtonText: 'Cancelar'
+        }).then((result) => {
+          if (!result.isConfirmed) return;
           const cardId = btn.dataset.delete;
-          // Move debts to no card
           debts.forEach(d => {
             if (d.cardId === cardId) d.cardId = 'none';
           });
           creditCards = creditCards.filter(c => c.id !== cardId);
           saveData();
           render();
-        }
+        });
       };
     });
     
@@ -1012,12 +1054,20 @@ function handleFormSubmit(e) {
   const description = document.getElementById('description').value.trim();
   
   if (!amount || amount <= 0) {
-    alert('Ingresa un monto válido');
+    Swal.fire({
+      title: 'Monto inválido',
+      text: 'Por favor ingresa un monto válido',
+      icon: 'error'
+    });
     return;
   }
   
   if (!description) {
-    alert('Ingresa una descripción');
+    Swal.fire({
+      title: 'Descripción requerida',
+      text: 'Por favor ingresa una descripción',
+      icon: 'error'
+    });
     return;
   }
   
@@ -1042,14 +1092,31 @@ function deleteTransaction(id) {
 }
 
 function clearAllData() {
-  if (confirm('¿Borrar todos los datos? Esta acción no se puede deshacer.')) {
-    transactions = [];
-    fixedExpenses = [];
-    debts = [];
-    history = {};
-    saveData();
-    render();
-  }
+  Swal.fire({
+    title: '¿Borrar todos los datos?',
+    text: 'Esta acción no se puede deshacer',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Sí, borrar todo',
+    cancelButtonText: 'Cancelar',
+    confirmButtonColor: '#ff3b30'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      transactions = [];
+      fixedExpenses = [];
+      debts = [];
+      creditCards = [];
+      history = {};
+      lastPaymentMonth = null;
+      saveData();
+      render();
+      Swal.fire({
+        title: '¡Borrado!',
+        text: 'Todos los datos han sido eliminados',
+        icon: 'success'
+      });
+    }
+  });
 }
 
 // ===== INITIALIZATION =====
@@ -1082,18 +1149,6 @@ function updateDarkMode() {
   } else {
     body.classList.remove('dark-mode');
     if (btn) btn.textContent = '🌙';
-  }
-}
-
-function clearAllData() {
-  if (confirm('¿Borrar todos los datos? Esta acción no se puede deshacer.')) {
-    transactions = [];
-    fixedExpenses = [];
-    debts = [];
-    creditCards = [];
-    history = {};
-    saveData();
-    render();
   }
 }
 
