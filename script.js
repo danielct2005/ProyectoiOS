@@ -421,7 +421,6 @@ function renderFinanzas() {
               ${t.type === 'gasto' ? '-' : '+'}${formatCurrency(t.amount)}
             </div>
             <button class="edit-debt-btn" data-edit="${t.id}">⋮</button>
-            <button class="transaction-item__delete" data-delete="${t.id}">🗑️</button>
           </div>
         `).join('')}
       </div>
@@ -446,6 +445,37 @@ function renderFinanzas() {
         📦 Archivar Mes y Nuevo
       </button>
     </div>
+    
+    <!-- Modal Editar Movimiento -->
+    <div class="modal" id="editTransactionModal">
+      <div class="modal__backdrop"></div>
+      <div class="modal__content">
+        <h3 class="modal__title">Editar Movimiento</h3>
+        <form id="editTransactionForm">
+          <input type="hidden" id="editTransactionId">
+          <div class="form-group">
+            <label class="form-label">Tipo</label>
+            <div class="type-selector">
+              <button type="button" class="type-btn" data-type="gasto" id="editTypeGasto">💸 Gasto</button>
+              <button type="button" class="type-btn" data-type="ingreso" id="editTypeIngreso">💚 Ingreso</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="editTransactionAmount">Monto</label>
+            <input type="number" id="editTransactionAmount" class="form-input" required inputmode="numeric">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="editTransactionDesc">Descripción</label>
+            <input type="text" id="editTransactionDesc" class="form-input" required>
+          </div>
+          <div class="modal__actions">
+            <button type="button" class="btn btn--danger" id="deleteTransactionBtn">🗑️ Eliminar</button>
+            <button type="submit" class="btn btn--primary">Guardar</button>
+          </div>
+          <button type="button" class="btn btn--secondary btn--block mt-1" id="cancelEditTransactionBtn">Cancelar</button>
+        </form>
+      </div>
+    </div>
   `;
   
   // Event listeners with setTimeout to ensure DOM is ready
@@ -457,48 +487,82 @@ function renderFinanzas() {
     
     document.getElementById('transactionForm').onsubmit = handleFormSubmit;
     
-    document.querySelectorAll('#transactionList [data-delete]').forEach(btn => {
-      btn.onclick = (e) => {
-        e.stopPropagation();
-        const transaction = transactions.find(t => t.id === btn.dataset.delete);
-        Swal.fire({
-          title: '¿Eliminar movimiento?',
-          text: transaction ? `"${transaction.description}"` : 'Este movimiento',
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonText: 'Sí, eliminar',
-          cancelButtonText: 'Cancelar',
-          confirmButtonColor: '#ff3b30'
-        }).then((result) => {
-          if (result.isConfirmed) {
-            deleteTransaction(btn.dataset.delete);
-          }
-        });
-      };
-    });
-    
-    // Edit transaction button
+    // Edit transaction button - open modal
     document.querySelectorAll('#transactionList [data-edit]').forEach(btn => {
       btn.onclick = (e) => {
         e.stopPropagation();
         const transaction = transactions.find(t => t.id === btn.dataset.edit);
         if (transaction) {
-          document.getElementById('amount').value = transaction.amount;
-          document.getElementById('description').value = transaction.description;
+          document.getElementById('editTransactionId').value = transaction.id;
+          document.getElementById('editTransactionAmount').value = transaction.amount;
+          document.getElementById('editTransactionDesc').value = transaction.description;
           
-          // Set the correct type
-          if (transaction.type === 'gasto') {
-            handleTypeChange('gasto');
-          } else {
-            handleTypeChange('ingreso');
-          }
+          // Set type buttons
+          document.getElementById('editTypeGasto').classList.toggle('active', transaction.type === 'gasto');
+          document.getElementById('editTypeIngreso').classList.toggle('active', transaction.type === 'ingreso');
           
-          // Delete the old one
-          deleteTransaction(transaction.id);
-          document.getElementById('amount').focus();
+          document.getElementById('editTransactionModal').classList.add('visible');
         }
       };
     });
+    
+    // Close modal handlers
+    document.getElementById('cancelEditTransactionBtn').onclick = () => {
+      document.getElementById('editTransactionModal').classList.remove('visible');
+    };
+    
+    document.querySelector('#editTransactionModal .modal__backdrop').onclick = () => {
+      document.getElementById('editTransactionModal').classList.remove('visible');
+    };
+    
+    // Edit type buttons in modal
+    document.getElementById('editTypeGasto').onclick = () => {
+      document.getElementById('editTypeGasto').classList.add('active');
+      document.getElementById('editTypeIngreso').classList.remove('active');
+    };
+    
+    document.getElementById('editTypeIngreso').onclick = () => {
+      document.getElementById('editTypeIngreso').classList.add('active');
+      document.getElementById('editTypeGasto').classList.remove('active');
+    };
+    
+    // Save edited transaction
+    document.getElementById('editTransactionForm').onsubmit = (e) => {
+      e.preventDefault();
+      const id = document.getElementById('editTransactionId').value;
+      const amount = parseInt(document.getElementById('editTransactionAmount').value);
+      const description = document.getElementById('editTransactionDesc').value.trim();
+      const type = document.getElementById('editTypeGasto').classList.contains('active') ? 'gasto' : 'ingreso';
+      
+      const idx = transactions.findIndex(t => t.id === id);
+      if (idx >= 0 && amount > 0 && description) {
+        transactions[idx] = { ...transactions[idx], amount, description, type };
+        saveData();
+        document.getElementById('editTransactionModal').classList.remove('visible');
+        render();
+        Swal.fire({ title: '¡Guardado!', text: 'Movimiento actualizado', icon: 'success' });
+      }
+    };
+    
+    // Delete transaction from modal
+    document.getElementById('deleteTransactionBtn').onclick = () => {
+      const id = document.getElementById('editTransactionId').value;
+      Swal.fire({
+        title: '¿Eliminar movimiento?',
+        text: 'Esta acción no se puede deshacer',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar',
+        confirmButtonColor: '#ff3b30'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          deleteTransaction(id);
+          document.getElementById('editTransactionModal').classList.remove('visible');
+          render();
+        }
+      });
+    };
     
     document.getElementById('archiveMonthBtn').onclick = () => {
       Swal.fire({
