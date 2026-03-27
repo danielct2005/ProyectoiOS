@@ -72,23 +72,24 @@ function formatCurrency(amount) {
  */
 function addThousandsSeparator(input) {
   input.addEventListener('input', function(e) {
+    // Guardar posición del cursor
+    const cursorPos = this.selectionStart;
+    const oldLength = this.value.length;
+    
     // Remover todo excepto dígitos
-    let value = this.value.replace(/\D/g, '');
+    let value = this.value.replace(/[^\d]/g, '');
+    
     if (value) {
-      // Formatear con puntos
-      let formatted = '';
-      let count = 0;
-      for (let i = value.length - 1; i >= 0; i--) {
-        if (count > 0 && count % 3 === 0) {
-          formatted = '.' + formatted;
-        }
-        formatted = value[i] + formatted;
-        count++;
-      }
-      this.value = formatted;
+      // Formatear con puntos usando regex
+      this.value = value.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
     } else {
       this.value = '';
     }
+    
+    // Ajustar posición del cursor
+    const newLength = this.value.length;
+    const newPos = cursorPos + (newLength - oldLength);
+    this.setSelectionRange(newPos, newPos);
   });
 }
 
