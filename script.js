@@ -479,6 +479,16 @@ function renderAgendaLista(container) {
         const date = document.getElementById('dateDesc').value.trim();
         const notes = document.getElementById('dateNotes').value.trim();
         
+        // Validar campos requeridos
+        if (!title) {
+          Swal.fire({ title: 'Título requerido', text: 'Por favor ingresa un título', icon: 'error' });
+          return;
+        }
+        if (!date) {
+          Swal.fire({ title: 'Fecha requerida', text: 'Por favor ingresa una fecha', icon: 'error' });
+          return;
+        }
+        
         if (editId) {
           const idx = importantDates.findIndex(d => d.id === editId);
           if (idx >= 0) importantDates[idx] = { ...importantDates[idx], title, date, notes };
@@ -868,11 +878,20 @@ function renderBilletera() {
       const id = document.getElementById('editTransactionId').value;
       const amount = parseInt(document.getElementById('editTransactionAmount').value);
       const description = document.getElementById('editTransactionDesc').value.trim();
-      const type = document.getElementById('editTypeGasto').classList.contains('active') ? 'gasto' : 'ingreso';
+      
+      // Validar monto
+      if (!amount || amount <= 0) {
+        Swal.fire({ title: 'Monto inválido', text: 'Por favor ingresa un monto válido', icon: 'error' });
+        return;
+      }
+      if (!description) {
+        Swal.fire({ title: 'Descripción requerida', text: 'Por favor ingresa una descripción', icon: 'error' });
+        return;
+      }
       
       const idx = transactions.findIndex(t => t.id === id);
       if (idx >= 0 && amount > 0 && description) {
-        transactions[idx] = { ...transactions[idx], amount, description, type };
+        transactions[idx] = { ...transactions[idx], amount, description, type: document.getElementById('editTypeGasto').classList.contains('active') ? 'gasto' : 'ingreso' };
         saveData();
         document.getElementById('editTransactionModal').classList.remove('visible');
         render();
@@ -1060,6 +1079,12 @@ function renderFijos() {
         const editId = document.getElementById('fixedEditId').value;
         const name = document.getElementById('fixedName').value.trim();
         const amount = parseInt(document.getElementById('fixedAmount').value);
+        
+        // Validar nombre
+        if (!name) {
+          Swal.fire({ title: 'Nombre requerido', text: 'Por favor ingresa un nombre', icon: 'error' });
+          return;
+        }
         
         // Validar monto
         if (!amount || amount <= 0) {
@@ -1354,6 +1379,12 @@ function renderDeudas() {
       const totalAmount = parseInt(document.getElementById('debtTotal').value);
       const totalInstallments = parseInt(document.getElementById('debtInstallments').value);
       
+      // Validar producto
+      if (!product) {
+        Swal.fire({ title: 'Producto requerido', text: 'Por favor ingresa un producto', icon: 'error' });
+        return;
+      }
+      
       // Validaciones
       if (!totalAmount || totalAmount <= 0) {
         Swal.fire({ title: 'Monto inválido', text: 'Ingresa un monto válido', icon: 'error' });
@@ -1442,13 +1473,30 @@ function renderDeudas() {
       const debtId = document.getElementById('editDebtId').value;
       const idx = debts.findIndex(d => d.id === debtId);
       if (idx >= 0) {
+        const product = document.getElementById('editDebtProduct').value.trim();
         const totalAmount = parseInt(document.getElementById('editDebtTotal').value);
         const totalInstallments = parseInt(document.getElementById('editDebtInstallments').value);
+        
+        // Validar producto
+        if (!product) {
+          Swal.fire({ title: 'Producto requerido', text: 'Por favor ingresa un producto', icon: 'error' });
+          return;
+        }
+        
+        // Validaciones
+        if (!totalAmount || totalAmount <= 0) {
+          Swal.fire({ title: 'Monto inválido', text: 'Ingresa un monto válido', icon: 'error' });
+          return;
+        }
+        if (!totalInstallments || totalInstallments < 1) {
+          Swal.fire({ title: 'Cuotas inválidas', text: 'Ingresa al menos 1 cuota', icon: 'error' });
+          return;
+        }
         
         debts[idx] = {
           ...debts[idx],
           cardId: document.getElementById('editDebtCard').value,
-          product: document.getElementById('editDebtProduct').value.trim(),
+          product: product,
           totalAmount,
           totalInstallments,
           installmentAmount: Math.round(totalAmount / totalInstallments)
@@ -1805,6 +1853,16 @@ function renderAgenda() {
       const title = document.getElementById('dateTitle').value.trim();
       const date = document.getElementById('dateDesc').value.trim();
       const notes = document.getElementById('dateNotes').value.trim();
+      
+      // Validar campos requeridos
+      if (!title) {
+        Swal.fire({ title: 'Título requerido', text: 'Por favor ingresa un título', icon: 'error' });
+        return;
+      }
+      if (!date) {
+        Swal.fire({ title: 'Fecha requerida', text: 'Por favor ingresa una fecha', icon: 'error' });
+        return;
+      }
       
       if (editId) {
         const idx = importantDates.findIndex(d => d.id === editId);
