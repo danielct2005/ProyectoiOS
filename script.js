@@ -11,7 +11,7 @@ const MAX_TRANSACTIONS = 20;
 // ===== STATE =====
 let currentSection = 'finanzas';
 let currentSubsection = 'billetera';
-let agendaSubsection = 'calendario';
+let agendaSubsection = 'lista';
 let currentMonth = getCurrentMonthKey();
 let transactions = [];
 let fixedExpenses = [];
@@ -932,7 +932,6 @@ function renderBilletera() {
 function renderFijos() {
   const main = document.querySelector('.main');
   const total = calculateFixedExpensesTotal();
-  console.log('Rendering Fijos, total:', total, 'items:', fixedExpenses.length);
   
   main.innerHTML = `
     <div class="section-header">
@@ -1110,7 +1109,6 @@ function renderDeudas() {
   const main = document.querySelector('.main');
   const totalDebt = calculateDebtsTotal();
   const monthlyInstallments = calculateDebtsMonthly();
-  console.log('Rendering Deudas, total:', totalDebt, 'items:', debts.length);
   
   // Get card name by ID
   const getCardName = (cardId) => {
@@ -1660,7 +1658,7 @@ function init() {
     };
   });
   
-  console.log('💰 App de Finanzas inicializada');
+  console.log('App inicializada');
 }
 
 function updateDarkMode() {
