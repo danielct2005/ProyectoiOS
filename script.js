@@ -1508,7 +1508,7 @@ function renderDeudas() {
     });
     
     // Touch/click on debt item - show edit modal
-    document.querySelectorAll('#deudasList .transaction-item').forEach(item => {
+    document.querySelectorAll('.debt-group .transaction-item').forEach(item => {
       item.onclick = () => {
         const debtId = item.dataset.edit;
         const debt = debts.find(d => d.id === debtId);
@@ -1572,7 +1572,7 @@ function renderDeudas() {
     
     // Delete debt - long press
     let debtLongPressTimer;
-    document.querySelectorAll('#deudasList .transaction-item').forEach(item => {
+    document.querySelectorAll('.debt-group .transaction-item').forEach(item => {
       item.oncontextmenu = (e) => {
         e.preventDefault();
         Swal.fire({
