@@ -94,6 +94,15 @@ function addThousandsSeparator(input) {
 }
 
 /**
+ * Solo permite dígitos
+ */
+function digitsOnly(input) {
+  input.addEventListener('input', function(e) {
+    this.value = this.value.replace(/[^\d]/g, '');
+  });
+}
+
+/**
  * Formatea una fecha
  */
 function formatDate(dateString) {
@@ -1397,7 +1406,7 @@ function renderDeudas() {
           </div>
           <div class="form-group">
             <label class="form-label" for="debtInstallments">Cantidad de Cuotas</label>
-            <input type="number" id="debtInstallments" class="form-input" placeholder="12" min="1" max="48" required inputmode="numeric">
+            <input type="text" id="debtInstallments" class="form-input" placeholder="12" inputmode="numeric">
           </div>
           <div class="modal__actions">
             <button type="button" class="btn btn--secondary" id="cancelDebtBtn">Cancelar</button>
@@ -1455,7 +1464,7 @@ function renderDeudas() {
           </div>
           <div class="form-group">
             <label class="form-label" for="editDebtInstallments">Total de Cuotas</label>
-            <input type="number" id="editDebtInstallments" class="form-input" required inputmode="numeric">
+            <input type="text" id="editDebtInstallments" class="form-input" inputmode="numeric">
           </div>
           <div class="form-group">
             <label class="form-label" for="editDebtPaidInstallments">Cuotas Pagadas</label>
@@ -1481,6 +1490,9 @@ function renderDeudas() {
     // Formatear inputs con separador de miles
     addThousandsSeparator(document.getElementById('debtTotal'));
     addThousandsSeparator(document.getElementById('editDebtTotal'));
+    digitsOnly(document.getElementById('debtInstallments'));
+    digitsOnly(document.getElementById('editDebtInstallments'));
+    digitsOnly(document.getElementById('editDebtPaidInstallments'));
     
     // Manage cards button
     document.getElementById('manageCardsBtn').onclick = () => {
@@ -1546,8 +1558,8 @@ function renderDeudas() {
         Swal.fire({ title: 'Monto inválido', text: 'Ingresa un monto válido', icon: 'error' });
         return;
       }
-      if (!totalInstallments || totalInstallments < 1) {
-        Swal.fire({ title: 'Cuotas inválidas', text: 'Ingresa al menos 1 cuota', icon: 'error' });
+      if (!totalInstallments || totalInstallments < 1 || totalInstallments > 48) {
+        Swal.fire({ title: 'Cuotas inválidas', text: 'Ingresa entre 1 y 48 cuotas', icon: 'error' });
         return;
       }
       
@@ -1647,8 +1659,8 @@ function renderDeudas() {
           Swal.fire({ title: 'Monto inválido', text: 'Ingresa un monto válido', icon: 'error' });
           return;
         }
-        if (!totalInstallments || totalInstallments < 1) {
-          Swal.fire({ title: 'Cuotas inválidas', text: 'Ingresa al menos 1 cuota', icon: 'error' });
+        if (!totalInstallments || totalInstallments < 1 || totalInstallments > 48) {
+          Swal.fire({ title: 'Cuotas inválidas', text: 'Ingresa entre 1 y 48 cuotas', icon: 'error' });
           return;
         }
         if (paidInstallments < 0 || paidInstallments > totalInstallments) {
