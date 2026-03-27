@@ -262,33 +262,43 @@ function payAllCuentas() {
   }).then((result) => {
     if (!result.isConfirmed) return;
     
-    // Agregar movimiento de gasto por cada cuenta fija
-    fixedExpenses.forEach(expense => {
+    // Agregar movimiento agrupado de fijos (solo uno)
+    if (fixedTotal > 0) {
+      const fixedDetails = fixedExpenses.map(e => e.name).join(', ');
       transactions.unshift({
         id: generateId(),
-        amount: expense.amount,
-        description: `Pago ${expense.name}`,
+        amount: fixedTotal,
+        description: `📅 Pagos Fijos (${fixedExpenses.length})`,
         type: 'gasto',
-        date: new Date().toISOString()
+        date: new Date().toISOString(),
+        details: fixedExpenses.map(e => ({ name: e.name, amount: e.amount }))
       });
-    });
+    }
     
-    // Agregar movimiento de gasto por cada cuota de deuda
-    debts.forEach(debt => {
-      if (debt.paidInstallments < debt.totalInstallments) {
-        // Agregar gasto de la cuota
-        transactions.unshift({
-          id: generateId(),
-          amount: debt.installmentAmount,
-          description: `Cuota ${debt.paidInstallments + 1}/${debt.totalInstallments} - ${debt.product}`,
-          type: 'gasto',
-          date: new Date().toISOString()
-        });
-        
-        // Actualizar cuotas pagadas
-        debt.paidInstallments++;
-      }
-    });
+    // Agregar movimiento agrupado de deudas (solo uno)
+    if (debtsMonthly > 0) {
+      const activeDebts = debts.filter(d => d.paidInstallments < d.totalInstallments);
+      transactions.unshift({
+        id: generateId(),
+        amount: debtsMonthly,
+        description: `💳 Cuotas Deudas (${activeDebts.length})`,
+        type: 'gasto',
+        date: new Date().toISOString(),
+        details: activeDebts.map(d => ({ 
+          product: d.product, 
+          amount: d.installmentAmount,
+          cuota: d.paidInstallments + 1,
+          total: d.totalInstallments
+        }))
+      });
+      
+      // Actualizar cuotas pagadas
+      debts.forEach(debt => {
+        if (debt.paidInstallments < debt.totalInstallments) {
+          debt.paidInstallments++;
+        }
+      });
+    }
     
     // Mark as paid this month
     lastPaymentMonth = currentMonth;
@@ -843,7 +853,7 @@ function renderBilletera() {
             <p class="empty-state__text">Sin movimientos</p>
           </div>
         ` : transactions.slice(0, MAX_TRANSACTIONS).map(t => `
-          <div class="transaction-item" data-id="${t.id}" data-edit="${t.id}">
+          <div class="transaction-item ${t.details ? 'has-details' : ''}" data-id="${t.id}" data-edit="${t.id}" ${t.details ? 'data-details="' + encodeURIComponent(JSON.stringify(t.details)) + '"' : ''}>
             <div class="transaction-item__icon transaction-item__icon--${t.type}">
               ${t.type === 'gasto' ? '📉' : '📈'}
             </div>
@@ -933,6 +943,25 @@ function renderBilletera() {
         e.stopPropagation();
         const transaction = transactions.find(t => t.id === btn.dataset.edit);
         if (transaction) {
+          // Si tiene detalles, mostrar modal de detalles
+          if (transaction.details) {
+            let detailsHtml = '';
+            if (transaction.details[0].name) {
+              // Es un gasto fijo
+              detailsHtml = transaction.details.map(d => `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee;"><span>${d.name}</span><span>${formatCurrency(d.amount)}</span></div>`).join('');
+            } else {
+              // Es una cuota de deuda
+              detailsHtml = transaction.details.map(d => `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee;"><span>${d.product} (Cuota ${d.cuota}/${d.total})</span><span>${formatCurrency(d.amount)}</span></div>`).join('');
+            }
+            Swal.fire({
+              title: transaction.description,
+              html: `<div style="text-align:left;">${detailsHtml}</div><div style="margin-top:15px;font-weight:bold;text-align:right;">Total: ${formatCurrency(transaction.amount)}</div>`,
+              icon: 'info'
+            });
+            return;
+          }
+          
+          // Si no tiene detalles, abrir modal de edición
           document.getElementById('editTransactionId').value = transaction.id;
           document.getElementById('editTransactionAmount').value = transaction.amount;
           document.getElementById('editTransactionDesc').value = transaction.description;
