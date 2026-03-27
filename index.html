@@ -4,12 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   
-  <!-- Primary Meta Tags -->
   <title>Mis Finanzas</title>
   <meta name="title" content="Mis Finanzas - Gestión Personal">
-  <meta name="description" content="App personal de gestión de finanzas y agenda">
+  <meta name="description" content="App personal de gestión de finanzas">
   
-  <!-- PWA Meta Tags -->
   <meta name="theme-color" content="#007aff">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -19,142 +17,50 @@
   <meta name="msapplication-TileColor" content="#007aff">
   <meta name="msapplication-tap-highlight" content="no">
   
-  <!-- Favicon & Icons -->
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23007aff' width='100' height='100' rx='20'/><text x='50' y='65' font-size='50' text-anchor='middle' fill='white'>💰</text></svg>">
   <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23007aff' width='100' height='100' rx='20'/><text x='50' y='65' font-size='50' text-anchor='middle' fill='white'>💰</text></svg>">
   
-  <!-- PWA Manifest -->
   <link rel="manifest" href="manifest.json">
-  
-  <!-- Styles -->
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- Offline Banner -->
   <div class="offline-banner" id="offlineBanner">
     Sin conexión - Modo offline activo
   </div>
 
   <div class="app">
-    <!-- Header -->
     <header class="header">
       <div class="header__title">Mis Finanzas</div>
       <button class="header__btn" id="clearDataBtn" title="Borrar datos">🗑️</button>
     </header>
 
-    <!-- Main Content -->
     <main class="main">
-      <!-- Balance Card -->
-      <div class="balance-card">
-        <div class="balance-card__label">Saldo Total</div>
-        <div class="balance-card__amount" id="totalBalance">$0</div>
-        <div class="balance-card__info">
-          <span class="balance-card__income">💚 Ingresos: <span id="totalIncome">$0</span></span>
-          <span class="balance-card__expense">❤️ Gastos: <span id="totalExpense">$0</span></span>
-        </div>
-      </div>
-
-      <!-- Add Transaction Form -->
-      <div class="card">
-        <h3 class="card__title mb-2">Agregar Movimiento</h3>
-        <form id="transactionForm">
-          <div class="form-group">
-            <label class="form-label">Tipo</label>
-            <div class="type-selector">
-              <button type="button" class="type-btn active" data-type="gasto" id="typeGasto">
-                💸 Gasto
-              </button>
-              <button type="button" class="type-btn" data-type="ingreso" id="typeIngreso">
-                💚 Ingreso
-              </button>
-            </div>
-          </div>
-          
-          <div class="form-group">
-            <label class="form-label" for="amount">Monto</label>
-            <input 
-              type="number" 
-              id="amount" 
-              class="form-input" 
-              placeholder="0.00" 
-              min="0" 
-              step="0.01" 
-              required
-              inputmode="decimal"
-            >
-          </div>
-          
-          <div class="form-group">
-            <label class="form-label" for="description">Descripción</label>
-            <input 
-              type="text" 
-              id="description" 
-              class="form-input" 
-              placeholder="Ej: Mercado Libre cuota 2" 
-              maxlength="100"
-              required
-            >
-          </div>
-          
-          <button type="submit" class="btn btn--primary btn--block">
-            ➕ Agregar
-          </button>
-        </form>
-      </div>
-
-      <!-- Recent Transactions -->
-      <div class="card">
-        <div class="card__header">
-          <h3 class="card__title">Últimos Movimientos</h3>
-          <span class="card__badge" id="transactionCount">0</span>
-        </div>
-        
-        <div class="transaction-list" id="transactionList">
-          <!-- Transactions will be rendered here -->
-          <div class="empty-state" id="emptyState">
-            <span class="empty-state__icon">📝</span>
-            <p class="empty-state__text">No hay movimientos aún</p>
-            <p class="empty-state__hint">Agrega tu primer movimiento arriba</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Debug Info (solo desarrollo) -->
-      <div class="card mt-2" id="debugSection" style="display: none;">
-        <div class="card__header">
-          <div class="card__icon card__icon--orange">🔧</div>
-          <div>
-            <div class="card__title">Debug</div>
-            <div class="card__subtitle">Información técnica</div>
-          </div>
-        </div>
-        <div class="card__text text-muted" id="debugInfo">
-          <p>Cargando...</p>
-        </div>
-      </div>
+      <!-- Content will be rendered by JavaScript -->
     </main>
 
-    <!-- Bottom Navigation -->
     <nav class="nav">
-      <a href="#" class="nav__item nav__item--active" data-section="finanzas">
+      <a href="#" class="nav__item" data-section="finanzas">
         <span class="nav__icon">💰</span>
         <span>Finanzas</span>
       </a>
-      <a href="#" class="nav__item" data-section="agenda">
+      <a href="#" class="nav__item" data-section="fijos">
         <span class="nav__icon">📅</span>
-        <span>Agenda</span>
+        <span>Fijos</span>
       </a>
-      <a href="#" class="nav__item" data-section="ajustes">
-        <span class="nav__icon">⚙️</span>
-        <span>Ajustes</span>
+      <a href="#" class="nav__item" data-section="deudas">
+        <span class="nav__icon">💳</span>
+        <span>Deudas</span>
+      </a>
+      <a href="#" class="nav__item" data-section="historial">
+        <span class="nav__icon">📦</span>
+        <span>Historial</span>
       </a>
     </nav>
   </div>
 
-  <!-- Scripts -->
   <script src="script.js"></script>
   <script>
-    // ===== PWA Service Worker Registration =====
+    // Service Worker Registration
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', async () => {
         try {
@@ -166,11 +72,10 @@
       });
     }
 
-    // ===== Online/Offline Status =====
+    // Online/Offline Status
     const updateOnlineStatus = () => {
       const isOnline = navigator.onLine;
       const bannerEl = document.getElementById('offlineBanner');
-      
       if (isOnline) {
         bannerEl.classList.remove('visible');
       } else {
@@ -181,21 +86,6 @@
     window.addEventListener('online', updateOnlineStatus);
     window.addEventListener('offline', updateOnlineStatus);
     updateOnlineStatus();
-
-    // ===== Debug Info =====
-    const debugInfo = document.getElementById('debugInfo');
-    const debugSection = document.getElementById('debugSection');
-    
-    // Mostrar debug solo en desarrollo (localhost)
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      debugSection.style.display = 'block';
-      debugInfo.innerHTML = `
-        <p><strong>Service Worker:</strong> ${'serviceWorker' in navigator ? '✓' : '✗'}</p>
-        <p><strong>LocalStorage:</strong> ${typeof localStorage !== 'undefined' ? '✓' : '✗'}</p>
-        <p><strong>Display Mode:</strong> ${window.matchMedia('(display-mode: standalone)').matches ? 'standalone' : 'browser'}</p>
-        <p><strong>Online:</strong> ${navigator.onLine ? '✓' : '✗'}</p>
-      `;
-    }
   </script>
 </body>
 </html>
