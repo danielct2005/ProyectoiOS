@@ -420,9 +420,9 @@ body {
 
 .transaction-item {
   display: grid;
-  grid-template-columns: 40px 1fr auto;
-  gap: 12px;
-  padding: var(--space-md);
+  grid-template-columns: 36px 1fr auto;
+  gap: 8px;
+  padding: 10px;
   background: var(--gray-50);
   border-radius: var(--radius);
   transition: background 0.15s ease;

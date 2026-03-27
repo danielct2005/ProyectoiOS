@@ -450,13 +450,12 @@ function renderAgendaLista(container) {
             <p class="empty-state__hint">Agrega cumpleaños, pagos, etc.</p>
           </div>
         ` : importantDates.map(d => `
-          <div class="transaction-item" data-id="${d.id}">
+          <div class="transaction-item" data-id="${d.id}" data-edit="${d.id}">
             <div class="transaction-item__icon transaction-item__icon--gasto">🎉</div>
             <div class="transaction-item__content">
               <div class="transaction-item__desc">${escapeHtml(d.title)}</div>
               <div class="transaction-item__date">${d.date} ${d.notes ? '- ' + d.notes : ''}</div>
             </div>
-            <button class="edit-debt-btn" data-edit="${d.id}">⋮</button>
           </div>
         `).join('')}
       </div>
@@ -800,7 +799,7 @@ function renderBilletera() {
             <p class="empty-state__text">Sin movimientos</p>
           </div>
         ` : transactions.slice(0, MAX_TRANSACTIONS).map(t => `
-          <div class="transaction-item" data-id="${t.id}">
+          <div class="transaction-item" data-id="${t.id}" data-edit="${t.id}">
             <div class="transaction-item__icon transaction-item__icon--${t.type}">
               ${t.type === 'gasto' ? '📉' : '📈'}
             </div>
@@ -811,7 +810,6 @@ function renderBilletera() {
             <div class="transaction-item__amount transaction-item__amount--${t.type}">
               ${t.type === 'gasto' ? '-' : '+'}${formatCurrency(t.amount)}
             </div>
-            <button class="edit-debt-btn" data-edit="${t.id}">⋮</button>
           </div>
         `).join('')}
       </div>
@@ -1040,14 +1038,13 @@ function renderFijos() {
             <p class="empty-state__hint">Agrega Spotify, bencina, celular, etc.</p>
           </div>
         ` : sortedExpenses.map(e => `
-          <div class="transaction-item" data-id="${e.id}">
+          <div class="transaction-item" data-id="${e.id}" data-edit="${e.id}">
             <div class="transaction-item__icon transaction-item__icon--gasto">📅</div>
             <div class="transaction-item__content">
               <div class="transaction-item__desc">${escapeHtml(e.name)}</div>
               <div class="transaction-item__date">${e.category}${e.dueDate ? ' • Vence: ' + e.dueDate : ''}</div>
             </div>
             <div class="transaction-item__amount transaction-item__amount--gasto">${formatCurrency(e.amount)}</div>
-            <button class="edit-debt-btn" data-edit="${e.id}">⋮</button>
           </div>
         `).join('')}
       </div>
@@ -1510,11 +1507,10 @@ function renderDeudas() {
       };
     });
     
-    // Edit debt buttons
-    document.querySelectorAll('.edit-debt-btn').forEach(btn => {
-      btn.onclick = (e) => {
-        e.stopPropagation();
-        const debtId = btn.dataset.edit;
+    // Touch/click on debt item - show edit modal
+    document.querySelectorAll('#deudasList .transaction-item').forEach(item => {
+      item.onclick = () => {
+        const debtId = item.dataset.edit;
         const debt = debts.find(d => d.id === debtId);
         if (debt) {
           document.getElementById('editDebtId').value = debt.id;
@@ -1574,13 +1570,26 @@ function renderDeudas() {
       }
     };
     
-    // Delete debt
-    document.querySelectorAll('#deudasList [data-delete]').forEach(btn => {
-      btn.onclick = (e) => {
-        e.stopPropagation();
-        debts = debts.filter(d => d.id !== btn.dataset.delete);
-        saveData();
-        render();
+    // Delete debt - long press
+    let debtLongPressTimer;
+    document.querySelectorAll('#deudasList .transaction-item').forEach(item => {
+      item.oncontextmenu = (e) => {
+        e.preventDefault();
+        Swal.fire({
+          title: '¿Eliminar deuda?',
+          text: 'Esta acción no se puede deshacer',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Sí, eliminar',
+          cancelButtonText: 'Cancelar',
+          confirmButtonColor: '#ff3b30'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            debts = debts.filter(d => d.id !== item.dataset.delete);
+            saveData();
+            render();
+          }
+        });
       };
     });
   }, 100);
@@ -1590,15 +1599,13 @@ function renderDeudas() {
 function buildDebtItemHtml(d) {
   const isComplete = (d.paidInstallments || 0) >= d.totalInstallments;
   return `
-    <div class="transaction-item ${isComplete ? 'transaction-item--complete' : ''}" data-id="${d.id}">
+    <div class="transaction-item ${isComplete ? 'transaction-item--complete' : ''}" data-id="${d.id}" data-edit="${d.id}" data-delete="${d.id}">
       <div class="transaction-item__icon transaction-item__icon--gasto">💳</div>
       <div class="transaction-item__content">
         <div class="transaction-item__desc">${escapeHtml(d.product)}</div>
         <div class="transaction-item__date ${isComplete ? 'text-success' : ''}">${d.paidInstallments || 0}/${d.totalInstallments} cuotas (${formatCurrency(d.installmentAmount)})${isComplete ? ' ✓ Pagado' : ''}</div>
       </div>
       <div class="transaction-item__amount transaction-item__amount--gasto">${formatCurrency(d.totalAmount)}</div>
-      ${!isComplete ? `<button class="edit-debt-btn" data-edit="${d.id}">⋮</button>` : ''}
-      <button class="transaction-item__delete" data-delete="${d.id}">🗑️</button>
     </div>
   `;
 }
@@ -1853,13 +1860,12 @@ function renderAgenda() {
             <p class="empty-state__hint">Agrega cumpleaños, pagos, etc.</p>
           </div>
         ` : importantDates.map(d => `
-          <div class="transaction-item" data-id="${d.id}">
+          <div class="transaction-item" data-id="${d.id}" data-edit="${d.id}">
             <div class="transaction-item__icon transaction-item__icon--gasto">🎉</div>
             <div class="transaction-item__content">
               <div class="transaction-item__desc">${escapeHtml(d.title)}</div>
               <div class="transaction-item__date">${d.date} ${d.notes ? '- ' + d.notes : ''}</div>
             </div>
-            <button class="edit-debt-btn" data-edit="${d.id}">⋮</button>
           </div>
         `).join('')}
       </div>
