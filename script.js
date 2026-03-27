@@ -68,6 +68,19 @@ function formatCurrency(amount) {
 }
 
 /**
+ * Agrega separador de miles mientras escribe
+ */
+function addThousandsSeparator(input) {
+  input.addEventListener('input', function(e) {
+    let value = this.value.replace(/\D/g, '');
+    if (value) {
+      value = parseInt(value).toString();
+      this.value = formatNumber(value);
+    }
+  });
+}
+
+/**
  * Formatea una fecha
  */
 function formatDate(dateString) {
@@ -886,6 +899,10 @@ function renderBilletera() {
     // Formatear input de monto con separador de miles
 
     
+    // Separador de miles en inputs
+    addThousandsSeparator(document.getElementById('amount'));
+    addThousandsSeparator(document.getElementById('editTransactionAmount'));
+    
     document.getElementById('transactionForm').onsubmit = handleFormSubmit;
     
     // Edit transaction button - open modal
@@ -1097,6 +1114,9 @@ function renderFijos() {
   
   // Event listeners - usar setTimeout para asegurar DOM actualizado
   setTimeout(() => {
+    // Separador de miles en inputs
+    addThousandsSeparator(document.getElementById('fixedAmount'));
+    
     const addBtn = document.getElementById('addFixedBtn');
     const cancelBtn = document.getElementById('cancelFixedBtn');
     const backdrop = document.querySelector('#fixedModal .modal__backdrop');
@@ -1418,7 +1438,8 @@ function renderDeudas() {
     };
     
     // Formatear inputs con separador de miles
-
+    addThousandsSeparator(document.getElementById('debtTotal'));
+    addThousandsSeparator(document.getElementById('editDebtTotal'));
     
     // Manage cards button
     document.getElementById('manageCardsBtn').onclick = () => {
