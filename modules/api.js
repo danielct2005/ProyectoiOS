@@ -7,6 +7,8 @@
 // ==================== CONSTANTS ====================
 
 const API_BASE_URL = 'https://mindicador.cl/api';
+// Proxy CORS público para evitar bloqueos
+const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
 
 // Cache para evitar llamadas repetidas
 const cache = new Map();
@@ -15,11 +17,14 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
 // ==================== FETCH HELPERS ====================
 
 /**
- * Realiza una petición fetch con manejo de errores
+ * Realiza una petición fetch con manejo de errores y proxy CORS
  */
 async function fetchWithErrorHandling(url, options = {}) {
+  // Usar proxy CORS para evitar bloqueos
+  const proxyUrl = CORS_PROXY + encodeURIComponent(url);
+  
   try {
-    const response = await fetch(url, {
+    const response = await fetch(proxyUrl, {
       ...options,
       headers: {
         'Content-Type': 'application/json',
