@@ -208,35 +208,41 @@ function loadMonthData() {
 function render() {
   renderNavigation();
   
-  switch (currentSection) {
-    case 'finanzas':
-      renderFinanzas();
-      break;
-    case 'fijos':
-      renderFijos();
-      break;
-    case 'deudas':
-      renderDeudas();
-      break;
-    case 'historial':
-      renderHistorial();
-      break;
+  try {
+    switch (currentSection) {
+      case 'finanzas':
+        renderFinanzas();
+        break;
+      case 'fijos':
+        renderFijos();
+        break;
+      case 'deudas':
+        renderDeudas();
+        break;
+      case 'historial':
+        renderHistorial();
+        break;
+    }
+  } catch (error) {
+    console.error('Error rendering section:', error);
+    document.querySelector('.main').innerHTML = '<div class="card"><p>Error: ' + error.message + '</p></div>';
   }
 }
 
 function renderNavigation() {
-  // Actualizar navegación activa
-  document.querySelectorAll('.nav__item').forEach(item => {
-    item.classList.toggle('nav__item--active', item.dataset.section === currentSection);
-  });
-  
   // Agregar event listeners
   document.querySelectorAll('.nav__item').forEach(item => {
     item.onclick = (e) => {
       e.preventDefault();
+      console.log('Clicked section:', item.dataset.section);
       currentSection = item.dataset.section;
       render();
     };
+  });
+  
+  // Actualizar navegación activa
+  document.querySelectorAll('.nav__item').forEach(item => {
+    item.classList.toggle('nav__item--active', item.dataset.section === currentSection);
   });
 }
 
@@ -373,6 +379,7 @@ function renderFinanzas() {
 function renderFijos() {
   const main = document.querySelector('.main');
   const total = calculateFixedExpensesTotal();
+  console.log('Rendering Fijos, total:', total, 'items:', fixedExpenses.length);
   
   main.innerHTML = `
     <div class="section-header">
@@ -386,7 +393,7 @@ function renderFijos() {
     </div>
     
     <div class="card">
-      <div class="transaction-list">
+      <div class="transaction-list" id="fijosList">
         ${fixedExpenses.length === 0 ? `
           <div class="empty-state">
             <span class="empty-state__icon">📅</span>
@@ -411,7 +418,7 @@ function renderFijos() {
     <div class="modal" id="fixedModal">
       <div class="modal__backdrop"></div>
       <div class="modal__content">
-        <h3 class="modal__title">${editingId ? 'Editar' : 'Agregar'} Gasto Fijo</h3>
+        <h3 class="modal__title">Agregar Gasto Fijo</h3>
         <form id="fixedForm">
           <div class="form-group">
             <label class="form-label" for="fixedName">Nombre</label>
@@ -434,49 +441,55 @@ function renderFijos() {
     </div>
   `;
   
-  let editingId = null;
-  
-  document.getElementById('addFixedBtn').onclick = () => {
-    editingId = null;
-    document.getElementById('fixedModal').classList.add('visible');
-  };
-  
-  document.getElementById('cancelFixedBtn').onclick = () => {
-    document.getElementById('fixedModal').classList.remove('visible');
-  };
-  
-  document.querySelector('.modal__backdrop').onclick = () => {
-    document.getElementById('fixedModal').classList.remove('visible');
-  };
-  
-  document.getElementById('fixedForm').onsubmit = (e) => {
-    e.preventDefault();
-    const name = document.getElementById('fixedName').value.trim();
-    const amount = parseInt(document.getElementById('fixedAmount').value);
-    const category = document.getElementById('fixedCategory').value.trim() || 'General';
+  // Event listeners - usar setTimeout para asegurar DOM actualizado
+  setTimeout(() => {
+    const addBtn = document.getElementById('addFixedBtn');
+    const cancelBtn = document.getElementById('cancelFixedBtn');
+    const backdrop = document.querySelector('#fixedModal .modal__backdrop');
+    const form = document.getElementById('fixedForm');
     
-    if (editingId) {
-      const idx = fixedExpenses.findIndex(f => f.id === editingId);
-      if (idx >= 0) {
-        fixedExpenses[idx] = { ...fixedExpenses[idx], name, amount, category };
-      }
-    } else {
-      fixedExpenses.push({ id: generateId(), name, amount, category });
+    if (addBtn) {
+      addBtn.onclick = () => {
+        console.log('Add fixed clicked');
+        document.getElementById('fixedModal').classList.add('visible');
+      };
     }
     
-    saveData();
-    document.getElementById('fixedModal').classList.remove('visible');
-    render();
-  };
-  
-  document.querySelectorAll('[data-delete]').forEach(btn => {
-    btn.onclick = (e) => {
-      e.stopPropagation();
-      fixedExpenses = fixedExpenses.filter(f => f.id !== btn.dataset.delete);
-      saveData();
-      render();
-    };
-  });
+    if (cancelBtn) {
+      cancelBtn.onclick = () => {
+        document.getElementById('fixedModal').classList.remove('visible');
+      };
+    }
+    
+    if (backdrop) {
+      backdrop.onclick = () => {
+        document.getElementById('fixedModal').classList.remove('visible');
+      };
+    }
+    
+    if (form) {
+      form.onsubmit = (e) => {
+        e.preventDefault();
+        const name = document.getElementById('fixedName').value.trim();
+        const amount = parseInt(document.getElementById('fixedAmount').value);
+        const category = document.getElementById('fixedCategory').value.trim() || 'General';
+        
+        fixedExpenses.push({ id: generateId(), name, amount, category });
+        saveData();
+        document.getElementById('fixedModal').classList.remove('visible');
+        render();
+      };
+    }
+    
+    document.querySelectorAll('#fijosList [data-delete]').forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        fixedExpenses = fixedExpenses.filter(f => f.id !== btn.dataset.delete);
+        saveData();
+        render();
+      };
+    });
+  }, 100);
 }
 
 // ===== DEUDAS SECTION =====
@@ -485,6 +498,7 @@ function renderDeudas() {
   const main = document.querySelector('.main');
   const totalDebt = calculateDebtsTotal();
   const monthlyInstallments = calculateDebtsMonthly();
+  console.log('Rendering Deudas, total:', totalDebt, 'items:', debts.length);
   
   main.innerHTML = `
     <div class="section-header">
@@ -501,7 +515,7 @@ function renderDeudas() {
     </div>
     
     <div class="card">
-      <div class="transaction-list">
+      <div class="transaction-list" id="deudasList">
         ${debts.length === 0 ? `
           <div class="empty-state">
             <span class="empty-state__icon">💳</span>
@@ -526,7 +540,7 @@ function renderDeudas() {
     <div class="modal" id="debtModal">
       <div class="modal__backdrop"></div>
       <div class="modal__content">
-        <h3 class="modal__title">${editingDebtId ? 'Editar' : 'Agregar'} Deuda</h3>
+        <h3 class="modal__title">Agregar Deuda</h3>
         <form id="debtForm">
           <div class="form-group">
             <label class="form-label" for="debtProduct">Producto</label>
@@ -549,57 +563,64 @@ function renderDeudas() {
     </div>
   `;
   
-  let editingDebtId = null;
-  
-  document.getElementById('addDebtBtn').onclick = () => {
-    editingDebtId = null;
-    document.getElementById('debtModal').classList.add('visible');
-  };
-  
-  document.getElementById('cancelDebtBtn').onclick = () => {
-    document.getElementById('debtModal').classList.remove('visible');
-  };
-  
-  document.querySelector('.modal__backdrop').onclick = () => {
-    document.getElementById('debtModal').classList.remove('visible');
-  };
-  
-  document.getElementById('debtForm').onsubmit = (e) => {
-    e.preventDefault();
-    const product = document.getElementById('debtProduct').value.trim();
-    const totalAmount = parseInt(document.getElementById('debtTotal').value);
-    const totalInstallments = parseInt(document.getElementById('debtInstallments').value);
-    const installmentAmount = Math.round(totalAmount / totalInstallments);
+  // Event listeners
+  setTimeout(() => {
+    const addBtn = document.getElementById('addDebtBtn');
+    const cancelBtn = document.getElementById('cancelDebtBtn');
+    const backdrop = document.querySelector('#debtModal .modal__backdrop');
+    const form = document.getElementById('debtForm');
     
-    if (editingDebtId) {
-      const idx = debts.findIndex(d => d.id === editingDebtId);
-      if (idx >= 0) {
-        debts[idx] = { ...debts[idx], product, totalAmount, totalInstallments, installmentAmount };
-      }
-    } else {
-      debts.push({ 
-        id: generateId(), 
-        product, 
-        totalAmount, 
-        totalInstallments, 
-        installmentAmount,
-        paidInstallments: 0
-      });
+    if (addBtn) {
+      addBtn.onclick = () => {
+        console.log('Add debt clicked');
+        document.getElementById('debtModal').classList.add('visible');
+      };
     }
     
-    saveData();
-    document.getElementById('debtModal').classList.remove('visible');
-    render();
-  };
-  
-  document.querySelectorAll('[data-delete]').forEach(btn => {
-    btn.onclick = (e) => {
-      e.stopPropagation();
-      debts = debts.filter(d => d.id !== btn.dataset.delete);
-      saveData();
-      render();
-    };
-  });
+    if (cancelBtn) {
+      cancelBtn.onclick = () => {
+        document.getElementById('debtModal').classList.remove('visible');
+      };
+    }
+    
+    if (backdrop) {
+      backdrop.onclick = () => {
+        document.getElementById('debtModal').classList.remove('visible');
+      };
+    }
+    
+    if (form) {
+      form.onsubmit = (e) => {
+        e.preventDefault();
+        const product = document.getElementById('debtProduct').value.trim();
+        const totalAmount = parseInt(document.getElementById('debtTotal').value);
+        const totalInstallments = parseInt(document.getElementById('debtInstallments').value);
+        const installmentAmount = Math.round(totalAmount / totalInstallments);
+        
+        debts.push({ 
+          id: generateId(), 
+          product, 
+          totalAmount, 
+          totalInstallments, 
+          installmentAmount,
+          paidInstallments: 0
+        });
+        
+        saveData();
+        document.getElementById('debtModal').classList.remove('visible');
+        render();
+      };
+    }
+    
+    document.querySelectorAll('#deudasList [data-delete]').forEach(btn => {
+      btn.onclick = (e) => {
+        e.stopPropagation();
+        debts = debts.filter(d => d.id !== btn.dataset.delete);
+        saveData();
+        render();
+      };
+    });
+  }, 100);
 }
 
 // ===== HISTORIAL SECTION =====
