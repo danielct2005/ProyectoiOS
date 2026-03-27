@@ -1418,12 +1418,14 @@ function renderDeudas() {
     document.getElementById('addCardForm').onsubmit = (e) => {
       e.preventDefault();
       const name = document.getElementById('newCardName').value.trim();
-      if (name) {
-        creditCards.push({ id: generateId(), name });
-        saveData();
-        document.getElementById('newCardName').value = '';
-        render();
+      if (!name) {
+        Swal.fire({ title: 'Nombre requerido', text: 'Por favor ingresa el nombre del banco', icon: 'error' });
+        return;
       }
+      creditCards.push({ id: generateId(), name });
+      saveData();
+      document.getElementById('newCardName').value = '';
+      render();
     };
     
     // Delete card
