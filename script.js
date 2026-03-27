@@ -808,7 +808,7 @@ function renderBilletera() {
         
         <div class="form-group">
           <label class="form-label" for="amount">Monto</label>
-          <input type="number" id="amount" class="form-input" placeholder="0" min="0" step="1" required inputmode="numeric">
+          <input type="text" id="amount" class="form-input" placeholder="0" inputmode="numeric">
         </div>
         
         <div class="form-group">
@@ -886,7 +886,7 @@ function renderBilletera() {
           </div>
           <div class="form-group">
             <label class="form-label" for="editTransactionAmount">Monto</label>
-            <input type="number" id="editTransactionAmount" class="form-input" required inputmode="numeric">
+            <input type="text" id="editTransactionAmount" class="form-input" inputmode="numeric">
           </div>
           <div class="form-group">
             <label class="form-label" for="editTransactionDesc">Descripción</label>
@@ -1105,7 +1105,7 @@ function renderFijos() {
           </div>
           <div class="form-group">
             <label class="form-label" for="fixedAmount">Monto</label>
-            <input type="number" id="fixedAmount" class="form-input" placeholder="0" min="0" step="1" required inputmode="numeric">
+            <input type="text" id="fixedAmount" class="form-input" placeholder="0" inputmode="numeric">
           </div>
           <div class="form-group">
             <label class="form-label" for="fixedCategory">Categoría</label>
@@ -1365,7 +1365,7 @@ function renderDeudas() {
           </div>
           <div class="form-group">
             <label class="form-label" for="debtTotal">Precio Total</label>
-            <input type="number" id="debtTotal" class="form-input" placeholder="0" min="0" step="1" required inputmode="numeric">
+            <input type="text" id="debtTotal" class="form-input" placeholder="0" inputmode="numeric">
           </div>
           <div class="form-group">
             <label class="form-label" for="debtInstallments">Cantidad de Cuotas</label>
@@ -1423,7 +1423,7 @@ function renderDeudas() {
           </div>
           <div class="form-group">
             <label class="form-label" for="editDebtTotal">Precio Total</label>
-            <input type="number" id="editDebtTotal" class="form-input" required inputmode="numeric">
+            <input type="text" id="editDebtTotal" class="form-input" inputmode="numeric">
           </div>
           <div class="form-group">
             <label class="form-label" for="editDebtInstallments">Total de Cuotas</label>
