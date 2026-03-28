@@ -12,11 +12,13 @@ import {
 } from './storage.js';
 import * as Finanzas from './finanzas.js';
 import * as Agenda from './agenda.js';
+import * as Economia from './economia.js';
 
 // ==================== CONSTANTS ====================
 
 const sectionTitles = {
   finanzas: 'Finanzas',
+  economia: 'Economía',
   agenda: 'Agenda',
   ajustes: 'Ajustes'
 };
@@ -173,6 +175,9 @@ export function render() {
     switch (appState.currentSection) {
       case 'finanzas':
         Finanzas.renderFinanzasContainer();
+        break;
+      case 'economia':
+        Economia.renderEconomiaContainer();
         break;
       case 'agenda':
         Agenda.renderAgendaContainer();

@@ -1218,3 +1218,78 @@ body.dark-mode .btn--ghost {
   color: var(--gray-400);
 }
 
+/* ===== CONVERSOR DE MONEDAS ===== */
+
+.converter-swap {
+  display: flex;
+  justify-content: center;
+  margin: var(--space-sm) 0;
+}
+
+.converter-result {
+  background: var(--gray-100);
+  border-radius: var(--radius);
+  padding: var(--space-md);
+  text-align: center;
+  margin-top: var(--space-sm);
+}
+
+body.dark-mode .converter-result {
+  background: var(--gray-800);
+}
+
+.converter-result__value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--primary);
+  display: block;
+}
+
+.currency-selector select {
+  width: 100%;
+}
+
+/* ===== TASAS DE CAMBIO ===== */
+
+.rates-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.rate-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-sm);
+  background: var(--gray-100);
+  border-radius: var(--radius);
+}
+
+body.dark-mode .rate-item {
+  background: var(--gray-800);
+}
+
+.rate-item__value {
+  font-weight: 600;
+  color: var(--primary);
+}
+
+/* ===== UTILIDADES ===== */
+
+.text-sm {
+  font-size: 0.875rem;
+}
+
+.mt-1 {
+  margin-top: var(--space-sm);
+}
+
+.mt-2 {
+  margin-top: var(--space-md);
+}
+
+.mb-2 {
+  margin-bottom: var(--space-md);
+}
+

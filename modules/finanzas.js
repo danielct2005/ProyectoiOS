@@ -31,7 +31,6 @@ import {
   createEmptyState,
   getMonthName
 } from './utils.js';
-import * as API from './api.js';
 
 // ==================== CALCULATIONS ====================
 
@@ -250,32 +249,6 @@ export function renderBilletera() {
       ` : ''}
     </div>
     
-    <!-- Indicadores Económicos -->
-    <div class="card" id="indicatorsCard">
-      <div class="card__header">
-        <h3 class="card__title">📊 Indicadores Económicos</h3>
-        <button class="btn btn--sm btn--ghost" id="refreshIndicatorsBtn" title="Actualizar">🔄</button>
-      </div>
-      <div class="indicators-grid" id="indicatorsGrid">
-        <div class="indicator-item">
-          <span class="indicator-item__label">UF</span>
-          <span class="indicator-item__value" id="ufValue">Cargando...</span>
-        </div>
-        <div class="indicator-item">
-          <span class="indicator-item__label">USD</span>
-          <span class="indicator-item__value" id="dolarValue">Cargando...</span>
-        </div>
-        <div class="indicator-item">
-          <span class="indicator-item__label">EUR</span>
-          <span class="indicator-item__value" id="euroValue">Cargando...</span>
-        </div>
-        <div class="indicator-item">
-          <span class="indicator-item__label">UTM</span>
-          <span class="indicator-item__value" id="utmValue">Cargando...</span>
-        </div>
-      </div>
-    </div>
-    
     ${appState.history[appState.currentMonth] ? `
       <div class="archive-notice">
         📦 Este mes está en historial
@@ -389,55 +362,6 @@ export function renderBilletera() {
   
   // Event listeners
   setupBilleteraEvents();
-  
-  // Cargar indicadores económicos
-  loadEconomicIndicators();
-}
-
-// ==================== ECONOMIC INDICATORS ====================
-
-async function loadEconomicIndicators() {
-  // Mostrar estado de carga
-  const ufEl = document.getElementById('ufValue');
-  const dolarEl = document.getElementById('dolarValue');
-  const euroEl = document.getElementById('euroValue');
-  const utmEl = document.getElementById('utmValue');
-  
-  if (ufEl) ufEl.textContent = 'Cargando...';
-  if (dolarEl) dolarEl.textContent = 'Cargando...';
-  if (euroEl) euroEl.textContent = 'Cargando...';
-  if (utmEl) utmEl.textContent = 'Cargando...';
-  
-  // Obtener valores de la API
-  const [uf, dolar, euro, utm] = await Promise.allSettled([
-    API.getCurrentUF(),
-    API.getCurrentDolar(),
-    API.getCurrentEuro(),
-    API.getCurrentUTM()
-  ]);
-  
-  // Actualizar UI con los valores
-  const refreshBtn = document.getElementById('refreshIndicatorsBtn');
-  
-  const formatValue = (result) => {
-    if (result.status === 'fulfilled' && result.value && result.value > 0) {
-      return formatCurrency(Math.round(result.value));
-    }
-    return 'Sin conexión';
-  };
-  
-  if (ufEl) ufEl.textContent = formatValue(uf);
-  if (dolarEl) dolarEl.textContent = formatValue(dolar);
-  if (euroEl) euroEl.textContent = formatValue(euro);
-  if (utmEl) utmEl.textContent = formatValue(utm);
-  
-  // Botón de actualizar
-  if (refreshBtn) {
-    refreshBtn.addEventListener('click', () => {
-      API.clearCache();
-      loadEconomicIndicators();
-    });
-  }
 }
 
 function setupBilleteraEvents() {
