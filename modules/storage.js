@@ -33,6 +33,10 @@ export const appState = {
   lastPaymentMonth: null,
   previousMonthBalance: 0,
   
+  // Datos de ahorros
+  savingsAccounts: [],
+  savingsGoals: [],
+  
   // Preferencias (se inicializa en false, se carga correctamente en loadData)
   darkMode: false
 };
@@ -52,6 +56,8 @@ export function loadData() {
       appState.lastPaymentMonth = parsed.lastPaymentMonth || null;
       appState.importantDates = parsed.importantDates || [];
       appState.previousMonthBalance = parsed.previousMonthBalance || 0;
+      appState.savingsAccounts = parsed.savingsAccounts || [];
+      appState.savingsGoals = parsed.savingsGoals || [];
     } else {
       resetState();
     }
@@ -73,6 +79,8 @@ function resetState() {
   appState.lastPaymentMonth = null;
   appState.importantDates = [];
   appState.previousMonthBalance = 0;
+  appState.savingsAccounts = [];
+  appState.savingsGoals = [];
 }
 
 // ==================== SAVE DATA ====================
@@ -87,7 +95,9 @@ export function saveData() {
       history: appState.history,
       lastPaymentMonth: appState.lastPaymentMonth,
       importantDates: appState.importantDates,
-      previousMonthBalance: appState.previousMonthBalance
+      previousMonthBalance: appState.previousMonthBalance,
+      savingsAccounts: appState.savingsAccounts,
+      savingsGoals: appState.savingsGoals
     }));
   } catch (error) {
     console.error('Error al guardar datos:', error);
@@ -250,6 +260,145 @@ export function archiveMonth(monthKey, income, expense, transactions, balance) {
     };
   }
   saveData();
+}
+
+// ==================== AHORROS - CUENTAS ====================
+
+export function addSavingsAccount(name, initialBalance = 0, color = '#007aff') {
+  appState.savingsAccounts.push({
+    id: generateId(),
+    name,
+    balance: initialBalance,
+    color,
+    createdAt: new Date().toISOString()
+  });
+  saveData();
+}
+
+export function updateSavingsAccount(id, name, balance, color) {
+  const idx = appState.savingsAccounts.findIndex(a => a.id === id);
+  if (idx >= 0) {
+    appState.savingsAccounts[idx] = {
+      ...appState.savingsAccounts[idx],
+      name,
+      balance,
+      color
+    };
+    saveData();
+  }
+}
+
+export function deleteSavingsAccount(id) {
+  appState.savingsAccounts = appState.savingsAccounts.filter(a => a.id !== id);
+  saveData();
+}
+
+export function transferBetweenAccounts(fromId, toId, amount) {
+  const fromAccount = appState.savingsAccounts.find(a => a.id === fromId);
+  const toAccount = appState.savingsAccounts.find(a => a.id === toId);
+  
+  if (fromAccount && toAccount && fromAccount.balance >= amount) {
+    fromAccount.balance -= amount;
+    toAccount.balance += amount;
+    saveData();
+    return true;
+  }
+  return false;
+}
+
+export function addToAccount(accountId, amount) {
+  const account = appState.savingsAccounts.find(a => a.id === accountId);
+  if (account) {
+    account.balance += amount;
+    saveData();
+    return true;
+  }
+  return false;
+}
+
+export function withdrawFromAccount(accountId, amount) {
+  const account = appState.savingsAccounts.find(a => a.id === accountId);
+  if (account && account.balance >= amount) {
+    account.balance -= amount;
+    saveData();
+    return true;
+  }
+  return false;
+}
+
+export function getTotalSavings() {
+  return appState.savingsAccounts.reduce((sum, a) => sum + a.balance, 0);
+}
+
+// ==================== AHORROS - METAS ====================
+
+export function addSavingsGoal(name, targetAmount, icon = '🎯') {
+  const goal = {
+    id: generateId(),
+    name,
+    targetAmount,
+    currentAmount: 0,
+    icon,
+    createdAt: new Date().toISOString(),
+    completedAt: null,
+    notificationsEnabled: true
+  };
+  appState.savingsGoals.push(goal);
+  saveData();
+  return goal;
+}
+
+export function updateSavingsGoal(id, name, targetAmount, icon) {
+  const idx = appState.savingsGoals.findIndex(g => g.id === id);
+  if (idx >= 0) {
+    appState.savingsGoals[idx] = {
+      ...appState.savingsGoals[idx],
+      name,
+      targetAmount,
+      icon
+    };
+    saveData();
+  }
+}
+
+export function deleteSavingsGoal(id) {
+  appState.savingsGoals = appState.savingsGoals.filter(g => g.id !== id);
+  saveData();
+}
+
+export function contributeToGoal(id, amount) {
+  const goal = appState.savingsGoals.find(g => g.id === id);
+  if (goal) {
+    const wasCompleted = goal.currentAmount >= goal.targetAmount;
+    goal.currentAmount += amount;
+    
+    // Check if goal is now completed
+    if (!wasCompleted && goal.currentAmount >= goal.targetAmount) {
+      goal.completedAt = new Date().toISOString();
+      // Trigger notification
+      if (goal.notificationsEnabled) {
+        setTimeout(() => {
+          Swal.fire({
+            title: '🎉 ¡Meta Completada!',
+            text: `Has logrado ahorrar ${goal.targetAmount.toLocaleString('es-CL')} para "${goal.name}"`,
+            icon: 'success'
+          });
+        }, 100);
+      }
+    }
+    
+    saveData();
+    return true;
+  }
+  return false;
+}
+
+export function getActiveGoals() {
+  return appState.savingsGoals.filter(g => g.currentAmount < g.targetAmount);
+}
+
+export function getCompletedGoals() {
+  return appState.savingsGoals.filter(g => g.currentAmount >= g.targetAmount);
 }
 
 // ==================== EXPORT/IMPORT ====================
