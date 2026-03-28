@@ -41,7 +41,7 @@ function setupLoginScreen() {
     const result = await signInWithGoogle();
     
     // Si es redirect, la página se recargará automáticamente
-    if (!result.success && !result.redirecting) {
+    if (!result.success) {
       alert('Error: ' + result.error);
       loginGoogleBtn.disabled = false;
       loginGoogleBtn.innerHTML = '<span class="login-btn-icon"><img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google"></span><span>Continuar con Google</span>';
@@ -91,9 +91,6 @@ async function init() {
   
   // Inicializar Firebase
   await initFirebase();
-  
-  // Verificar resultado de redirect de Google (si volvió de login)
-  await checkRedirectResult();
   
   // Verificar si hay usuario logueado
   checkAuthAndShowLogin();

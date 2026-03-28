@@ -13,7 +13,9 @@ const firebaseConfig = {
   storageBucket: "misfinanzas-e0813.firebasestorage.app",
   messagingSenderId: "689243140150",
   appId: "1:689243140150:web:e7c45d78b8cf5f137e2897",
-  measurementId: "G-2MKSHZE5ME"
+  measurementId: "G-2MKSHZE5ME",
+  // OAuth Client ID para Google Auth
+  oauthClientId: "689243140150-ffj2ei4r7k7f7g744je638lgamud5buo.apps.googleusercontent.com"
 };
 
 // Estado de sincronizacion
@@ -133,10 +135,9 @@ export async function signInWithGoogle() {
     
     return new Promise((resolve) => {
       window.google.accounts.id.initialize({
-        client_id: firebaseConfig.apiKey.includes('AIzaSy') ? 
-          firebaseConfig.apiKey.replace('AIzaSy', '') + '.apps.googleusercontent.com' : null,
+        client_id: firebaseConfig.oauthClientId,
         ux_mode: 'redirect',
-        redirect_uri: window.location.href,
+        redirect_uri: window.location.origin + '/',
         callback: async (response) => {
           if (response.credential) {
             const credential = window.firebase.auth.GoogleAuthProvider.credential(response.credential);
@@ -149,16 +150,7 @@ export async function signInWithGoogle() {
         }
       });
       
-      window.google.accounts.id.prompt((notification) => {
-        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-          // Fallback: forzar redirect
-          window.google.accounts.id.renderButton(
-            document.createElement('div'), 
-            { theme: 'outline', size: 'large' }
-          );
-          window.google.accounts.id.prompt();
-        }
-      });
+      window.google.accounts.id.prompt();
     });
   } catch (error) {
     console.error('Error con Google:', error);
