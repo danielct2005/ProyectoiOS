@@ -1627,17 +1627,17 @@ body.dark-mode .news-item--link:hover {
 
 .login-container {
   text-align: center;
-  max-width: 260px;
+  max-width: 320px;
   width: 100%;
 }
 
 .login-logo {
-  font-size: 3.5rem;
-  margin-bottom: var(--space-sm);
+  font-size: 5rem;
+  margin-bottom: var(--space-md);
 }
 
 .login-title {
-  font-size: 1.5rem;
+  font-size: 2rem;
   font-weight: 700;
   color: var(--text-primary);
   margin-bottom: var(--space-xs);
@@ -1645,7 +1645,7 @@ body.dark-mode .news-item--link:hover {
 
 .login-subtitle {
   color: var(--text-secondary);
-  margin-bottom: var(--space-lg);
+  margin-bottom: var(--space-xl);
 }
 
 .login-buttons {
@@ -1658,13 +1658,13 @@ body.dark-mode .news-item--link:hover {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: var(--space-sm);
   width: 100%;
-  padding: 10px 14px;
+  padding: var(--space-md) var(--space-lg);
   border: none;
-  border-radius: 8px;
-  font-size: 0.8rem;
-  font-weight: 500;
+  border-radius: var(--radius);
+  font-size: 1rem;
+  font-weight: 600;
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
 }
@@ -1701,8 +1701,8 @@ body.dark-mode .news-item--link:hover {
 }
 
 .login-note {
-  margin-top: var(--space-md);
-  font-size: 0.7rem;
+  margin-top: var(--space-xl);
+  font-size: 0.8rem;
   color: var(--text-secondary);
 }
 
