@@ -1504,3 +1504,12 @@ body.dark-mode .icon-option {
   background: rgba(0, 122, 255, 0.1);
 }
 
+/* Delete button for completed goals */
+.btn-action--delete {
+  opacity: 0.5;
+}
+
+.btn-action--delete:hover {
+  opacity: 1;
+}
+

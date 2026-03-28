@@ -135,14 +135,18 @@ function renderAhorrosHTML() {
     <!-- Completed Goals -->
     ${completedGoals.length > 0 ? `
       <div class="card">
-        <h3 class="card__title mb-2">✅ Metas Completadas</h3>
+        <div class="card__header">
+          <h3 class="card__title">✅ Metas Completadas</h3>
+          <span class="card__badge">${completedGoals.length}</span>
+        </div>
         <div class="goals-list">
           ${completedGoals.map(goal => `
-            <div class="goal-item goal-item--completed" data-id="${goal.id}">
+            <div class="goal-item goal-item--completed" data-id="${goal.id}" data-completed="true">
               <div class="goal-item__header">
                 <span class="goal-item__icon">${goal.icon}</span>
                 <span class="goal-item__name">${escapeHtml(goal.name)}</span>
                 <span class="goal-item__completed-badge">✓</span>
+                <button class="btn-action btn-action--delete" data-action="deleteCompleted" data-id="${goal.id}" title="Eliminar">🗑️</button>
               </div>
               <div class="goal-item__amounts">
                 <span>${formatCurrency(goal.targetAmount)}</span>
@@ -286,12 +290,36 @@ function setupAhorrosEvents() {
       });
     });
     
-    // Goal actions
-    document.querySelectorAll('.goal-item .btn-action').forEach(btn => {
+    // Goal actions (active goals - contribute)
+    document.querySelectorAll('.goal-item:not(.goal-item--completed) .btn-action').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         const id = btn.dataset.id;
         openContributeModal(id);
+      });
+    });
+    
+    // Delete completed goals
+    document.querySelectorAll('[data-action="deleteCompleted"]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = btn.dataset.id;
+        const goal = appState.savingsGoals.find(g => g.id === id);
+        
+        Swal.fire({
+          title: '¿Eliminar meta completada?',
+          text: `"${goal?.name}" se eliminará permanentemente`,
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Sí, eliminar',
+          cancelButtonText: 'Cancelar',
+          confirmButtonColor: '#ff3b30'
+        }).then(result => {
+          if (result.isConfirmed) {
+            deleteSavingsGoal(id);
+            renderAhorrosContainer();
+          }
+        });
       });
     });
     
