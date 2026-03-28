@@ -40,11 +40,11 @@ export async function initFirebase() {
       window.firebase.initializeApp(firebaseConfig);
     }
     
-    // Cargar Google Identity SDK
-    await loadGoogleIdentitySDK();
-    
     // Configurar autenticacion
     const auth = window.firebase.auth();
+    
+    // Configurar persistencia - importante para iOS Safari
+    await auth.setPersistence(window.firebase.auth.Auth.Persistence.LOCAL);
     
     // Verificar estado de autenticacion
     return new Promise((resolve) => {
@@ -135,13 +135,28 @@ export async function signInWithGoogle() {
   try {
     const auth = window.firebase.auth();
     const googleProvider = new window.firebase.auth.GoogleAuthProvider();
+    googleProvider.setCustomParameters({
+      prompt: 'select_account'
+    });
     
-    // Usar Firebase Auth directamente con redirect
-    await auth.signInWithRedirect(googleProvider);
-    
-    // Nota: Después del redirect, Firebase maneja automáticamente el resultado
-    // El onAuthStateChanged en initFirebase detectará el usuario
-    return { success: true, redirecting: true };
+    // Intentar con popup primero (más compatible)
+    try {
+      const result = await auth.signInWithPopup(googleProvider);
+      currentUser = result.user;
+      isAnonymous = false;
+      console.log('Login con Google exitoso:', result.user.email);
+      
+      // Ocultar pantalla de login
+      const loginScreen = document.getElementById('loginScreen');
+      if (loginScreen) loginScreen.classList.add('hidden');
+      
+      return { success: true, user: result.user };
+    } catch (popupError) {
+      // Si falla el popup (como en iOS Safari), usar redirect
+      console.log('Popup falló, intentando redirect:', popupError.message);
+      await auth.signInWithRedirect(googleProvider);
+      return { success: true, redirecting: true };
+    }
   } catch (error) {
     console.error('Error con Google:', error);
     return { success: false, error: error.message };
