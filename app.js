@@ -74,13 +74,32 @@ function setupLoginScreen() {
     document.querySelector('.login-note').style.display = 'block';
   });
   
+  // Validar formato de email
+  function isValidEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  }
+  
   // Registrarse con email
   registerBtn?.addEventListener('click', async () => {
-    const email = emailInput.value;
+    const email = emailInput.value.trim();
     const password = passwordInput.value;
     
+    // Validar campos vacíos
     if (!email || !password) {
       alert('Por favor ingresa email y contraseña');
+      return;
+    }
+    
+    // Validar formato de email
+    if (!isValidEmail(email)) {
+      alert('Por favor ingresa un email válido');
+      return;
+    }
+    
+    // Validar contraseña mínima
+    if (password.length < 6) {
+      alert('La contraseña debe tener al menos 6 caracteres');
       return;
     }
     
@@ -90,19 +109,36 @@ function setupLoginScreen() {
     const result = await signUpWithEmail(email, password);
     
     if (!result.success) {
-      alert('Error: ' + result.error);
-      registerBtn.disabled = false;
-      registerBtn.textContent = 'Registrarse';
+      // Manejar error específico
+      if (result.error === 'auth/email-already-in-use') {
+        alert('Este correo ya está registrado. Por favor, inicia sesión.');
+        // Cambiar a modo login
+        registerBtn.style.display = 'none';
+        loginBtn.style.display = 'block';
+        loginBtn.textContent = 'Iniciar Sesión';
+        loginBtn.disabled = false;
+      } else {
+        alert('Error al registrarse: ' + result.error);
+        registerBtn.disabled = false;
+        registerBtn.textContent = 'Registrarse';
+      }
     }
   });
   
   // Iniciar sesión con email
   loginBtn?.addEventListener('click', async () => {
-    const email = emailInput.value;
+    const email = emailInput.value.trim();
     const password = passwordInput.value;
     
+    // Validar campos vacíos
     if (!email || !password) {
       alert('Por favor ingresa email y contraseña');
+      return;
+    }
+    
+    // Validar formato de email
+    if (!isValidEmail(email)) {
+      alert('Por favor ingresa un email válido');
       return;
     }
     
@@ -112,9 +148,22 @@ function setupLoginScreen() {
     const result = await signInWithEmail(email, password);
     
     if (!result.success) {
-      alert('Error: ' + result.error);
-      loginBtn.disabled = false;
-      loginBtn.textContent = 'Iniciar Sesión';
+      if (result.error === 'auth/user-not-found') {
+        alert('No existe una cuenta con este email. Por favor, regístrate.');
+        // Cambiar a modo registro
+        loginBtn.style.display = 'none';
+        registerBtn.style.display = 'block';
+        registerBtn.textContent = 'Registrarse';
+        registerBtn.disabled = false;
+      } else if (result.error === 'auth/wrong-password') {
+        alert('Contraseña incorrecta');
+        loginBtn.disabled = false;
+        loginBtn.textContent = 'Iniciar Sesión';
+      } else {
+        alert('Error al iniciar sesión: ' + result.error);
+        loginBtn.disabled = false;
+        loginBtn.textContent = 'Iniciar Sesión';
+      }
     }
   });
   

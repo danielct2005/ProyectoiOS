@@ -218,7 +218,7 @@ export async function signInAnonymously() {
   }
 }
 
-// Email/Password Sign-In
+// Email/Password Sign-Up (crear cuenta)
 export async function signUpWithEmail(email, password) {
   const auth = window.firebase.auth();
   
@@ -234,10 +234,12 @@ export async function signUpWithEmail(email, password) {
     return { success: true };
   } catch (error) {
     console.error('Error al registrarse:', error);
-    return { success: false, error: error.message };
+    // Devolver el código de error limpio
+    return { success: false, error: error.code };
   }
 }
 
+// Email/Password Sign-In (iniciar sesión)
 export async function signInWithEmail(email, password) {
   const auth = window.firebase.auth();
   
@@ -253,7 +255,8 @@ export async function signInWithEmail(email, password) {
     return { success: true };
   } catch (error) {
     console.error('Error al iniciar sesión:', error);
-    return { success: false, error: error.message };
+    // Devolver el código de error limpio
+    return { success: false, error: error.code };
   }
 }
 
