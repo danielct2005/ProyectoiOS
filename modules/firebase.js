@@ -114,6 +114,11 @@ export async function signInWithGoogle() {
   const auth = window.firebase.auth();
   const googleProvider = new window.firebase.auth.GoogleAuthProvider();
   
+  // Configuraciones para iOS Safari
+  googleProvider.setCustomParameters({
+    prompt: 'select_account'
+  });
+  
   try {
     // Usar redirect en vez de popup (mejor para iOS Safari)
     await auth.signInWithRedirect(googleProvider);
