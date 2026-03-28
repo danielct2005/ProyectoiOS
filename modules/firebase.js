@@ -40,11 +40,11 @@ export async function initFirebase() {
       window.firebase.initializeApp(firebaseConfig);
     }
     
+    // Cargar Google Identity SDK
+    await loadGoogleIdentitySDK();
+    
     // Configurar autenticacion
     const auth = window.firebase.auth();
-    
-    // Provider Google
-    const googleProvider = new window.firebase.auth.GoogleAuthProvider();
     
     // Verificar estado de autenticacion
     return new Promise((resolve) => {
@@ -53,6 +53,10 @@ export async function initFirebase() {
           currentUser = user;
           isAnonymous = user.isAnonymous;
           console.log('Usuario autenticado:', user.email || 'Anónimo');
+          
+          // Ocultar pantalla de login si existe
+          const loginScreen = document.getElementById('loginScreen');
+          if (loginScreen) loginScreen.classList.add('hidden');
         } else {
           // No hay usuario, mostrar pantalla de login
           console.log('No hay usuario conectado');
@@ -139,17 +143,28 @@ export async function signInWithGoogle() {
         ux_mode: 'redirect',
         redirect_uri: window.location.origin + '/',
         callback: async (response) => {
-          if (response.credential) {
-            const credential = window.firebase.auth.GoogleAuthProvider.credential(response.credential);
-            const result = await auth.signInWithCredential(credential);
-            currentUser = result.user;
-            isAnonymous = false;
-            console.log('Login con Google exitoso:', result.user.email);
-            resolve({ success: true, user: result.user });
+          try {
+            if (response.credential) {
+              const credential = window.firebase.auth.GoogleAuthProvider.credential(response.credential);
+              const result = await auth.signInWithCredential(credential);
+              currentUser = result.user;
+              isAnonymous = false;
+              console.log('Login con Google exitoso:', result.user.email);
+              
+              // Ocultar pantalla de login
+              const loginScreen = document.getElementById('loginScreen');
+              if (loginScreen) loginScreen.classList.add('hidden');
+              
+              resolve({ success: true, user: result.user });
+            }
+          } catch (e) {
+            console.error('Error en callback:', e);
+            resolve({ success: false, error: e.message });
           }
         }
       });
       
+      // Forzar el flujo de redirect
       window.google.accounts.id.prompt();
     });
   } catch (error) {
