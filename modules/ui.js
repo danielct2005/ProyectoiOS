@@ -14,6 +14,7 @@ import * as Finanzas from './finanzas.js';
 import * as Agenda from './agenda.js';
 import * as Economia from './economia.js';
 import * as Ahorros from './ahorros.js';
+import * as Noticias from './noticias.js';
 
 // ==================== CONSTANTS ====================
 
@@ -21,6 +22,7 @@ const sectionTitles = {
   finanzas: 'Finanzas',
   economia: 'Economía',
   ahorros: 'Ahorros',
+  noticias: 'Noticias',
   agenda: 'Agenda',
   ajustes: 'Ajustes'
 };
@@ -183,6 +185,9 @@ export function render() {
         break;
       case 'ahorros':
         Ahorros.renderAhorrosContainer();
+        break;
+      case 'noticias':
+        Noticias.renderNoticiasContainer();
         break;
       case 'agenda':
         Agenda.renderAgendaContainer();

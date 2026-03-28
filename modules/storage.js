@@ -37,6 +37,9 @@ export const appState = {
   savingsAccounts: [],
   savingsGoals: [],
   
+  // Datos de noticias
+  news: [],
+  
   // Preferencias (se inicializa en false, se carga correctamente en loadData)
   darkMode: false
 };
@@ -58,6 +61,7 @@ export function loadData() {
       appState.previousMonthBalance = parsed.previousMonthBalance || 0;
       appState.savingsAccounts = parsed.savingsAccounts || [];
       appState.savingsGoals = parsed.savingsGoals || [];
+      appState.news = parsed.news || [];
     } else {
       resetState();
     }
@@ -81,6 +85,7 @@ function resetState() {
   appState.previousMonthBalance = 0;
   appState.savingsAccounts = [];
   appState.savingsGoals = [];
+  appState.news = [];
 }
 
 // ==================== SAVE DATA ====================
@@ -97,7 +102,8 @@ export function saveData() {
       importantDates: appState.importantDates,
       previousMonthBalance: appState.previousMonthBalance,
       savingsAccounts: appState.savingsAccounts,
-      savingsGoals: appState.savingsGoals
+      savingsGoals: appState.savingsGoals,
+      news: appState.news
     }));
   } catch (error) {
     console.error('Error al guardar datos:', error);
@@ -440,5 +446,31 @@ export function clearAllData() {
   appState.lastPaymentMonth = null;
   appState.importantDates = [];
   appState.previousMonthBalance = 0;
+  appState.savingsAccounts = [];
+  appState.savingsGoals = [];
+  appState.news = [];
+  saveData();
+}
+
+// ==================== NOTICIAS ====================
+
+export function addNewsItem(title, source = 'Manual') {
+  appState.news.unshift({
+    id: generateId(),
+    title,
+    source,
+    url: '',
+    timestamp: new Date().toISOString()
+  });
+  saveData();
+}
+
+export function deleteNewsItem(id) {
+  appState.news = appState.news.filter(n => n.id !== id);
+  saveData();
+}
+
+export function clearAllNews() {
+  appState.news = [];
   saveData();
 }
