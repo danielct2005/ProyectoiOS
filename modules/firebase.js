@@ -134,24 +134,39 @@ function loadGoogleIdentitySDK() {
 export async function signInWithGoogle() {
   try {
     const auth = window.firebase.auth();
-    const googleProvider = new window.firebase.auth.GoogleAuthProvider();
     
-    // Intentar popup
-    try {
-      const result = await auth.signInWithPopup(googleProvider);
-      currentUser = result.user;
-      isAnonymous = false;
+    // Usar el SDK de Google Identity Services que es más moderno
+    await loadGoogleIdentitySDK();
+    
+    return new Promise((resolve) => {
+      const clientId = firebaseConfig.oauthClientId;
       
-      const loginScreen = document.getElementById('loginScreen');
-      if (loginScreen) loginScreen.classList.add('hidden');
+      window.google.accounts.id.initialize({
+        client_id: clientId,
+        ux_mode: 'popup',
+        callback: async (response) => {
+          if (response.credential) {
+            try {
+              const credential = window.firebase.auth.GoogleAuthProvider.credential(response.credential);
+              const result = await auth.signInWithCredential(credential);
+              
+              currentUser = result.user;
+              isAnonymous = false;
+              
+              const loginScreen = document.getElementById('loginScreen');
+              if (loginScreen) loginScreen.classList.add('hidden');
+              
+              resolve({ success: true });
+            } catch (e) {
+              resolve({ success: false, error: e.message });
+            }
+          }
+        }
+      });
       
-      return { success: true };
-    } catch (popupError) {
-      // Si falla popup, intentar redirect
-      console.log('Popup bloqueado, usando redirect...');
-      await auth.signInWithRedirect(googleProvider);
-      return { success: true, redirecting: true };
-    }
+      // Mostrar el popup de Google
+      window.google.accounts.id.prompt();
+    });
   } catch (error) {
     console.error('Error con Google:', error);
     return { success: false, error: error.message };
@@ -175,6 +190,12 @@ export async function checkRedirectResult() {
       
       return { success: true, user: result.user };
     }
+    
+    // También verificar si ya hay un usuario actual (del onAuthStateChanged)
+    if (currentUser && !isAnonymous) {
+      return { success: true, user: currentUser };
+    }
+    
     return { success: false };
   } catch (error) {
     console.error('Error en redirect:', error);
