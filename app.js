@@ -18,6 +18,7 @@ import * as UI from './modules/ui.js';
 import { 
   initFirebase, 
   signInWithGoogle, 
+  signInWithApple,
   signInAnonymously, 
   signOut,
   getAuthState,
@@ -29,6 +30,7 @@ import {
 function setupLoginScreen() {
   const loginScreen = document.getElementById('loginScreen');
   const loginGoogleBtn = document.getElementById('loginGoogleBtn');
+  const loginAppleBtn = document.getElementById('loginAppleBtn');
   const loginAnonBtn = document.getElementById('loginAnonBtn');
   
   if (!loginScreen) return;
@@ -48,6 +50,20 @@ function setupLoginScreen() {
       }
       loginGoogleBtn.disabled = false;
       loginGoogleBtn.innerHTML = '<span class="login-btn-icon"><img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google"></span><span>Continuar con Google</span>';
+    }
+  });
+  
+  // Login con Apple
+  loginAppleBtn?.addEventListener('click', async () => {
+    loginAppleBtn.disabled = true;
+    loginAppleBtn.textContent = 'Conectando...';
+    
+    const result = await signInWithApple();
+    
+    if (!result.success) {
+      alert('Error al iniciar sesión: ' + result.error);
+      loginAppleBtn.disabled = false;
+      loginAppleBtn.innerHTML = '<span class="login-btn-icon">🍎</span><span>Continuar con Apple</span>';
     }
   });
   

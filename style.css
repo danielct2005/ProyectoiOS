@@ -1684,6 +1684,16 @@ body.dark-mode .news-item--link:hover {
   box-shadow: var(--shadow-lg);
 }
 
+.login-btn-apple {
+  background: var(--black);
+  color: var(--white);
+  border: none;
+}
+
+.login-btn-apple:hover {
+  background: #333;
+}
+
 .login-btn-anon {
   background: var(--gray-100);
   color: var(--text-primary);

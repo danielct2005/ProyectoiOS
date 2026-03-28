@@ -218,6 +218,39 @@ export async function signInAnonymously() {
   }
 }
 
+// Apple Sign-In
+export async function signInWithApple() {
+  const auth = window.firebase.auth();
+  const appleProvider = new window.firebase.auth.OAuthProvider('apple.com');
+  
+  // Configurar para iOS
+  appleProvider.addScope('email');
+  appleProvider.addScope('name');
+  
+  try {
+    // Intentar popup
+    try {
+      const result = await auth.signInWithPopup(appleProvider);
+      currentUser = result.user;
+      isAnonymous = false;
+      console.log('Login con Apple exitoso:', result.user.email);
+      
+      const loginScreen = document.getElementById('loginScreen');
+      if (loginScreen) loginScreen.classList.add('hidden');
+      
+      return { success: true };
+    } catch (popupError) {
+      // Si falla popup, usar redirect
+      console.log('Popup bloqueado, usando redirect...');
+      await auth.signInWithRedirect(appleProvider);
+      return { success: true, redirecting: true };
+    }
+  } catch (error) {
+    console.error('Error con Apple:', error);
+    return { success: false, error: error.message };
+  }
+}
+
 export async function signOut() {
   const auth = window.firebase.auth();
   
