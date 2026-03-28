@@ -133,13 +133,10 @@ function loadGoogleIdentitySDK() {
 
 export async function signInWithGoogle() {
   try {
-    // Usar el método más robusto: abrir OAuth en iframe oculto
-    // que redirige a la página principal con el resultado
-    
     const auth = window.firebase.auth();
     const googleProvider = new window.firebase.auth.GoogleAuthProvider();
     
-    // Intentar con popup (funciona en la mayoría de casos)
+    // Intentar popup
     try {
       const result = await auth.signInWithPopup(googleProvider);
       currentUser = result.user;
@@ -150,9 +147,8 @@ export async function signInWithGoogle() {
       
       return { success: true };
     } catch (popupError) {
-      console.log('Popup no disponible, usando redirect...');
-      
-      // Fallback: usar redirect
+      // Si falla popup, intentar redirect
+      console.log('Popup bloqueado, usando redirect...');
       await auth.signInWithRedirect(googleProvider);
       return { success: true, redirecting: true };
     }

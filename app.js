@@ -33,16 +33,19 @@ function setupLoginScreen() {
   
   if (!loginScreen) return;
   
-  // Login con Google (usa redirect para iOS Safari)
+  // Login con Google
   loginGoogleBtn.addEventListener('click', async () => {
     loginGoogleBtn.disabled = true;
-    loginGoogleBtn.textContent = 'Redireccionando...';
+    loginGoogleBtn.textContent = 'Conectando...';
     
     const result = await signInWithGoogle();
     
-    // Si es redirect, la página se recargará automáticamente
     if (!result.success) {
-      alert('Error: ' + result.error);
+      if (result.error && result.error.includes('blocked')) {
+        alert('El popup fue bloqueado. Por favor permite popups para este sitio, o usa "Continuar como Invitado".');
+      } else {
+        alert('Error al iniciar sesión: ' + result.error);
+      }
       loginGoogleBtn.disabled = false;
       loginGoogleBtn.innerHTML = '<span class="login-btn-icon"><img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google"></span><span>Continuar con Google</span>';
     }
