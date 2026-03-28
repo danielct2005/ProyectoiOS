@@ -1694,6 +1694,11 @@ body.dark-mode .news-item--link:hover {
   font-size: 1.25rem;
 }
 
+.login-btn-icon img {
+  width: 20px;
+  height: 20px;
+}
+
 .login-note {
   margin-top: var(--space-xl);
   font-size: 0.8rem;
