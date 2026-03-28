@@ -25,6 +25,28 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
+  <!-- Login Screen -->
+  <div class="login-screen" id="loginScreen">
+    <div class="login-container">
+      <div class="login-logo">💰</div>
+      <h1 class="login-title">Mis Finanzas</h1>
+      <p class="login-subtitle">Gestión personal de tus finanzas</p>
+      
+      <div class="login-buttons">
+        <button class="login-btn login-btn-google" id="loginGoogleBtn">
+          <span class="login-btn-icon">🔵</span>
+          <span>Continuar con Google</span>
+        </button>
+        <button class="login-btn login-btn-anon" id="loginAnonBtn">
+          <span class="login-btn-icon">👤</span>
+          <span>Continuar como Invitado</span>
+        </button>
+      </div>
+      
+      <p class="login-note">Con Google tus datos se sincronizarán en todos tus dispositivos</p>
+    </div>
+  </div>
+
   <div class="offline-banner" id="offlineBanner">
     Sin conexión - Modo offline activo
   </div>
@@ -34,6 +56,10 @@
   <div class="hamburger-menu" id="hamburgerMenu">
     <div class="menu-header">
       <span class="menu-title">Menú</span>
+      <div class="menu-user" id="menuUser">
+        <span class="menu-user-name" id="userDisplayName">Cargando...</span>
+        <button class="menu-logout-btn" id="logoutBtn" title="Cerrar sesión">🚪</button>
+      </div>
     </div>
     <div class="menu-content">
       <button class="menu-item active" data-section="finanzas">

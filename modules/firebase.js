@@ -1,24 +1,28 @@
 /**
  * ===== MODULO DE FIREBASE =====
- * Configuracion y sincronizacion con Firestore
+ * Configuracion, autenticacion y sincronizacion con Firestore
  */
 
 // IMPORTANTE: Reemplaza estos valores con los de tu proyecto Firebase
 // Obtlos en: Firebase Console > Configuracion del proyecto > Tus apps > Web app
 
 const firebaseConfig = {
-  apiKey: "TU_API_KEY",
-  authDomain: "TU_PROYECTO.firebaseapp.com",
-  projectId: "TU_PROYECTO",
-  storageBucket: "TU_PROYECTO.appspot.com",
-  messagingSenderId: "TU_SENDER_ID",
-  appId: "TU_APP_ID"
+  apiKey: "AIzaSyCUnWsDNu1FuoJ0CECAS5ReSbkkbXU_Y6Q",
+  authDomain: "misfinanzas-e0813.firebaseapp.com",
+  projectId: "misfinanzas-e0813",
+  storageBucket: "misfinanzas-e0813.firebasestorage.app",
+  messagingSenderId: "689243140150",
+  appId: "1:689243140150:web:e7c45d78b8cf5f137e2897",
+  measurementId: "G-2MKSHZE5ME"
 };
 
 // Estado de sincronizacion
 export let isFirebaseReady = false;
 export let isOnline = navigator.onLine;
-let unsubscribe = null;
+export let currentUser = null;
+export let isAnonymous = false;
+let unsubscribeAuth = null;
+let unsubscribeData = null;
 
 // ==================== INICIALIZAR FIREBASE ====================
 
@@ -34,25 +38,41 @@ export async function initFirebase() {
       window.firebase.initializeApp(firebaseConfig);
     }
     
-    // Verificar conexion
-    const db = window.firebase.firestore();
-    await db.collection('_health').doc('check').get();
+    // Configurar autenticacion
+    const auth = window.firebase.auth();
     
-    isFirebaseReady = true;
-    console.log('Firebase conectado correctamente');
+    // Provider Google
+    const googleProvider = new window.firebase.auth.GoogleAuthProvider();
     
-    // Listener para cambios de conexion
-    window.addEventListener('online', () => {
-      isOnline = true;
-      console.log('Conexion restaurada');
+    // Verificar estado de autenticacion
+    return new Promise((resolve) => {
+      auth.onAuthStateChanged(async (user) => {
+        if (user) {
+          currentUser = user;
+          isAnonymous = user.isAnonymous;
+          console.log('Usuario autenticado:', user.email || 'Anónimo');
+        } else {
+          // No hay usuario, mostrar pantalla de login
+          console.log('No hay usuario conectado');
+        }
+        
+        isFirebaseReady = true;
+        
+        // Listener para cambios de conexion
+        window.addEventListener('online', () => {
+          isOnline = true;
+          console.log('Conexion restaurada');
+        });
+        
+        window.addEventListener('offline', () => {
+          isOnline = false;
+          console.log('Sin conexion - modo offline');
+        });
+        
+        resolve(true);
+      });
     });
     
-    window.addEventListener('offline', () => {
-      isOnline = false;
-      console.log('Sin conexion - modo offline');
-    });
-    
-    return true;
   } catch (error) {
     console.error('Error inicializando Firebase:', error);
     isFirebaseReady = false;
@@ -88,6 +108,69 @@ function loadFirebaseSDK() {
   });
 }
 
+// ==================== AUTENTICACION ====================
+
+export async function signInWithGoogle() {
+  const auth = window.firebase.auth();
+  const googleProvider = new window.firebase.auth.GoogleAuthProvider();
+  
+  try {
+    const result = await auth.signInWithPopup(googleProvider);
+    currentUser = result.user;
+    isAnonymous = false;
+    console.log('Login con Google exitoso:', result.user.email);
+    return { success: true, user: result.user };
+  } catch (error) {
+    console.error('Error con Google:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function signInAnonymously() {
+  const auth = window.firebase.auth();
+  
+  try {
+    const result = await auth.signInAnonymously();
+    currentUser = result.user;
+    isAnonymous = true;
+    console.log('Login anonimo exitoso');
+    return { success: true, user: result.user };
+  } catch (error) {
+    console.error('Error anonimo:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function signOut() {
+  const auth = window.firebase.auth();
+  
+  try {
+    await auth.signOut();
+    currentUser = null;
+    isAnonymous = false;
+    console.log('Sesion cerrada');
+    return { success: true };
+  } catch (error) {
+    console.error('Error al cerrar sesion:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+export function isUserLoggedIn() {
+  return currentUser !== null;
+}
+
+export function getUserDisplayName() {
+  if (!currentUser) return 'Invitado';
+  if (isAnonymous) return 'Anonimo';
+  return currentUser.displayName || currentUser.email || 'Usuario';
+}
+
+export function getUserEmail() {
+  if (!currentUser) return '';
+  return currentUser.email || '';
+}
+
 // ==================== FIRESTORE HELPERS ====================
 
 export function getDb() {
@@ -97,15 +180,17 @@ export function getDb() {
   return window.firebase.firestore();
 }
 
-export function getUserId() {
-  // Por ahora usamos un ID unico basado en el dispositivo
-  // En el futuro puedes agregar autenticacion
-  let userId = localStorage.getItem('finanzas_user_id');
-  if (!userId) {
-    userId = 'user_' + Math.random().toString(36).substr(2, 9);
-    localStorage.setItem('finanzas_user_id', userId);
+function getUserId() {
+  if (!currentUser) {
+    // Si no hay usuario, usar ID del dispositivo
+    let deviceId = localStorage.getItem('finanzas_device_id');
+    if (!deviceId) {
+      deviceId = 'device_' + Math.random().toString(36).substr(2, 9);
+      localStorage.setItem('finanzas_device_id', deviceId);
+    }
+    return deviceId;
   }
-  return userId;
+  return currentUser.uid;
 }
 
 // ==================== GUARDAR DATOS ====================
@@ -113,6 +198,12 @@ export function getUserId() {
 export async function saveToFirestore(collection, data) {
   if (!isFirebaseReady) {
     console.warn('Firebase no disponible, guardando en localStorage');
+    return false;
+  }
+  
+  // Si es anonimo, solo guardar localmente
+  if (isAnonymous) {
+    console.log('Usuario anonimo - guardando solo localmente');
     return false;
   }
   
@@ -140,6 +231,12 @@ export async function loadFromFirestore(collection) {
     return null;
   }
   
+  // Si es anonimo, no cargar desde la nube
+  if (isAnonymous) {
+    console.log('Usuario anonimo - usando solo datos locales');
+    return null;
+  }
+  
   try {
     const userId = getUserId();
     const docRef = getDb().collection('users').doc(userId).collection(collection).doc('data');
@@ -158,12 +255,17 @@ export async function loadFromFirestore(collection) {
 // ==================== SINCRONIZACION EN TIEMPO REAL ====================
 
 export function subscribeToChanges(collection, callback) {
-  if (!isFirebaseReady) return () => {};
+  if (!isFirebaseReady || isAnonymous) return () => {};
+  
+  // Desuscribir anterior
+  if (unsubscribeData) {
+    unsubscribeData();
+  }
   
   const userId = getUserId();
   const docRef = getDb().collection('users').doc(userId).collection(collection).doc('data');
   
-  unsubscribe = docRef.onSnapshot((doc) => {
+  unsubscribeData = docRef.onSnapshot((doc) => {
     if (doc.exists) {
       callback(doc.data());
     }
@@ -171,23 +273,23 @@ export function subscribeToChanges(collection, callback) {
     console.error('Error en suscripcion:', error);
   });
   
-  return unsubscribe;
+  return unsubscribeData;
 }
 
-// ==================== ELIMINAR SUSCRIPCION ====================
+// ==================== ELIMINAR SUSCRIPCIONES ====================
 
-export function unsubscribeChanges() {
-  if (unsubscribe) {
-    unsubscribe();
-    unsubscribe = null;
+export function unsubscribeAll() {
+  if (unsubscribeData) {
+    unsubscribeData();
+    unsubscribeData = null;
   }
 }
 
 // ==================== EXPORT/IMPORT ====================
 
 export async function exportAllUserData() {
-  if (!isFirebaseReady) {
-    throw new Error('Firebase no disponible');
+  if (!isFirebaseReady || isAnonymous) {
+    throw new Error('Firebase no disponible para usuario anonimo');
   }
   
   const userId = getUserId();
@@ -207,11 +309,23 @@ export async function exportAllUserData() {
 }
 
 export async function importAllUserData(data) {
-  if (!isFirebaseReady) {
-    throw new Error('Firebase no disponible');
+  if (!isFirebaseReady || isAnonymous) {
+    throw new Error('Firebase no disponible para usuario anonimo');
   }
   
   for (const [collection, value] of Object.entries(data)) {
     await saveToFirestore(collection, value);
   }
+}
+
+// ==================== ACTUALIZAR ESTADO ====================
+
+export function getAuthState() {
+  return {
+    isLoggedIn: currentUser !== null,
+    isAnonymous: isAnonymous,
+    displayName: getUserDisplayName(),
+    email: getUserEmail(),
+    photoURL: currentUser?.photoURL || null
+  };
 }

@@ -1606,3 +1606,137 @@ body.dark-mode .news-item--link:hover {
   font-size: 1.25rem;
 }
 
+/* ===== LOGIN SCREEN ===== */
+.login-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--background);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: var(--space-lg);
+}
+
+.login-screen.hidden {
+  display: none;
+}
+
+.login-container {
+  text-align: center;
+  max-width: 320px;
+  width: 100%;
+}
+
+.login-logo {
+  font-size: 5rem;
+  margin-bottom: var(--space-md);
+}
+
+.login-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: var(--space-xs);
+}
+
+.login-subtitle {
+  color: var(--text-secondary);
+  margin-bottom: var(--space-xl);
+}
+
+.login-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.login-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  width: 100%;
+  padding: var(--space-md) var(--space-lg);
+  border: none;
+  border-radius: var(--radius);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.login-btn:active {
+  transform: scale(0.98);
+}
+
+.login-btn-google {
+  background: var(--white);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--gray-200);
+}
+
+.login-btn-google:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+.login-btn-anon {
+  background: var(--gray-100);
+  color: var(--text-primary);
+  border: 1px solid var(--gray-300);
+}
+
+.login-btn-icon {
+  font-size: 1.25rem;
+}
+
+.login-note {
+  margin-top: var(--space-xl);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+/* ===== MENU USER INFO ===== */
+.menu-user {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-sm) 0;
+  border-bottom: 1px solid var(--gray-200);
+  margin-bottom: var(--space-sm);
+}
+
+.menu-user-name {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.menu-logout-btn {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  padding: var(--space-xs);
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.menu-logout-btn:hover {
+  opacity: 1;
+}
+
+/* Dark mode login */
+@media (prefers-color-scheme: dark) {
+  .login-screen {
+    background: var(--gray-900);
+  }
+  
+  .login-title {
+    color: var(--white);
+  }
+}
+

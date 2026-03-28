@@ -15,6 +15,7 @@ import * as Agenda from './agenda.js';
 import * as Economia from './economia.js';
 import * as Ahorros from './ahorros.js';
 import * as Noticias from './noticias.js';
+import { getAuthState, signOut } from './firebase.js';
 
 // ==================== CONSTANTS ====================
 
@@ -57,6 +58,7 @@ export function setupMenuHandlers() {
   const overlay = document.getElementById('menuOverlay');
   
   menuBtn?.addEventListener('click', () => {
+    updateUserDisplay();
     menu?.classList.add('visible');
     overlay?.classList.add('visible');
   });
@@ -79,8 +81,41 @@ export function setupMenuHandlers() {
   // Dark mode button
   document.getElementById('darkModeBtn')?.addEventListener('click', toggleDarkMode);
   
+  // Logout button
+  document.getElementById('logoutBtn')?.addEventListener('click', async () => {
+    if (confirm('¿Cerrar sesión?')) {
+      await signOut();
+      window.location.reload();
+    }
+  });
+  
   // Initialize dark mode
   updateDarkMode();
+  
+  // Initialize user display
+  updateUserDisplay();
+}
+
+function updateUserDisplay() {
+  const userDisplayName = document.getElementById('userDisplayName');
+  const logoutBtn = document.getElementById('logoutBtn');
+  
+  if (!userDisplayName) return;
+  
+  try {
+    const authState = getAuthState();
+    
+    if (authState.isLoggedIn) {
+      userDisplayName.textContent = authState.displayName;
+      if (logoutBtn) logoutBtn.style.display = 'block';
+    } else {
+      userDisplayName.textContent = 'No conectado';
+      if (logoutBtn) logoutBtn.style.display = 'none';
+    }
+  } catch (e) {
+    userDisplayName.textContent = 'Cargando...';
+    if (logoutBtn) logoutBtn.style.display = 'none';
+  }
 }
 
 // ==================== RENDER MENU ====================

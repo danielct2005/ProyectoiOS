@@ -15,6 +15,69 @@
 import { appState, loadData, saveData } from './modules/storage.js';
 import { getCurrentMonthKey } from './modules/utils.js';
 import * as UI from './modules/ui.js';
+import { 
+  initFirebase, 
+  signInWithGoogle, 
+  signInAnonymously, 
+  signOut,
+  getAuthState,
+  isFirebaseReady
+} from './modules/firebase.js';
+
+// ==================== LOGIN UI ====================
+
+function setupLoginScreen() {
+  const loginScreen = document.getElementById('loginScreen');
+  const loginGoogleBtn = document.getElementById('loginGoogleBtn');
+  const loginAnonBtn = document.getElementById('loginAnonBtn');
+  
+  if (!loginScreen) return;
+  
+  // Login con Google
+  loginGoogleBtn.addEventListener('click', async () => {
+    loginGoogleBtn.disabled = true;
+    loginGoogleBtn.textContent = 'Conectando...';
+    
+    const result = await signInWithGoogle();
+    
+    if (result.success) {
+      loginScreen.classList.add('hidden');
+    } else {
+      alert('Error: ' + result.error);
+      loginGoogleBtn.disabled = false;
+      loginGoogleBtn.innerHTML = '<span class="login-btn-icon">🔵</span><span>Continuar con Google</span>';
+    }
+  });
+  
+  // Login anónimo
+  loginAnonBtn.addEventListener('click', async () => {
+    loginAnonBtn.disabled = true;
+    loginAnonBtn.textContent = 'Conectando...';
+    
+    const result = await signInAnonymously();
+    
+    if (result.success) {
+      loginScreen.classList.add('hidden');
+    } else {
+      alert('Error: ' + result.error);
+      loginAnonBtn.disabled = false;
+      loginAnonBtn.innerHTML = '<span class="login-btn-icon">👤</span><span>Continuar como Invitado</span>';
+    }
+  });
+}
+
+function checkAuthAndShowLogin() {
+  const loginScreen = document.getElementById('loginScreen');
+  if (!loginScreen) return;
+  
+  const authState = getAuthState();
+  
+  if (authState.isLoggedIn) {
+    loginScreen.classList.add('hidden');
+  } else {
+    loginScreen.classList.remove('hidden');
+  }
+}
 
 // ==================== INITIALIZATION ====================
 
@@ -23,6 +86,15 @@ import * as UI from './modules/ui.js';
  */
 async function init() {
   console.log('🚀 Inicializando App Modular...');
+  
+  // Configurar pantalla de login
+  setupLoginScreen();
+  
+  // Inicializar Firebase
+  await initFirebase();
+  
+  // Verificar si hay usuario logueado
+  checkAuthAndShowLogin();
   
   // Inicializar mes actual
   appState.currentMonth = getCurrentMonthKey();
