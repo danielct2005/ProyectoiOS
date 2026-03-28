@@ -33,9 +33,9 @@
       <p class="login-subtitle">Gestión personal de tus finanzas</p>
       
       <div class="login-buttons">
-        <button class="login-btn login-btn-apple" id="loginAppleBtn">
-          <span class="login-btn-icon">🍎</span>
-          <span>Continuar con Apple</span>
+        <button class="login-btn login-btn-email" id="loginEmailBtn">
+          <span class="login-btn-icon">✉️</span>
+          <span>Continuar con Email</span>
         </button>
         <button class="login-btn login-btn-google" id="loginGoogleBtn">
           <span class="login-btn-icon"><img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google"></span>
@@ -45,6 +45,17 @@
           <span class="login-btn-icon">👤</span>
           <span>Continuar como Invitado</span>
         </button>
+      </div>
+      
+      <!-- Formulario de email -->
+      <div class="login-email-form" id="loginEmailForm" style="display: none;">
+        <input type="email" id="emailInput" placeholder="Tu email" class="login-input">
+        <input type="password" id="passwordInput" placeholder="Contraseña" class="login-input">
+        <div class="login-email-buttons">
+          <button class="login-btn login-btn-primary" id="registerBtn">Registrarse</button>
+          <button class="login-btn login-btn-secondary" id="loginBtn">Iniciar Sesión</button>
+        </div>
+        <button class="login-back-btn" id="backToLoginBtn">← Volver</button>
       </div>
       
       <p class="login-note">Con Google tus datos se sincronizarán en todos tus dispositivos</p>

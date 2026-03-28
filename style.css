@@ -1684,20 +1684,66 @@ body.dark-mode .news-item--link:hover {
   box-shadow: var(--shadow-lg);
 }
 
-.login-btn-apple {
-  background: var(--black);
+.login-btn-email {
+  background: var(--primary);
   color: var(--white);
   border: none;
 }
 
-.login-btn-apple:hover {
-  background: #333;
+.login-btn-email:hover {
+  background: var(--primary-dark);
+}
+
+.login-btn-primary {
+  background: var(--primary);
+  color: var(--white);
+  border: none;
+}
+
+.login-btn-secondary {
+  background: var(--gray-200);
+  color: var(--text-primary);
+  border: none;
 }
 
 .login-btn-anon {
   background: var(--gray-100);
   color: var(--text-primary);
   border: 1px solid var(--gray-300);
+}
+
+/* Email form */
+.login-email-form {
+  margin-top: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.login-input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--gray-300);
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.login-email-buttons {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.login-email-buttons .login-btn {
+  flex: 1;
+}
+
+.login-back-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  margin-top: var(--space-sm);
+  cursor: pointer;
 }
 
 .login-btn-icon {

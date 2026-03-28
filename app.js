@@ -18,7 +18,8 @@ import * as UI from './modules/ui.js';
 import { 
   initFirebase, 
   signInWithGoogle, 
-  signInWithApple,
+  signInWithEmail,
+  signUpWithEmail,
   signInAnonymously, 
   signOut,
   getAuthState,
@@ -30,8 +31,14 @@ import {
 function setupLoginScreen() {
   const loginScreen = document.getElementById('loginScreen');
   const loginGoogleBtn = document.getElementById('loginGoogleBtn');
-  const loginAppleBtn = document.getElementById('loginAppleBtn');
+  const loginEmailBtn = document.getElementById('loginEmailBtn');
   const loginAnonBtn = document.getElementById('loginAnonBtn');
+  const loginEmailForm = document.getElementById('loginEmailForm');
+  const emailInput = document.getElementById('emailInput');
+  const passwordInput = document.getElementById('passwordInput');
+  const registerBtn = document.getElementById('registerBtn');
+  const loginBtn = document.getElementById('loginBtn');
+  const backToLoginBtn = document.getElementById('backToLoginBtn');
   
   if (!loginScreen) return;
   
@@ -53,17 +60,61 @@ function setupLoginScreen() {
     }
   });
   
-  // Login con Apple
-  loginAppleBtn?.addEventListener('click', async () => {
-    loginAppleBtn.disabled = true;
-    loginAppleBtn.textContent = 'Conectando...';
+  // Mostrar formulario de email
+  loginEmailBtn?.addEventListener('click', () => {
+    document.querySelector('.login-buttons').style.display = 'none';
+    document.querySelector('.login-note').style.display = 'none';
+    loginEmailForm.style.display = 'flex';
+  });
+  
+  // Volver a los botones de login
+  backToLoginBtn?.addEventListener('click', () => {
+    loginEmailForm.style.display = 'none';
+    document.querySelector('.login-buttons').style.display = 'flex';
+    document.querySelector('.login-note').style.display = 'block';
+  });
+  
+  // Registrarse con email
+  registerBtn?.addEventListener('click', async () => {
+    const email = emailInput.value;
+    const password = passwordInput.value;
     
-    const result = await signInWithApple();
+    if (!email || !password) {
+      alert('Por favor ingresa email y contraseña');
+      return;
+    }
+    
+    registerBtn.disabled = true;
+    registerBtn.textContent = 'Registrando...';
+    
+    const result = await signUpWithEmail(email, password);
     
     if (!result.success) {
-      alert('Error al iniciar sesión: ' + result.error);
-      loginAppleBtn.disabled = false;
-      loginAppleBtn.innerHTML = '<span class="login-btn-icon">🍎</span><span>Continuar con Apple</span>';
+      alert('Error: ' + result.error);
+      registerBtn.disabled = false;
+      registerBtn.textContent = 'Registrarse';
+    }
+  });
+  
+  // Iniciar sesión con email
+  loginBtn?.addEventListener('click', async () => {
+    const email = emailInput.value;
+    const password = passwordInput.value;
+    
+    if (!email || !password) {
+      alert('Por favor ingresa email y contraseña');
+      return;
+    }
+    
+    loginBtn.disabled = true;
+    loginBtn.textContent = 'Iniciando...';
+    
+    const result = await signInWithEmail(email, password);
+    
+    if (!result.success) {
+      alert('Error: ' + result.error);
+      loginBtn.disabled = false;
+      loginBtn.textContent = 'Iniciar Sesión';
     }
   });
   
