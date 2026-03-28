@@ -47,16 +47,16 @@ const globalNews = [
 ];
 
 const warNews = [
-  { title: 'Conflicto en Gaza: Israel amplia operaciones terrestres en Rafah', source: 'Al Jazeera', url: 'https://www.aljazeera.com' },
-  { title: 'Ucranianos跪ra: Combates intensos en el frente oriental', source: 'BBC News', url: 'https://www.bbc.com' },
-  { title: 'Medio Oriente: Tensiones Iran-Israel generan alerta internacional', source: 'Reuters', url: 'https://www.reuters.com' },
-  { title: 'Gaza: Ayuda humanitaria sigue insuficiente segun la ONU', source: 'AP News', url: 'https://apnews.com' },
-  { title: 'Rusia-Ucraina: Negociaciones de paz en punto muerto', source: 'The Guardian', url: 'https://www.theguardian.com' },
-  { title: 'Medio Oriente: Oleoductos bajo amenaza por conflictos navales', source: 'Bloomberg', url: 'https://www.bloomberg.com' },
-  { title: 'Gaza: Mas de 30.000 civiles han fallecido segun autoridades sanitarias', source: 'CNN', url: 'https://www.cnn.com' },
-  { title: 'Ucraina: Ayuda militar de EE.UU. podria aprobarse pronto', source: 'Washington Post', url: 'https://www.washingtonpost.com' },
-  { title: 'Medio Oriente: OPEC expr concerns over oil supply disruptions', source: 'Financial Times', url: 'https://www.ft.com' },
-  { title: 'Conflictos armed: Inversores buscan refugio en bonos y oro', source: 'CNBC', url: 'https://www.cnbc.com' },
+  { title: 'Iran-Israel: Escalada militar - Iran lanza ataque con drones y misiles', source: 'BBC News', url: 'https://www.bbc.com' },
+  { title: 'Estrecho de Ormuz: Tensiones amenazan suministro mundial de petroleo', source: 'Reuters', url: 'https://www.reuters.com' },
+  { title: 'Golfo Persico: Barcos mercantes evitan zona por ataques', source: 'Al Jazeera', url: 'https://www.aljazeera.com' },
+  { title: 'Israel-Iran: EE.UU. promete apoyo militar a Israel', source: 'CNN', url: 'https://www.cnn.com' },
+  { title: 'Gaza: Operacion militar israeli en Rafah esta en curso', source: 'AP News', url: 'https://apnews.com' },
+  { title: 'Golfo de Adén: Hutíes Yemen atacan barcos comerciales', source: 'The Guardian', url: 'https://www.theguardian.com' },
+  { title: 'Petroleo: Precios suben 3% por tensiones en Medio Oriente', source: 'Bloomberg', url: 'https://www.bloomberg.com' },
+  { title: 'Ucranianos: Rusia gana terreno en el frente oriental', source: 'BBC News', url: 'https://www.bbc.com' },
+  { title: 'NATO: Alertan sobre posible expandision del conflicto en Europa', source: 'Financial Times', url: 'https://www.ft.com' },
+  { title: 'Armamento: Iran advierte que proximo ataque sera mas grande', source: 'Washington Post', url: 'https://www.washingtonpost.com' },
 ];
 
 async function fetchLatamNews() {
