@@ -1521,6 +1521,11 @@ body.dark-mode .icon-option {
   margin-bottom: var(--space-md);
 }
 
+.news-selector--3 .news-source-btn {
+  font-size: 0.75rem;
+  padding: var(--space-sm);
+}
+
 .news-source-btn {
   flex: 1;
   padding: var(--space-sm) var(--space-md);

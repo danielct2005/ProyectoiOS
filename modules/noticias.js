@@ -13,7 +13,7 @@ import { escapeHtml, generateId } from './utils.js';
 
 // ==================== STATE ====================
 
-let currentNewsSource = 'latam'; // 'latam' or 'global'
+let currentNewsSource = 'latam'; // 'latam', 'global' or 'war'
 let newsItems = [];
 let isLoading = false;
 
@@ -41,9 +41,22 @@ const globalNews = [
   { title: 'Economia de Estados Unidos muestra fortaleza en el trimestre', source: 'The Wall Street Journal', url: 'https://www.wsj.com' },
   { title: 'Banco Central Europeo mantiene politica monetaria expansiva', source: 'Financial Times', url: 'https://www.ft.com' },
   { title: 'Mercados asiaticos cierran con ganancias generalizadas', source: 'Reuters', url: 'https://www.reuters.com' },
-  { title: 'Criptomonedas mantienen estabilidad luego de recientes volatilidad', source: 'CoinDesk', url: 'https://www.coindesk.com' },
+  { title: 'Criptomonedas mantienen estabilidad luego de recientes volatilidades', source: 'CoinDesk', url: 'https://www.coindesk.com' },
   { title: 'Precio del petroleo sube por tensiones geopoliticas', source: 'Bloomberg', url: 'https://www.bloomberg.com' },
   { title: 'Economia global enfrenta desafios por inflacion persistente', source: 'The Economist', url: 'https://www.economist.com' },
+];
+
+const warNews = [
+  { title: 'Conflicto en Gaza: Israel amplia operaciones terrestres en Rafah', source: 'Al Jazeera', url: 'https://www.aljazeera.com' },
+  { title: 'Ucranianos跪ra: Combates intensos en el frente oriental', source: 'BBC News', url: 'https://www.bbc.com' },
+  { title: 'Medio Oriente: Tensiones Iran-Israel generan alerta internacional', source: 'Reuters', url: 'https://www.reuters.com' },
+  { title: 'Gaza: Ayuda humanitaria sigue insuficiente segun la ONU', source: 'AP News', url: 'https://apnews.com' },
+  { title: 'Rusia-Ucraina: Negociaciones de paz en punto muerto', source: 'The Guardian', url: 'https://www.theguardian.com' },
+  { title: 'Medio Oriente: Oleoductos bajo amenaza por conflictos navales', source: 'Bloomberg', url: 'https://www.bloomberg.com' },
+  { title: 'Gaza: Mas de 30.000 civiles han fallecido segun autoridades sanitarias', source: 'CNN', url: 'https://www.cnn.com' },
+  { title: 'Ucraina: Ayuda militar de EE.UU. podria aprobarse pronto', source: 'Washington Post', url: 'https://www.washingtonpost.com' },
+  { title: 'Medio Oriente: OPEC expr concerns over oil supply disruptions', source: 'Financial Times', url: 'https://www.ft.com' },
+  { title: 'Conflictos armed: Inversores buscan refugio en bonos y oro', source: 'CNBC', url: 'https://www.cnbc.com' },
 ];
 
 async function fetchLatamNews() {
@@ -84,6 +97,25 @@ async function fetchGlobalNews() {
   isLoading = false;
 }
 
+async function fetchWarNews() {
+  if (isLoading) return;
+  isLoading = true;
+  
+  // Simular carga pequena
+  await new Promise(r => setTimeout(r, 500));
+  
+  // Usar noticias de conflictos
+  newsItems = warNews.map((item, index) => ({
+    id: generateId(),
+    title: item.title,
+    url: item.url,
+    source: item.source,
+    timestamp: new Date(Date.now() - index * 1800000).toISOString(),
+  }));
+  
+  isLoading = false;
+}
+
 // ==================== MAIN RENDER ====================
 
 export function renderNoticiasContainer() {
@@ -98,8 +130,10 @@ export function renderNoticiasContainer() {
 async function loadNews() {
   if (currentNewsSource === 'latam') {
     await fetchLatamNews();
-  } else {
+  } else if (currentNewsSource === 'global') {
     await fetchGlobalNews();
+  } else {
+    await fetchWarNews();
   }
   renderNewsList();
 }
@@ -112,12 +146,15 @@ function renderNoticiasHTML() {
     </div>
     
     <!-- News Source Selector -->
-    <div class="news-selector">
+    <div class="news-selector news-selector--3">
       <button class="news-source-btn ${currentNewsSource === 'latam' ? 'active' : ''}" data-source="latam">
-        🌎 Latinoamerica
+        🌎 Latam
       </button>
       <button class="news-source-btn ${currentNewsSource === 'global' ? 'active' : ''}" data-source="global">
-        🌍 Global
+        💹 Global
+      </button>
+      <button class="news-source-btn ${currentNewsSource === 'war' ? 'active' : ''}" data-source="war">
+        ⚔️ Guerra
       </button>
     </div>
     
@@ -230,11 +267,13 @@ function setupNoticiasEvents() {
     
     // Ver mas button
     document.getElementById('viewMoreBtn')?.addEventListener('click', () => {
-      // Open Yahoo Finance in new tab
+      // Open appropriate news source
       if (currentNewsSource === 'latam') {
-        window.open('https://espanol.news.yahoo.com/finanzas/', '_blank');
+        window.open('https://www.emol.com/', '_blank');
+      } else if (currentNewsSource === 'global') {
+        window.open('https://www.bloomberg.com/', '_blank');
       } else {
-        window.open('https://finance.yahoo.com/', '_blank');
+        window.open('https://www.bbc.com/news/world', '_blank');
       }
     });
   }, 100);
