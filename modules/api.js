@@ -30,35 +30,40 @@ const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
  * Falls back a proxies públicos si el proxy local no está disponible
  */
 async function fetchWithErrorHandling(url, options = {}) {
-  const timeoutMs = 8000; // 8 segundos de timeout
+  const timeoutMs = 15000; // 15 segundos de timeout (más razonable)
   
-  // 1. Primero intentar con el proxy local de Vercel
-  try {
-    // Extraer el indicador de la URL (ej: "uf" de "/api/uf")
-    const indicator = url.split('/').pop();
-    const proxyUrl = `${API_PROXY_URL}?indicator=${indicator}`;
-    
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-    
-    const response = await fetch(proxyUrl, {
-      ...options,
-      signal: controller.signal
-    });
-    
-    clearTimeout(timeoutId);
-    
-    if (response.ok) {
-      const data = await response.json();
-      if (data.success && data.value) {
-        // Transformar al formato esperado por la app
-        return {
-          serie: [{ valor: data.value, fecha: data.fecha }]
-        };
+  // 1. Primero intentar con el proxy local de Vercel (3 intentos)
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const indicator = url.split('/').pop();
+      const proxyUrl = `${API_PROXY_URL}?indicator=${indicator}`;
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+      
+      const response = await fetch(proxyUrl, {
+        ...options,
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.value) {
+          return {
+            serie: [{ valor: data.value, fecha: data.fecha }]
+          };
+        }
       }
+    } catch (error) {
+      if (attempt < 3) {
+        console.warn(`Proxy local intento ${attempt} falló, reintentando...`);
+        await new Promise(r => setTimeout(r, 1000)); // Esperar 1 segundo
+        continue;
+      }
+      console.warn('Proxy local (Vercel) falló después de 3 intentos');
     }
-  } catch (error) {
-    console.warn('Proxy local (Vercel) falló, intentando proxies públicos:', error.message);
   }
   
   // 2. Si el proxy local falla, intentar con proxies públicos
@@ -86,13 +91,9 @@ async function fetchWithErrorHandling(url, options = {}) {
       
       const data = await response.json();
       
-      // Verificar que los datos son válidos
       if (data && data.serie && data.serie.length > 0) {
         return data;
       }
-      
-      console.warn('Datos inválidos del proxy, intentando siguiente...');
-      continue;
       
     } catch (error) {
       console.warn(`Proxy ${proxy} falló:`, error.message);
@@ -100,24 +101,42 @@ async function fetchWithErrorHandling(url, options = {}) {
     }
   }
   
-  // Si todos los proxies fallan, lanzar error
-  throw new Error('Todos los proxies CORS fallaron');
+  // Si todos fallan, usar datos caché si existen
+  const cached = cache.get(url);
+  if (cached) {
+    console.warn('Usando datos en caché debido a fallo de proxies');
+    return cached.data;
+  }
+  
+  throw new Error('Todos los proxies fallaron y no hay caché');
 }
 
 /**
- * Obtiene datos con caché
+ * Obtiene datos con caché - siempre guarda en caché cuando tiene éxito
  */
 async function fetchWithCache(key, fetcher) {
   const cached = cache.get(key);
   
+  // Si hay caché válido, usarlo
   if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
     return cached.data;
   }
   
-  const data = await fetcher();
-  cache.set(key, { data, timestamp: Date.now() });
-  
-  return data;
+  try {
+    const data = await fetcher();
+    // Siempre guardar en caché si hay éxito
+    if (data && data.serie && data.serie.length > 0) {
+      cache.set(key, { data, timestamp: Date.now() });
+    }
+    return data;
+  } catch (error) {
+    // Si falla, pero hay caché aunque esté vencido, usarlo como fallback
+    if (cached) {
+      console.warn('API falló, usando caché vencido:', key);
+      return cached.data;
+    }
+    throw error;
+  }
 }
 
 // ==================== MINDICADOR API ====================
