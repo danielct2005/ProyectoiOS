@@ -172,12 +172,6 @@ export async function checkRedirectResult() {
   }
 }
 
-// Verificar si hay resultado de redirect pendiente
-export async function checkRedirectResult() {
-  // Ya no necesario con el nuevo flujo de Google Identity
-  return { success: false };
-}
-
 export async function signInAnonymously() {
   const auth = window.firebase.auth();
   
