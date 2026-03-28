@@ -115,13 +115,30 @@ export async function signInWithGoogle() {
   const googleProvider = new window.firebase.auth.GoogleAuthProvider();
   
   try {
-    const result = await auth.signInWithPopup(googleProvider);
-    currentUser = result.user;
-    isAnonymous = false;
-    console.log('Login con Google exitoso:', result.user.email);
-    return { success: true, user: result.user };
+    // Usar redirect en vez de popup (mejor para iOS Safari)
+    await auth.signInWithRedirect(googleProvider);
+    return { success: true, redirecting: true };
   } catch (error) {
     console.error('Error con Google:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+// Verificar si hay resultado de redirect pendiente
+export async function checkRedirectResult() {
+  const auth = window.firebase.auth();
+  
+  try {
+    const result = await auth.getRedirectResult();
+    if (result.user) {
+      currentUser = result.user;
+      isAnonymous = false;
+      console.log('Login con Google exitoso:', result.user.email);
+      return { success: true, user: result.user };
+    }
+    return { success: false };
+  } catch (error) {
+    console.error('Error en redirect:', error);
     return { success: false, error: error.message };
   }
 }

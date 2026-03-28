@@ -21,7 +21,7 @@ import {
   signInAnonymously, 
   signOut,
   getAuthState,
-  isFirebaseReady
+  checkRedirectResult
 } from './modules/firebase.js';
 
 // ==================== LOGIN UI ====================
@@ -33,19 +33,18 @@ function setupLoginScreen() {
   
   if (!loginScreen) return;
   
-  // Login con Google
+  // Login con Google (usa redirect para iOS Safari)
   loginGoogleBtn.addEventListener('click', async () => {
     loginGoogleBtn.disabled = true;
-    loginGoogleBtn.textContent = 'Conectando...';
+    loginGoogleBtn.textContent = 'Redireccionando...';
     
     const result = await signInWithGoogle();
     
-    if (result.success) {
-      loginScreen.classList.add('hidden');
-    } else {
+    // Si es redirect, la página se recargará automáticamente
+    if (!result.success && !result.redirecting) {
       alert('Error: ' + result.error);
       loginGoogleBtn.disabled = false;
-      loginGoogleBtn.innerHTML = '<span class="login-btn-icon">🔵</span><span>Continuar con Google</span>';
+      loginGoogleBtn.innerHTML = '<span class="login-btn-icon"><img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google"></span><span>Continuar con Google</span>';
     }
   });
   
@@ -92,6 +91,9 @@ async function init() {
   
   // Inicializar Firebase
   await initFirebase();
+  
+  // Verificar resultado de redirect de Google (si volvió de login)
+  await checkRedirectResult();
   
   // Verificar si hay usuario logueado
   checkAuthAndShowLogin();
