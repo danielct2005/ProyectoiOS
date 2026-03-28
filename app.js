@@ -92,8 +92,10 @@ async function init() {
   // Inicializar Firebase
   await initFirebase();
   
-  // Verificar si hay usuario logueado
-  checkAuthAndShowLogin();
+  // Pequeno delay para asegurar que el estado de auth esté listo
+  setTimeout(() => {
+    checkAuthAndShowLogin();
+  }, 500);
   
   // Inicializar mes actual
   appState.currentMonth = getCurrentMonthKey();
