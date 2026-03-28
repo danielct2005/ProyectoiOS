@@ -110,19 +110,56 @@ function loadFirebaseSDK() {
 
 // ==================== AUTENTICACION ====================
 
-export async function signInWithGoogle() {
-  const auth = window.firebase.auth();
-  const googleProvider = new window.firebase.auth.GoogleAuthProvider();
-  
-  // Configuraciones para iOS Safari
-  googleProvider.setCustomParameters({
-    prompt: 'select_account'
+// Cargar Google Identity Services
+function loadGoogleIdentitySDK() {
+  return new Promise((resolve, reject) => {
+    if (window.google?.accounts?.id) {
+      resolve();
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.onload = resolve;
+    script.onerror = reject;
+    document.head.appendChild(script);
   });
-  
+}
+
+export async function signInWithGoogle() {
   try {
-    // Usar redirect en vez de popup (mejor para iOS Safari)
-    await auth.signInWithRedirect(googleProvider);
-    return { success: true, redirecting: true };
+    await loadGoogleIdentitySDK();
+    
+    const auth = window.firebase.auth();
+    
+    return new Promise((resolve) => {
+      window.google.accounts.id.initialize({
+        client_id: firebaseConfig.apiKey.includes('AIzaSy') ? 
+          firebaseConfig.apiKey.replace('AIzaSy', '') + '.apps.googleusercontent.com' : null,
+        ux_mode: 'redirect',
+        redirect_uri: window.location.href,
+        callback: async (response) => {
+          if (response.credential) {
+            const credential = window.firebase.auth.GoogleAuthProvider.credential(response.credential);
+            const result = await auth.signInWithCredential(credential);
+            currentUser = result.user;
+            isAnonymous = false;
+            console.log('Login con Google exitoso:', result.user.email);
+            resolve({ success: true, user: result.user });
+          }
+        }
+      });
+      
+      window.google.accounts.id.prompt((notification) => {
+        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+          // Fallback: forzar redirect
+          window.google.accounts.id.renderButton(
+            document.createElement('div'), 
+            { theme: 'outline', size: 'large' }
+          );
+          window.google.accounts.id.prompt();
+        }
+      });
+    });
   } catch (error) {
     console.error('Error con Google:', error);
     return { success: false, error: error.message };
@@ -131,21 +168,8 @@ export async function signInWithGoogle() {
 
 // Verificar si hay resultado de redirect pendiente
 export async function checkRedirectResult() {
-  const auth = window.firebase.auth();
-  
-  try {
-    const result = await auth.getRedirectResult();
-    if (result.user) {
-      currentUser = result.user;
-      isAnonymous = false;
-      console.log('Login con Google exitoso:', result.user.email);
-      return { success: true, user: result.user };
-    }
-    return { success: false };
-  } catch (error) {
-    console.error('Error en redirect:', error);
-    return { success: false, error: error.message };
-  }
+  // Ya no necesario con el nuevo flujo de Google Identity
+  return { success: false };
 }
 
 export async function signInAnonymously() {
