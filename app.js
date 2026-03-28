@@ -21,14 +21,14 @@ import * as UI from './modules/ui.js';
 /**
  * Inicializa la aplicación
  */
-function init() {
+async function init() {
   console.log('🚀 Inicializando App Modular...');
   
   // Inicializar mes actual
   appState.currentMonth = getCurrentMonthKey();
   
-  // Cargar datos desde localStorage
-  loadData();
+  // Cargar datos (desde Firebase o localStorage)
+  await loadData();
   
   // Configurar manejadores de eventos de UI
   UI.setupMenuHandlers();

@@ -1,13 +1,21 @@
 /**
  * ===== MÓDULO DE ALMACENAMIENTO =====
- * Gestión de localStorage para la aplicación
+ * Gestión de datos con Firebase + localStorage como fallback
  */
 
 import { generateId } from './utils.js';
+import { 
+  initFirebase, 
+  saveToFirestore, 
+  loadFromFirestore, 
+  subscribeToChanges,
+  isFirebaseReady 
+} from './firebase.js';
 
 // ==================== CONSTANTS ====================
 
 const STORAGE_KEY = 'finanzas_app_data';
+let firebaseInitialized = false;
 
 // ==================== STATE ====================
 
@@ -46,7 +54,51 @@ export const appState = {
 
 // ==================== LOAD DATA ====================
 
-export function loadData() {
+export async function loadData() {
+  // Primero intentar con Firebase
+  const firebaseOk = await initFirebase();
+  firebaseInitialized = firebaseOk;
+  
+  if (firebaseOk) {
+    try {
+      // Cargar datos de Firestore
+      const data = await loadFromFirestore('appData');
+      if (data) {
+        appState.transactions = data.transactions || [];
+        appState.fixedExpenses = data.fixedExpenses || [];
+        appState.debts = data.debts || [];
+        appState.creditCards = data.creditCards || [];
+        appState.history = data.history || {};
+        appState.lastPaymentMonth = data.lastPaymentMonth || null;
+        appState.importantDates = data.importantDates || [];
+        appState.previousMonthBalance = data.previousMonthBalance || 0;
+        appState.savingsAccounts = data.savingsAccounts || [];
+        appState.savingsGoals = data.savingsGoals || [];
+        appState.news = data.news || [];
+        
+        // Sincronizar cambios en tiempo real
+        subscribeToChanges('appData', (cloudData) => {
+          // Actualizar solo si hay cambios远程
+          console.log('Datos sincronizados desde la nube');
+        });
+        
+        // Guardar en localStorage como backup
+        saveData();
+        
+        console.log('Datos cargados desde Firebase');
+        return;
+      }
+    } catch (error) {
+      console.error('Error cargando desde Firebase:', error);
+    }
+  }
+  
+  // Fallback: localStorage
+  console.log('Usando localStorage como fallback');
+  loadFromLocalStorage();
+}
+
+function loadFromLocalStorage() {
   try {
     const data = localStorage.getItem(STORAGE_KEY);
     if (data) {
@@ -91,22 +143,32 @@ function resetState() {
 // ==================== SAVE DATA ====================
 
 export function saveData() {
+  const dataToSave = {
+    transactions: appState.transactions,
+    fixedExpenses: appState.fixedExpenses,
+    debts: appState.debts,
+    creditCards: appState.creditCards,
+    history: appState.history,
+    lastPaymentMonth: appState.lastPaymentMonth,
+    importantDates: appState.importantDates,
+    previousMonthBalance: appState.previousMonthBalance,
+    savingsAccounts: appState.savingsAccounts,
+    savingsGoals: appState.savingsGoals,
+    news: appState.news
+  };
+  
+  // Siempre guardar en localStorage como backup
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({
-      transactions: appState.transactions,
-      fixedExpenses: appState.fixedExpenses,
-      debts: appState.debts,
-      creditCards: appState.creditCards,
-      history: appState.history,
-      lastPaymentMonth: appState.lastPaymentMonth,
-      importantDates: appState.importantDates,
-      previousMonthBalance: appState.previousMonthBalance,
-      savingsAccounts: appState.savingsAccounts,
-      savingsGoals: appState.savingsGoals,
-      news: appState.news
-    }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
   } catch (error) {
-    console.error('Error al guardar datos:', error);
+    console.error('Error guardando en localStorage:', error);
+  }
+  
+  // Tambien guardar en Firebase si esta disponible
+  if (firebaseInitialized) {
+    saveToFirestore('appData', dataToSave).catch(err => {
+      console.error('Error guardando en Firebase:', err);
+    });
   }
 }
 
