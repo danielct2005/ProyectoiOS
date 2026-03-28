@@ -133,42 +133,41 @@ function loadGoogleIdentitySDK() {
 
 export async function signInWithGoogle() {
   try {
-    await loadGoogleIdentitySDK();
-    
     const auth = window.firebase.auth();
+    const googleProvider = new window.firebase.auth.GoogleAuthProvider();
     
-    return new Promise((resolve) => {
-      window.google.accounts.id.initialize({
-        client_id: firebaseConfig.oauthClientId,
-        ux_mode: 'redirect',
-        redirect_uri: window.location.origin + '/',
-        callback: async (response) => {
-          try {
-            if (response.credential) {
-              const credential = window.firebase.auth.GoogleAuthProvider.credential(response.credential);
-              const result = await auth.signInWithCredential(credential);
-              currentUser = result.user;
-              isAnonymous = false;
-              console.log('Login con Google exitoso:', result.user.email);
-              
-              // Ocultar pantalla de login
-              const loginScreen = document.getElementById('loginScreen');
-              if (loginScreen) loginScreen.classList.add('hidden');
-              
-              resolve({ success: true, user: result.user });
-            }
-          } catch (e) {
-            console.error('Error en callback:', e);
-            resolve({ success: false, error: e.message });
-          }
-        }
-      });
-      
-      // Forzar el flujo de redirect
-      window.google.accounts.id.prompt();
-    });
+    // Usar Firebase Auth directamente con redirect
+    await auth.signInWithRedirect(googleProvider);
+    
+    // Nota: Después del redirect, Firebase maneja automáticamente el resultado
+    // El onAuthStateChanged en initFirebase detectará el usuario
+    return { success: true, redirecting: true };
   } catch (error) {
     console.error('Error con Google:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+// Verificar resultado del redirect cuando la página vuelve
+export async function checkRedirectResult() {
+  try {
+    const auth = window.firebase.auth();
+    const result = await auth.getRedirectResult();
+    
+    if (result.user) {
+      currentUser = result.user;
+      isAnonymous = false;
+      console.log('Login con Google exitoso:', result.user.email);
+      
+      // Ocultar pantalla de login
+      const loginScreen = document.getElementById('loginScreen');
+      if (loginScreen) loginScreen.classList.add('hidden');
+      
+      return { success: true, user: result.user };
+    }
+    return { success: false };
+  } catch (error) {
+    console.error('Error en redirect:', error);
     return { success: false, error: error.message };
   }
 }
