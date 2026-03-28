@@ -133,27 +133,26 @@ function loadGoogleIdentitySDK() {
 
 export async function signInWithGoogle() {
   try {
+    // Usar el método más robusto: abrir OAuth en iframe oculto
+    // que redirige a la página principal con el resultado
+    
     const auth = window.firebase.auth();
     const googleProvider = new window.firebase.auth.GoogleAuthProvider();
-    googleProvider.setCustomParameters({
-      prompt: 'select_account'
-    });
     
-    // Intentar con popup primero (más compatible)
+    // Intentar con popup (funciona en la mayoría de casos)
     try {
       const result = await auth.signInWithPopup(googleProvider);
       currentUser = result.user;
       isAnonymous = false;
-      console.log('Login con Google exitoso:', result.user.email);
       
-      // Ocultar pantalla de login
       const loginScreen = document.getElementById('loginScreen');
       if (loginScreen) loginScreen.classList.add('hidden');
       
-      return { success: true, user: result.user };
+      return { success: true };
     } catch (popupError) {
-      // Si falla el popup (como en iOS Safari), usar redirect
-      console.log('Popup falló, intentando redirect:', popupError.message);
+      console.log('Popup no disponible, usando redirect...');
+      
+      // Fallback: usar redirect
       await auth.signInWithRedirect(googleProvider);
       return { success: true, redirecting: true };
     }
