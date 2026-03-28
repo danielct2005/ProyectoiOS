@@ -1691,13 +1691,15 @@ body.dark-mode .news-item--link:hover {
 }
 
 .login-btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: 1.25rem;
 }
 
 .login-btn-icon img {
-  width: 14px;
-  height: 14px;
-  object-fit: contain;
+  width: 18px;
+  height: 18px;
 }
 
 .login-note {
