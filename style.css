@@ -1660,10 +1660,10 @@ body.dark-mode .news-item--link:hover {
   justify-content: center;
   gap: var(--space-sm);
   width: 100%;
-  padding: var(--space-md) var(--space-lg);
+  padding: 14px var(--space-lg);
   border: none;
   border-radius: var(--radius);
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
@@ -1695,8 +1695,8 @@ body.dark-mode .news-item--link:hover {
 }
 
 .login-btn-icon img {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
 }
 
 .login-note {
