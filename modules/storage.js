@@ -730,11 +730,20 @@ export function clearAllData() {
   appState.saldoInicial = 0;
   appState.currentMonth = null;
   
-  // Limpiar localStorage completamente
-  localStorage.clear();
+  // Limpiar TODAS las claves de localStorage relacionadas con la app
+  const keysToRemove = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && (key.includes('finanzas') || key.includes('firebase') || key.includes('auth'))) {
+      keysToRemove.push(key);
+    }
+  }
+  keysToRemove.forEach(key => localStorage.removeItem(key));
   
-  // Limpiar cualquier dato de Firebase del usuario actual (si hay)
-  // Esto es manejado por Firebase automáticamente al borrar localStorage
+  // También limpiar explícitamente las claves conocidas
+  localStorage.removeItem('finanzas_app_data');
+  localStorage.removeItem('currentMonth');
+  localStorage.removeItem('darkMode');
 }
 
 // ==================== NOTICIAS ====================

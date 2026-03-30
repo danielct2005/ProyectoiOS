@@ -494,15 +494,22 @@ export async function deleteAllUserData() {
   
   try {
     const userId = getUserId();
-    const userDocRef = getDb().collection('users').doc(userId);
     
-    // Eliminar el documento completo del usuario
-    await userDocRef.delete();
+    // Los datos se guardan en users/{userId}/appData/data
+    const appDataRef = getDb().collection('users').doc(userId).collection('appData').doc('data');
+    
+    // Eliminar los datos
+    await appDataRef.delete();
     
     console.log('Todos los datos de Firestore eliminados');
     return true;
   } catch (error) {
     console.error('Error al eliminar datos de Firestore:', error);
+    // Si no existe el documento, no es un error
+    if (error.code === 'not-found') {
+      console.log('No había datos en Firestore para eliminar');
+      return true;
+    }
     return false;
   }
 }
