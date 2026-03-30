@@ -783,6 +783,94 @@ body.modal-open {
   font-weight: 700;
 }
 
+/* ===== COBRO ITEM ===== */
+.cobro-item {
+  background: var(--gray-50);
+  border-radius: var(--radius);
+  padding: var(--space-md);
+  margin-bottom: var(--space-sm);
+  border-left: 4px solid #34c759;
+}
+
+.cobro-item:last-child {
+  margin-bottom: 0;
+}
+
+.cobro-item__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-xs);
+}
+
+.cobro-item__deudor {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.cobro-item__categoria {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  background: rgba(52, 209, 88, 0.15);
+  color: #34c759;
+  border-radius: var(--radius);
+}
+
+.cobro-item__concepto {
+  color: var(--text);
+  margin-bottom: var(--space-xs);
+}
+
+.cobro-item__details {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.875rem;
+  color: var(--text-light);
+  margin-bottom: var(--space-xs);
+}
+
+.cobro-item__cuotas {
+  font-weight: 600;
+}
+
+.cobro-item__monto {
+  color: #34c759;
+  font-weight: 600;
+}
+
+.cobro-item__status {
+  font-size: 0.875rem;
+  color: var(--warning);
+  margin-bottom: var(--space-sm);
+}
+
+.cobro-item__status--complete {
+  color: var(--success);
+}
+
+.cobro-item__actions {
+  display: flex;
+  gap: var(--space-xs);
+}
+
+.cobro-item__actions .btn {
+  flex: 1;
+}
+
+/* Dark mode for cobro-item */
+body.dark-mode .cobro-item {
+  background: var(--gray-800);
+}
+
+body.dark-mode .cobro-item__deudor,
+body.dark-mode .cobro-item__concepto {
+  color: var(--gray-100);
+}
+
+body.dark-mode .cobro-item__details {
+  color: var(--gray-400);
+}
+
 /* ===== CARD ITEM ===== */
 .card-item {
   display: flex;

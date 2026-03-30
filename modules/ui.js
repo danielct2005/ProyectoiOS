@@ -11,6 +11,7 @@ import {
   clearAllData 
 } from './storage.js';
 import * as Finanzas from './finanzas.js';
+import * as Cobros from './cobros.js';
 import * as Agenda from './agenda.js';
 import * as Economia from './economia.js';
 import * as Ahorros from './ahorros.js';
@@ -201,6 +202,8 @@ export function render() {
     if (appState.currentSection === 'finanzas') {
       const titles = Finanzas.getSubsectionTitles();
       headerTitle.textContent = titles[appState.currentSubsection] || 'Billetera';
+    } else if (appState.currentSection === 'cobros') {
+      headerTitle.textContent = 'Por Cobrar';
     } else if (appState.currentSection === 'agenda') {
       const titles = Agenda.getAgendaTitles();
       headerTitle.textContent = titles[appState.agendaSubsection] || 'Agenda';
@@ -214,6 +217,9 @@ export function render() {
     switch (appState.currentSection) {
       case 'finanzas':
         Finanzas.renderFinanzasContainer();
+        break;
+      case 'cobros':
+        Cobros.renderCobros();
         break;
       case 'economia':
         Economia.renderEconomiaContainer();

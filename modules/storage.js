@@ -35,6 +35,7 @@ export const appState = {
   transactions: [],
   fixedExpenses: [],
   debts: [],
+  cobros: [],  // Por Cobrar - préstamos a terceros
   creditCards: [],
   history: {},
   
@@ -74,6 +75,7 @@ export async function loadData() {
         appState.transactions = data.transactions || [];
         appState.fixedExpenses = data.fixedExpenses || [];
         appState.debts = data.debts || [];
+        appState.cobros = data.cobros || [];
         appState.creditCards = data.creditCards || [];
         appState.history = data.history || {};
         appState.lastPaymentMonth = data.lastPaymentMonth || null;
@@ -92,6 +94,7 @@ export async function loadData() {
             // Solo actualizar estos datos globales
             appState.fixedExpenses = cloudData.fixedExpenses || appState.fixedExpenses;
             appState.debts = cloudData.debts || appState.debts;
+            appState.cobros = cloudData.cobros || appState.cobros;
             appState.creditCards = cloudData.creditCards || appState.creditCards;
             appState.savingsAccounts = cloudData.savingsAccounts || appState.savingsAccounts;
             appState.savingsGoals = cloudData.savingsGoals || appState.savingsGoals;
@@ -202,6 +205,7 @@ function resetState() {
   appState.transactions = [];
   appState.fixedExpenses = [];
   appState.debts = [];
+  appState.cobros = [];
   appState.creditCards = [];
   appState.history = {};
   appState.lastPaymentMonth = null;
@@ -221,6 +225,7 @@ export function saveData() {
     transactions: appState.transactions,
     fixedExpenses: appState.fixedExpenses,
     debts: appState.debts,
+    cobros: appState.cobros,
     creditCards: appState.creditCards,
     history: appState.history,
     lastPaymentMonth: appState.lastPaymentMonth,
@@ -248,6 +253,7 @@ export function saveData() {
           transactions: appState.transactions,
           fixedExpenses: appState.fixedExpenses,
           debts: appState.debts,
+          cobros: appState.cobros,
           creditCards: appState.creditCards,
           history: appState.history,
           lastPaymentMonth: appState.lastPaymentMonth,
