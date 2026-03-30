@@ -283,7 +283,7 @@ export async function saveCurrentMonth() {
     .filter(t => t.type === 'gasto')
     .reduce((sum, t) => sum + t.amount, 0);
   
-  const saldoFinal = income - expense;
+  const saldoFinal = appState.saldoInicial + income - expense;
   
   const monthData = {
     transactions: appState.transactions,

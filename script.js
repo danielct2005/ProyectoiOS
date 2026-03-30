@@ -319,7 +319,7 @@ function payAllCuentas() {
 function archiveCurrentMonth() {
   const income = calculateIncome();
   const expense = calculateExpense();
-  const balance = income - expense;
+  const balance = saldoInicial + income - expense;
   
   if (income > 0 || expense > 0) {
     history[currentMonth] = {

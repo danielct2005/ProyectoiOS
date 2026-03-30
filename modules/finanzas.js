@@ -142,7 +142,7 @@ export function loadMonthData() {
 export async function archiveCurrentMonth() {
   const income = calculateIncome();
   const expense = calculateExpense();
-  const balance = income - expense;
+  const balance = appState.saldoInicial + income - expense;
   
   // Guardar en historial local
   archiveMonth(appState.currentMonth, income, expense, appState.transactions, balance);
