@@ -12,7 +12,8 @@ import {
   isFirebaseReady,
   saveMonthToFirestore,
   loadMonthFromFirestore,
-  getPreviousMonthBalance
+  getPreviousMonthBalance,
+  getAuthState
 } from './firebase.js';
 
 // ==================== CONSTANTS ====================
@@ -85,8 +86,24 @@ export async function loadData() {
         
         // Sincronizar cambios en tiempo real
         subscribeToChanges('appData', (cloudData) => {
-          // Actualizar solo si hay cambios远程
-          console.log('Datos sincronizados desde la nube');
+          // Actualizar el estado con los datos de la nube
+          if (cloudData) {
+            appState.transactions = cloudData.transactions || appState.transactions;
+            appState.fixedExpenses = cloudData.fixedExpenses || appState.fixedExpenses;
+            appState.debts = cloudData.debts || appState.debts;
+            appState.creditCards = cloudData.creditCards || appState.creditCards;
+            appState.history = cloudData.history || appState.history;
+            appState.lastPaymentMonth = cloudData.lastPaymentMonth || appState.lastPaymentMonth;
+            appState.importantDates = cloudData.importantDates || appState.importantDates;
+            appState.previousMonthBalance = cloudData.previousMonthBalance || appState.previousMonthBalance;
+            appState.savingsAccounts = cloudData.savingsAccounts || appState.savingsAccounts;
+            appState.savingsGoals = cloudData.savingsGoals || appState.savingsGoals;
+            appState.saldoInicial = cloudData.saldoInicial || appState.saldoInicial;
+            
+            // Re-renderizar la UI
+            window.dispatchEvent(new CustomEvent('app:render'));
+            console.log('Datos sincronizados desde la nube');
+          }
         });
         
         // Guardar en localStorage como backup
@@ -197,11 +214,18 @@ export function saveData() {
     console.error('Error guardando en localStorage:', error);
   }
   
-  // Tambien guardar en Firebase si esta disponible
+  // Tambien guardar en Firebase si hay usuario logueado (no anonimo)
   if (firebaseInitialized) {
-    saveToFirestore('appData', dataToSave).catch(err => {
-      console.error('Error guardando en Firebase:', err);
-    });
+    try {
+      const authState = getAuthState();
+      if (authState.isLoggedIn && !authState.isAnonymous) {
+        saveToFirestore('appData', dataToSave).catch(err => {
+          console.error('Error guardando en Firebase:', err);
+        });
+      }
+    } catch (err) {
+      console.error('Error al obtener estado de auth:', err);
+    }
   }
 }
 
