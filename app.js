@@ -141,17 +141,16 @@ function setupLoginScreen() {
     const result = await signInWithEmail(email, password);
     
     if (!result.success) {
-      if (result.error === 'auth/user-not-found') {
-        alert('No existe una cuenta con este email. Por favor, regístrate.');
-        // Cambiar a modo registro
-        loginBtn.style.display = 'none';
-        registerBtn.style.display = 'block';
-        registerBtn.textContent = 'Registrarse';
-        registerBtn.disabled = false;
-      } else if (result.error === 'auth/wrong-password') {
-        alert('Contraseña incorrecta');
-        loginBtn.disabled = false;
-        loginBtn.textContent = 'Iniciar Sesión';
+      // Firebase ahora devuelve "auth/invalid-login-credentials" para ambos casos
+      if (result.error === 'auth/invalid-login-credentials' || result.error === 'auth/user-not-found' || result.error === 'auth/wrong-password') {
+        alert('Email o contraseña incorrectos. Si no tienes cuenta, regístrate.');
+        // Cambiar a modo registro para que pueda crear cuenta
+        if (loginBtn && registerBtn) {
+          loginBtn.style.display = 'none';
+          registerBtn.style.display = 'block';
+          registerBtn.textContent = 'Registrarse';
+          registerBtn.disabled = false;
+        }
       } else {
         alert('Error al iniciar sesión: ' + result.error);
         loginBtn.disabled = false;
