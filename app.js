@@ -24,31 +24,52 @@ import {
   getAuthState
 } from './modules/firebase.js';
 
-// ==================== SWEET ALERT HELPER ====================
+// ==================== CUSTOM ALERT MODAL ====================
 
 function showAlert(title, text, icon = 'error') {
-  console.log('showAlert called:', title, text, 'Swal:', typeof Swal);
-  try {
-    if (typeof Swal !== 'undefined' && Swal.fire) {
-      Swal.fire({
-        title: title,
-        text: text,
-        icon: icon,
-        confirmButtonText: 'Aceptar',
-        confirmButtonColor: '#b8860b',
-        background: '#ffffff'
-      });
-    } else {
-      alert(title + '\n' + text);
+  // Remove existing modal if any
+  const existing = document.getElementById('customAlertModal');
+  if (existing) existing.remove();
+  
+  // Create modal
+  const modal = document.createElement('div');
+  modal.id = 'customAlertModal';
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    padding: 20px;
+  `;
+  
+  const iconEmoji = icon === 'success' ? '✅' : '⚠️';
+  
+  modal.innerHTML = `
+    <div style="background: white; border-radius: 16px; padding: 24px; max-width: 300px; width: 100%; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+      <div style="font-size: 48px; margin-bottom: 16px;">${iconEmoji}</div>
+      <h3 style="margin: 0 0 12px; color: #1a1a1a; font-size: 18px;">${title}</h3>
+      <p style="margin: 0 0 20px; color: #666; font-size: 14px;">${text}</p>
+      <button id="alertOkBtn" style="background: #b8860b; color: white; border: none; padding: 12px 32px; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; width: 100%;">Aceptar</button>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+  
+  modal.querySelector('#alertOkBtn').addEventListener('click', () => {
+    modal.remove();
+  });
+  
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.remove();
     }
-  } catch (e) {
-    console.error('Swal error:', e);
-    alert(title + '\n' + text);
-  }
-}
-
-function showSuccess(title, text) {
-  showAlert(title, text, 'success');
+  });
 }
 
 // ==================== LOGIN UI ====================
