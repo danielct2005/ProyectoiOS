@@ -715,6 +715,7 @@ export function importData(data) {
 }
 
 export function clearAllData() {
+  // Limpiar todo el estado
   appState.transactions = [];
   appState.fixedExpenses = [];
   appState.debts = [];
@@ -727,7 +728,13 @@ export function clearAllData() {
   appState.savingsGoals = [];
   appState.news = [];
   appState.saldoInicial = 0;
-  saveData();
+  appState.currentMonth = null;
+  
+  // Limpiar localStorage completamente
+  localStorage.clear();
+  
+  // Limpiar cualquier dato de Firebase del usuario actual (si hay)
+  // Esto es manejado por Firebase automáticamente al borrar localStorage
 }
 
 // ==================== NOTICIAS ====================
