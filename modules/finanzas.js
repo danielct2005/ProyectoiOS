@@ -95,14 +95,25 @@ export async function cargarDatosDelMes(yearMonth) {
   
   const monthData = await loadMonthDataFromStorage(yearMonth);
   
-  if (monthData) {
-    // El mes existe, cargar sus datos
+  // Calcular si es un mes futuro (mes siguiente al actual)
+  const currentMonth = appState.currentMonth;
+  const [currYear, currMonth] = currentMonth.split('-').map(Number);
+  const [targetYear, targetMonth] = yearMonth.split('-').map(Number);
+  
+  // Es mes futuro si es mayor al actual
+  const isFutureMonth = (targetYear > currYear) || 
+    (targetYear === currYear && targetMonth > currMonth);
+  
+  if (monthData && !isFutureMonth) {
+    // El mes existe y no es futuro, cargar sus datos
     appState.transactions = monthData.transactions || [];
     appState.saldoInicial = monthData.saldoInicial || 0;
     appState.lastPaymentMonth = monthData.lastPaymentMonth || null;
+  } else if (isFutureMonth) {
+    // Es un mes futuro - inicializar con saldo del mes anterior desde Firestore
+    await initializeMonthWithPreviousBalance(yearMonth);
   } else {
     // El mes NO existe - empezar desde cero
-    // El saldo del mes anterior solo se transfiere cuando SE ARCHIVA el mes actual
     appState.transactions = [];
     appState.saldoInicial = 0;
     appState.lastPaymentMonth = null;
