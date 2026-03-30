@@ -27,19 +27,22 @@ import {
 // ==================== SWEET ALERT HELPER ====================
 
 function showAlert(title, text, icon = 'error') {
-  if (typeof Swal !== 'undefined') {
-    Swal.fire({
-      title: title,
-      text: text,
-      icon: icon,
-      confirmButtonText: 'Aceptar',
-      confirmButtonColor: '#b8860b',
-      background: '#ffffff',
-      customClass: {
-        popup: 'custom-swal-popup'
-      }
-    });
-  } else {
+  console.log('showAlert called:', title, text, 'Swal:', typeof Swal);
+  try {
+    if (typeof Swal !== 'undefined' && Swal.fire) {
+      Swal.fire({
+        title: title,
+        text: text,
+        icon: icon,
+        confirmButtonText: 'Aceptar',
+        confirmButtonColor: '#b8860b',
+        background: '#ffffff'
+      });
+    } else {
+      alert(title + '\n' + text);
+    }
+  } catch (e) {
+    console.error('Swal error:', e);
     alert(title + '\n' + text);
   }
 }
