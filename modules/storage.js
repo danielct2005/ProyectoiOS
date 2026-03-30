@@ -352,32 +352,10 @@ function isCurrentMonthArchived() {
 export function addTransaction(amount, description, type) {
   // Verificar si el mes está archivado
   if (isCurrentMonthArchived()) {
-    // Cambiar al mes actual del sistema
-    const now = new Date();
-    const currentSystemMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-    
-    // Si el mes actual del sistema es diferente, actualizar
-    if (appState.currentMonth !== currentSystemMonth) {
-      appState.currentMonth = currentSystemMonth;
-      appState.transactions = [];
-      appState.saldoInicial = 0;
-    }
-    
-    // Agregar la transacción al mes actual
-    appState.transactions.unshift({
-      id: generateId(),
-      amount,
-      description,
-      type,
-      date: new Date().toISOString()
-    });
-    saveData();
-    
-    // Mostrar notificación al usuario
     return { 
-      success: true, 
+      success: false, 
       archived: true,
-      message: 'El mes estaba archivado. Movimiento agregado al mes actual.' 
+      message: 'No puedes realizar movimientos en este mes porque ya está archivado.' 
     };
   }
   

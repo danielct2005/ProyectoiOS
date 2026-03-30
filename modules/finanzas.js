@@ -499,13 +499,14 @@ async function handleTransactionSubmit(e) {
   
   const result = addTransaction(amount, description, type);
   
-  // Si el mes estaba archivado, mostrar notificación
-  if (result.archived) {
+  // Si el mes estaba archivado, mostrar error y no continuar
+  if (!result.success && result.archived) {
     Swal.fire({ 
       title: 'Mes archivado', 
-      text: 'El mes estaba archivado. Movimiento agregado al mes actual.', 
-      icon: 'warning' 
+      text: result.message, 
+      icon: 'error' 
     });
+    return;
   }
   
   // Guardar el mes en Firestore después de cada transacción
