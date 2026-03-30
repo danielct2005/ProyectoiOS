@@ -337,14 +337,9 @@ export async function initializeMonthWithPreviousBalance(yearMonth) {
   const prevBalanceData = await getPreviousMonthBalance(yearMonth);
   
   if (prevBalanceData) {
+    // Solo transferir el saldo, NO crear transacción (el saldoInicial ya lo representa)
     appState.saldoInicial = prevBalanceData.balance;
-    appState.transactions = [{
-      id: generateId(),
-      amount: prevBalanceData.balance,
-      description: '💰 Saldo anterior transferido',
-      type: 'ingreso',
-      date: new Date().toISOString()
-    }];
+    appState.transactions = [];
   } else {
     // Primer mes o mes anterior no encontrado
     appState.saldoInicial = 0;
