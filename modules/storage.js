@@ -127,10 +127,15 @@ export async function initializeCurrentMonth() {
   const now = new Date();
   const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   
+  // SIEMPRE usar el mes actual del sistema
+  appState.currentMonth = currentMonthKey;
+  
   // Si hay un mes anterior sin archivar, archivar automáticamente
-  if (appState.currentMonth && appState.currentMonth !== currentMonthKey) {
-    // Obtener el mes anterior
-    const [year, month] = appState.currentMonth.split('-');
+  // Solo si ya había un mes configurado y es diferente al actual
+  const previousStoredMonth = localStorage.getItem('currentMonth');
+  if (previousStoredMonth && previousStoredMonth !== currentMonthKey) {
+    // Obtener el mes anterior al actual
+    const [year, month] = currentMonthKey.split('-');
     const prevDate = new Date(parseInt(year), parseInt(month) - 1, 1);
     const prevMonthKey = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, '0')}`;
     
@@ -150,9 +155,6 @@ export async function initializeCurrentMonth() {
       console.log(`Mes ${prevMonthKey} archivado automáticamente`);
     }
   }
-  
-  // Actualizar al mes actual
-  appState.currentMonth = currentMonthKey;
   
   // Intentar cargar el mes desde Firestore/localStorage
   const monthData = await loadMonthDataFromStorage(appState.currentMonth);
