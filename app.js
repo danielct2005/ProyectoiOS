@@ -190,9 +190,6 @@ async function init() {
   // Inicializar Firebase
   await initFirebase();
   
-  // Verificar si volvió de un redirect de Google
-  await checkRedirectResult();
-  
   // Pequeno delay para asegurar que el estado de auth esté listo
   setTimeout(() => {
     checkAuthAndShowLogin();
