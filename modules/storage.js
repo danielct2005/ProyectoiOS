@@ -333,22 +333,24 @@ export async function loadMonthDataFromStorage(yearMonth) {
 
 // Inicializar un nuevo mes con el saldo del mes anterior
 export async function initializeMonthWithPreviousBalance(yearMonth) {
-  console.log(`initializeMonthWithPreviousBalance: ${yearMonth}`);
+  // Verificar si el mes ya tiene datos para evitar re-inicializaciones
+  const existingData = await loadMonthDataFromStorage(yearMonth);
+  if (existingData && existingData.saldoInicial > 0) {
+    // El mes ya está inicializado, no hacer nada
+    return;
+  }
   
   // Obtener saldo del mes anterior
   const prevBalanceData = await getPreviousMonthBalance(yearMonth);
-  console.log('prevBalanceData:', prevBalanceData);
   
   if (prevBalanceData) {
     // Solo transferir el saldo, NO crear transacción (el saldoInicial ya lo representa)
     appState.saldoInicial = prevBalanceData.balance;
     appState.transactions = [];
-    console.log(`Saldo transferido: ${prevBalanceData.balance} desde ${prevBalanceData.yearMonth}`);
   } else {
     // Primer mes o mes anterior no encontrado
     appState.saldoInicial = 0;
     appState.transactions = [];
-    console.log('No se encontró saldo anterior, inicializando en 0');
   }
   
   appState.lastPaymentMonth = null;
