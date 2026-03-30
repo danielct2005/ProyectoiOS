@@ -437,6 +437,130 @@ export async function importAllUserData(data) {
   }
 }
 
+// ==================== GESTIÓN DE MESES EN FIRESTORE ====================
+
+// Convertir mes (2026-03) a formato Firestore (2026_03)
+export function formatMonthId(yearMonth) {
+  return yearMonth.replace('-', '_');
+}
+
+// Convertir formato Firestore (2026_03) a mes (2026-03)
+export function parseMonthId(monthId) {
+  return monthId.replace('_', '-');
+}
+
+// Guardar datos de un mes específico
+export async function saveMonthToFirestore(yearMonth, data) {
+  if (!isFirebaseReady) {
+    console.warn('Firebase no disponible, guardando solo localmente');
+    return false;
+  }
+  
+  if (isAnonymous) {
+    console.log('Usuario anonimo - guardando solo localmente');
+    return false;
+  }
+  
+  try {
+    const userId = getUserId();
+    const monthId = formatMonthId(yearMonth);
+    const docRef = getDb().collection('users').doc(userId).collection('meses').doc(monthId);
+    
+    await docRef.set({
+      ...data,
+      yearMonth: yearMonth,
+      updatedAt: window.firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true });
+    
+    return true;
+  } catch (error) {
+    console.error('Error guardando mes en Firestore:', error);
+    return false;
+  }
+}
+
+// Cargar datos de un mes específico
+export async function loadMonthFromFirestore(yearMonth) {
+  if (!isFirebaseReady) {
+    console.warn('Firebase no disponible');
+    return null;
+  }
+  
+  if (isAnonymous) {
+    console.log('Usuario anonimo - usando solo datos locales');
+    return null;
+  }
+  
+  try {
+    const userId = getUserId();
+    const monthId = formatMonthId(yearMonth);
+    const docRef = getDb().collection('users').doc(userId).collection('meses').doc(monthId);
+    const doc = await docRef.get();
+    
+    if (doc.exists) {
+      return doc.data();
+    }
+    return null;
+  } catch (error) {
+    console.error('Error cargando mes desde Firestore:', error);
+    return null;
+  }
+}
+
+// Obtener el saldo del mes anterior
+export async function getPreviousMonthBalance(yearMonth) {
+  // Calcular el mes anterior
+  const [year, month] = yearMonth.split('-').map(Number);
+  let prevYear = year;
+  let prevMonth = month - 1;
+  
+  if (prevMonth < 1) {
+    prevMonth = 12;
+    prevYear--;
+  }
+  
+  const prevYearMonth = `${prevYear}-${String(prevMonth).padStart(2, '0')}`;
+  
+  // Intentar cargar el mes anterior desde Firestore
+  const prevMonthData = await loadMonthFromFirestore(prevYearMonth);
+  
+  if (prevMonthData && prevMonthData.saldoFinal !== undefined) {
+    return {
+      balance: prevMonthData.saldoFinal,
+      yearMonth: prevYearMonth
+    };
+  }
+  
+  // Si no existe, devolver null (no hay saldo anterior)
+  return null;
+}
+
+// Listar todos los meses disponibles en Firestore
+export async function listMonthsFromFirestore() {
+  if (!isFirebaseReady || isAnonymous) {
+    return [];
+  }
+  
+  try {
+    const userId = getUserId();
+    const mesesRef = getDb().collection('users').doc(userId).collection('meses');
+    const snapshot = await mesesRef.get();
+    
+    const months = [];
+    snapshot.forEach(doc => {
+      months.push({
+        id: doc.id,
+        yearMonth: doc.data().yearMonth
+      });
+    });
+    
+    return months;
+  } catch (error) {
+    console.error('Error listando meses:', error);
+    return [];
+  }
+}
+
 // ==================== ACTUALIZAR ESTADO ====================
 
 export function getAuthState() {

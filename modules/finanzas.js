@@ -6,6 +6,9 @@
 import { 
   appState, 
   saveData, 
+  saveCurrentMonth,
+  loadMonthDataFromStorage,
+  initializeMonthWithPreviousBalance,
   addTransaction, 
   updateTransaction, 
   deleteTransaction,
@@ -68,6 +71,44 @@ export function calculateTotalCuentas() {
 
 // ==================== MONTH MANAGEMENT ====================
 
+// Limpiar el estado visual antes de cargar nuevos datos
+function cleanUI() {
+  // Limpiar cualquier estado residual de la UI
+  const main = document.querySelector('.main');
+  if (main) {
+    main.innerHTML = '';
+  }
+  
+  // Limpiar modales abiertos
+  document.querySelectorAll('.modal.visible').forEach(modal => {
+    modal.classList.remove('visible');
+  });
+  
+  // Resetear contadores visuales si los hay
+  appState.currentSubsection = 'billetera';
+}
+
+// Función principal para cargar datos de un mes específico
+export async function cargarDatosDelMes(yearMonth) {
+  // Limpiar UI antes de cargar
+  cleanUI();
+  
+  const monthData = await loadMonthDataFromStorage(yearMonth);
+  
+  if (monthData) {
+    // El mes existe, cargar sus datos
+    appState.transactions = monthData.transactions || [];
+    appState.saldoInicial = monthData.saldoInicial || 0;
+    appState.lastPaymentMonth = monthData.lastPaymentMonth || null;
+  } else {
+    // El mes no existe, inicializar con saldo del mes anterior
+    await initializeMonthWithPreviousBalance(yearMonth);
+  }
+  
+  appState.currentMonth = yearMonth;
+  saveData();
+}
+
 export function changeMonth(direction) {
   const [year, month] = appState.currentMonth.split('-').map(Number);
   let newYear = year;
@@ -81,10 +122,15 @@ export function changeMonth(direction) {
     newYear--;
   }
   
-  appState.currentMonth = `${newYear}-${String(newMonth).padStart(2, '0')}`;
-  loadMonthData();
+  const newYearMonth = `${newYear}-${String(newMonth).padStart(2, '0')}`;
+  
+  // Carga forzada del nuevo mes (async pero no esperamos)
+  cargarDatosDelMes(newYearMonth).then(() => {
+    window.dispatchEvent(new CustomEvent('app:render'));
+  });
 }
 
+// Función legacy para compatibilidad
 export function loadMonthData() {
   if (appState.history[appState.currentMonth]) {
     appState.transactions = [...appState.history[appState.currentMonth].transactions];
@@ -93,16 +139,17 @@ export function loadMonthData() {
   }
 }
 
-export function archiveCurrentMonth() {
+export async function archiveCurrentMonth() {
   const income = calculateIncome();
   const expense = calculateExpense();
   const balance = income - expense;
   
-  // Guardar en historial
+  // Guardar en historial local
   archiveMonth(appState.currentMonth, income, expense, appState.transactions, balance);
   
-  // Guardar balance para transferir
+  // Guardar el mes actual en Firestore con saldoFinal
   appState.previousMonthBalance = balance;
+  await saveCurrentMonth();
   
   // Crear nuevo mes
   const [year, month] = appState.currentMonth.split('-').map(Number);
@@ -116,21 +163,10 @@ export function archiveCurrentMonth() {
   
   const newMonthKey = `${newYear}-${String(newMonth).padStart(2, '0')}`;
   
-  // Transferir balance al nuevo mes
-  if (appState.previousMonthBalance > 0) {
-    appState.transactions = [{
-      id: generateId(),
-      amount: appState.previousMonthBalance,
-      description: '💰 Saldo anterior transferido',
-      type: 'ingreso',
-      date: new Date().toISOString()
-    }];
-  } else {
-    appState.transactions = [];
-  }
+  // Inicializar el nuevo mes con el saldo del mes anterior (persistente)
+  await initializeMonthWithPreviousBalance(newMonthKey);
   
   appState.currentMonth = newMonthKey;
-  appState.lastPaymentMonth = null;
   
   saveData();
 }
@@ -444,7 +480,7 @@ function handleTypeChange(type) {
   document.getElementById('typeIngreso')?.classList.toggle('active', type === 'ingreso');
 }
 
-function handleTransactionSubmit(e) {
+async function handleTransactionSubmit(e) {
   e.preventDefault();
   
   const amount = parseNumber(document.getElementById('amount').value);
@@ -462,6 +498,9 @@ function handleTransactionSubmit(e) {
   }
   
   addTransaction(amount, description, type);
+  
+  // Guardar el mes en Firestore después de cada transacción
+  await saveCurrentMonth();
   
   document.getElementById('amount').value = '';
   document.getElementById('description').value = '';
@@ -554,7 +593,7 @@ function handleDeleteTransaction() {
   });
 }
 
-function handleArchiveMonth() {
+async function handleArchiveMonth() {
   const now = new Date();
   const [year, month] = appState.currentMonth.split('-').map(Number);
   const lastDayOfMonth = new Date(year, month, 0).getDate();
@@ -586,16 +625,16 @@ function handleArchiveMonth() {
     showCancelButton: true,
     confirmButtonText: 'Sí, archivar',
     cancelButtonText: 'Cancelar'
-  }).then((result) => {
+  }).then(async (result) => {
     if (result.isConfirmed) {
-      archiveCurrentMonth();
+      await archiveCurrentMonth();
       window.dispatchEvent(new CustomEvent('app:render'));
       Swal.fire({ title: '¡Archivado!', text: 'El mes ha sido guardado en historial', icon: 'success' });
     }
   });
 }
 
-function handlePayCuentas() {
+async function handlePayCuentas() {
   const result = payAllCuentas();
   
   if (!result.success) {
@@ -606,6 +645,9 @@ function handlePayCuentas() {
     });
     return;
   }
+  
+  // Guardar el mes en Firestore después de pagar cuentas
+  await saveCurrentMonth();
   
   window.dispatchEvent(new CustomEvent('app:render'));
   Swal.fire({ title: '¡Pagado!', text: 'Las cuentas han sido pagadas', icon: 'success' });

@@ -12,7 +12,7 @@
  */
 
 // Importar módulos
-import { appState, loadData, saveData } from './modules/storage.js';
+import { appState, loadData, saveData, initializeCurrentMonth } from './modules/storage.js';
 import { getCurrentMonthKey } from './modules/utils.js';
 import * as UI from './modules/ui.js';
 import { 
@@ -224,6 +224,9 @@ async function init() {
   
   // Cargar datos (desde Firebase o localStorage)
   await loadData();
+  
+  // Inicializar el mes actual (cargar desde Firestore si existe)
+  await initializeCurrentMonth();
   
   // Configurar manejadores de eventos de UI
   UI.setupMenuHandlers();

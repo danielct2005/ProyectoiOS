@@ -9,7 +9,10 @@ import {
   saveToFirestore, 
   loadFromFirestore, 
   subscribeToChanges,
-  isFirebaseReady 
+  isFirebaseReady,
+  saveMonthToFirestore,
+  loadMonthFromFirestore,
+  getPreviousMonthBalance
 } from './firebase.js';
 
 // ==================== CONSTANTS ====================
@@ -48,6 +51,9 @@ export const appState = {
   // Datos de noticias
   news: [],
   
+  // Saldo inicial del mes actual (persistente en Firestore)
+  saldoInicial: 0,
+  
   // Preferencias (se inicializa en false, se carga correctamente en loadData)
   darkMode: false
 };
@@ -75,6 +81,7 @@ export async function loadData() {
         appState.savingsAccounts = data.savingsAccounts || [];
         appState.savingsGoals = data.savingsGoals || [];
         appState.news = data.news || [];
+        appState.saldoInicial = data.saldoInicial || 0;
         
         // Sincronizar cambios en tiempo real
         subscribeToChanges('appData', (cloudData) => {
@@ -98,6 +105,29 @@ export async function loadData() {
   loadFromLocalStorage();
 }
 
+// Inicializar el mes actual al cargar la app
+export async function initializeCurrentMonth() {
+  if (!appState.currentMonth) {
+    const now = new Date();
+    appState.currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  }
+  
+  // Intentar cargar el mes desde Firestore/localStorage
+  const monthData = await loadMonthDataFromStorage(appState.currentMonth);
+  
+  if (monthData) {
+    // Cargar datos del mes
+    appState.transactions = monthData.transactions || [];
+    appState.saldoInicial = monthData.saldoInicial || 0;
+    appState.lastPaymentMonth = monthData.lastPaymentMonth || null;
+  } else {
+    // Nuevo mes, inicializar
+    await initializeMonthWithPreviousBalance(appState.currentMonth);
+  }
+  
+  saveData();
+}
+
 function loadFromLocalStorage() {
   try {
     const data = localStorage.getItem(STORAGE_KEY);
@@ -114,6 +144,7 @@ function loadFromLocalStorage() {
       appState.savingsAccounts = parsed.savingsAccounts || [];
       appState.savingsGoals = parsed.savingsGoals || [];
       appState.news = parsed.news || [];
+      appState.saldoInicial = parsed.saldoInicial || 0;
     } else {
       resetState();
     }
@@ -138,6 +169,7 @@ function resetState() {
   appState.savingsAccounts = [];
   appState.savingsGoals = [];
   appState.news = [];
+  appState.saldoInicial = 0;
 }
 
 // ==================== SAVE DATA ====================
@@ -154,7 +186,8 @@ export function saveData() {
     previousMonthBalance: appState.previousMonthBalance,
     savingsAccounts: appState.savingsAccounts,
     savingsGoals: appState.savingsGoals,
-    news: appState.news
+    news: appState.news,
+    saldoInicial: appState.saldoInicial
   };
   
   // Siempre guardar en localStorage como backup
@@ -170,6 +203,92 @@ export function saveData() {
       console.error('Error guardando en Firebase:', err);
     });
   }
+}
+
+// ==================== GESTIÓN DE MESES ====================
+
+// Guardar el mes actual en Firestore (documento único por mes)
+export async function saveCurrentMonth() {
+  if (!appState.currentMonth) return;
+  
+  const income = appState.transactions
+    .filter(t => t.type === 'ingreso')
+    .reduce((sum, t) => sum + t.amount, 0);
+  
+  const expense = appState.transactions
+    .filter(t => t.type === 'gasto')
+    .reduce((sum, t) => sum + t.amount, 0);
+  
+  const saldoFinal = income - expense;
+  
+  const monthData = {
+    transactions: appState.transactions,
+    saldoInicial: appState.saldoInicial,
+    saldoFinal: saldoFinal,
+    income: income,
+    expense: expense,
+    lastPaymentMonth: appState.lastPaymentMonth
+  };
+  
+  // Guardar en Firestore por mes
+  if (firebaseInitialized) {
+    await saveMonthToFirestore(appState.currentMonth, monthData);
+  }
+  
+  // También guardar en localStorage como backup
+  try {
+    const monthsData = JSON.parse(localStorage.getItem('finanzas_months_data') || '{}');
+    monthsData[appState.currentMonth] = monthData;
+    localStorage.setItem('finanzas_months_data', JSON.stringify(monthsData));
+  } catch (error) {
+    console.error('Error guardando mes en localStorage:', error);
+  }
+}
+
+// Cargar un mes específico desde Firestore
+export async function loadMonthDataFromStorage(yearMonth) {
+  let monthData = null;
+  
+  // Intentar primero desde Firestore
+  if (firebaseInitialized) {
+    monthData = await loadMonthFromFirestore(yearMonth);
+  }
+  
+  // Fallback a localStorage
+  if (!monthData) {
+    try {
+      const monthsData = JSON.parse(localStorage.getItem('finanzas_months_data') || '{}');
+      monthData = monthsData[yearMonth] || null;
+    } catch (error) {
+      console.error('Error cargando mes desde localStorage:', error);
+    }
+  }
+  
+  return monthData;
+}
+
+// Inicializar un nuevo mes con el saldo del mes anterior
+export async function initializeMonthWithPreviousBalance(yearMonth) {
+  // Obtener saldo del mes anterior
+  const prevBalanceData = await getPreviousMonthBalance(yearMonth);
+  
+  if (prevBalanceData) {
+    appState.saldoInicial = prevBalanceData.balance;
+    appState.transactions = [{
+      id: generateId(),
+      amount: prevBalanceData.balance,
+      description: '💰 Saldo anterior transferido',
+      type: 'ingreso',
+      date: new Date().toISOString()
+    }];
+  } else {
+    // Primer mes o mes anterior no encontrado
+    appState.saldoInicial = 0;
+    appState.transactions = [];
+  }
+  
+  appState.lastPaymentMonth = null;
+  saveData();
 }
 
 // ==================== DATA OPERATIONS ====================
@@ -511,6 +630,7 @@ export function clearAllData() {
   appState.savingsAccounts = [];
   appState.savingsGoals = [];
   appState.news = [];
+  appState.saldoInicial = 0;
   saveData();
 }
 
