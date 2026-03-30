@@ -24,6 +24,30 @@ import {
   getAuthState
 } from './modules/firebase.js';
 
+// ==================== SWEET ALERT HELPER ====================
+
+function showAlert(title, text, icon = 'error') {
+  if (typeof Swal !== 'undefined') {
+    Swal.fire({
+      title: title,
+      text: text,
+      icon: icon,
+      confirmButtonText: 'Aceptar',
+      confirmButtonColor: '#b8860b',
+      background: '#ffffff',
+      customClass: {
+        popup: 'custom-swal-popup'
+      }
+    });
+  } else {
+    alert(title + '\n' + text);
+  }
+}
+
+function showSuccess(title, text) {
+  showAlert(title, text, 'success');
+}
+
 // ==================== LOGIN UI ====================
 
 function setupLoginScreen() {
@@ -80,19 +104,19 @@ function setupLoginScreen() {
     
     // Validar campos vacíos
     if (!email || !password) {
-      alert('Por favor ingresa email y contraseña');
+      showAlert('Campos requeridos', 'Por favor ingresa email y contraseña');
       return;
     }
     
     // Validar formato de email
     if (!isValidEmail(email)) {
-      alert('Por favor ingresa un email válido');
+      showAlert('Email inválido', 'Por favor ingresa un email válido');
       return;
     }
     
     // Validar contraseña mínima
     if (password.length < 6) {
-      alert('La contraseña debe tener al menos 6 caracteres');
+      showAlert('Contraseña muy corta', 'La contraseña debe tener al menos 6 caracteres');
       return;
     }
     
@@ -104,14 +128,14 @@ function setupLoginScreen() {
     if (!result.success) {
       // Manejar error específico
       if (result.error === 'auth/email-already-in-use') {
-        alert('Este correo ya está registrado. Por favor, inicia sesión.');
+        showAlert('Correo ya registrado', 'Este correo ya está registrado. Por favor, inicia sesión.');
         // Cambiar a modo login
         registerBtn.style.display = 'none';
         loginBtn.style.display = 'block';
         loginBtn.textContent = 'Iniciar Sesión';
         loginBtn.disabled = false;
       } else {
-        alert('Error al registrarse: ' + result.error);
+        showAlert('Error al registrarse', result.error);
         registerBtn.disabled = false;
         registerBtn.textContent = 'Registrarse';
       }
@@ -125,13 +149,13 @@ function setupLoginScreen() {
     
     // Validar campos vacíos
     if (!email || !password) {
-      alert('Por favor ingresa email y contraseña');
+      showAlert('Campos requeridos', 'Por favor ingresa email y contraseña');
       return;
     }
     
     // Validar formato de email
     if (!isValidEmail(email)) {
-      alert('Por favor ingresa un email válido');
+      showAlert('Email inválido', 'Por favor ingresa un email válido');
       return;
     }
     
@@ -143,7 +167,7 @@ function setupLoginScreen() {
     if (!result.success) {
       // Firebase ahora devuelve "auth/invalid-login-credentials" para ambos casos
       if (result.error === 'auth/invalid-login-credentials' || result.error === 'auth/user-not-found' || result.error === 'auth/wrong-password') {
-        alert('Email o contraseña incorrectos. Si no tienes cuenta, regístrate.');
+        showAlert('Credenciales incorrectas', 'Email o contraseña incorrectos. Si no tienes cuenta, regístrate.');
         // Cambiar a modo registro para que pueda crear cuenta
         if (loginBtn && registerBtn) {
           loginBtn.style.display = 'none';
@@ -152,7 +176,7 @@ function setupLoginScreen() {
           registerBtn.disabled = false;
         }
       } else {
-        alert('Error al iniciar sesión: ' + result.error);
+        showAlert('Error al iniciar sesión', result.error);
         loginBtn.disabled = false;
         loginBtn.textContent = 'Iniciar Sesión';
       }
@@ -169,7 +193,7 @@ function setupLoginScreen() {
     if (result.success) {
       loginScreen.classList.add('hidden');
     } else {
-      alert('Error: ' + result.error);
+      showAlert('Error', result.error);
       loginAnonBtn.disabled = false;
       loginAnonBtn.innerHTML = '<span class="login-btn-icon">👤</span><span>Continuar como Invitado</span>';
     }
