@@ -41,16 +41,16 @@ function setupLoginScreen() {
   
   // Mostrar formulario de email
   loginEmailBtn?.addEventListener('click', () => {
-    document.querySelector('.login-buttons').style.display = 'none';
-    document.querySelector('.login-note').style.display = 'none';
-    loginEmailForm.style.display = 'flex';
+    document.querySelector('.login-buttons')?.style?.setProperty('display', 'none');
+    document.querySelector('.login-note')?.style?.setProperty('display', 'none');
+    loginEmailForm?.style?.setProperty('display', 'flex');
   });
   
   // Volver a los botones de login
   backToLoginBtn?.addEventListener('click', () => {
-    loginEmailForm.style.display = 'none';
-    document.querySelector('.login-buttons').style.display = 'flex';
-    document.querySelector('.login-note').style.display = 'block';
+    loginEmailForm?.style?.setProperty('display', 'none');
+    document.querySelector('.login-buttons')?.style?.setProperty('display', 'flex');
+    document.querySelector('.login-note')?.style?.setProperty('display', 'block');
   });
   
   // Validar formato de email
