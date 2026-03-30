@@ -339,3 +339,40 @@ function handleClearAllData() {
     }
   });
 }
+
+// ==================== MODAL HELPERS ====================
+
+export function openModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if (modal) {
+    modal.classList.add('visible');
+    document.body.classList.add('modal-open');
+  }
+}
+
+export function closeModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if (modal) {
+    modal.classList.remove('visible');
+    document.body.classList.remove('modal-open');
+  }
+}
+
+// Cerrar modal al hacer click en backdrop o presionar Escape
+export function setupModalCloseHandlers(modalId) {
+  const modal = document.getElementById(modalId);
+  if (!modal) return;
+  
+  // Click en backdrop
+  const backdrop = modal.querySelector('.modal__backdrop');
+  if (backdrop) {
+    backdrop.addEventListener('click', () => closeModal(modalId));
+  }
+  
+  // Tecla Escape
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal.classList.contains('visible')) {
+      closeModal(modalId);
+    }
+  });
+}

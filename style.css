@@ -654,22 +654,34 @@ body {
   inset: 0;
   z-index: 1000;
   display: none;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   padding: var(--space-md);
-  /* Enable scrolling in modal */
+  padding-top: max(var(--space-xl), env(safe-area-inset-top));
+  padding-bottom: max(var(--space-xl), env(safe-area-inset-bottom));
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
 }
 
-.modal.visible { display: flex; }
+.modal.visible { 
+  display: flex; 
+}
 
-/* Lock body scroll when modal is open */
+/* Lock body scroll when modal is open - usar CSS cuando cualquier modal tenga clase visible */
+body:has(.modal.visible) {
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
+  touch-action: none;
+}
+
+/* Alternativa sin :has para Safari más viejo */
 body.modal-open {
   overflow: hidden;
   position: fixed;
   width: 100%;
+  touch-action: none;
 }
 
 .modal__backdrop {
@@ -688,9 +700,11 @@ body.modal-open {
   width: 100%;
   max-height: 85vh;
   overflow-y: auto;
+  overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   box-shadow: var(--shadow-lg);
   text-align: center;
+  margin: auto 0;
 }
 
 .modal__title {
