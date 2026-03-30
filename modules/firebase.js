@@ -134,39 +134,24 @@ function loadGoogleIdentitySDK() {
 export async function signInWithGoogle() {
   try {
     const auth = window.firebase.auth();
+    const googleProvider = new window.firebase.auth.GoogleAuthProvider();
     
-    // Usar el SDK de Google Identity Services que es más moderno
-    await loadGoogleIdentitySDK();
-    
-    return new Promise((resolve) => {
-      const clientId = firebaseConfig.oauthClientId;
+    // Intentar con popup directamente via Firebase
+    try {
+      const result = await auth.signInWithPopup(googleProvider);
+      currentUser = result.user;
+      isAnonymous = false;
       
-      window.google.accounts.id.initialize({
-        client_id: clientId,
-        ux_mode: 'popup',
-        callback: async (response) => {
-          if (response.credential) {
-            try {
-              const credential = window.firebase.auth.GoogleAuthProvider.credential(response.credential);
-              const result = await auth.signInWithCredential(credential);
-              
-              currentUser = result.user;
-              isAnonymous = false;
-              
-              const loginScreen = document.getElementById('loginScreen');
-              if (loginScreen) loginScreen.classList.add('hidden');
-              
-              resolve({ success: true });
-            } catch (e) {
-              resolve({ success: false, error: e.message });
-            }
-          }
-        }
-      });
+      const loginScreen = document.getElementById('loginScreen');
+      if (loginScreen) loginScreen.classList.add('hidden');
       
-      // Mostrar el popup de Google
-      window.google.accounts.id.prompt();
-    });
+      return { success: true };
+    } catch (popupError) {
+      // Popup bloqueado - intentar redirect
+      console.log('Popup bloqueado, usando redirect...');
+      await auth.signInWithRedirect(googleProvider);
+      return { success: true, redirecting: true };
+    }
   } catch (error) {
     console.error('Error con Google:', error);
     return { success: false, error: error.message };

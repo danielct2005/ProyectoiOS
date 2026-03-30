@@ -47,11 +47,20 @@ function setupLoginScreen() {
     loginGoogleBtn.disabled = true;
     loginGoogleBtn.textContent = 'Conectando...';
     
+    // Timeout de 10 segundos - si no responde, mostrar error
+    const timeoutId = setTimeout(() => {
+      loginGoogleBtn.disabled = false;
+      loginGoogleBtn.innerHTML = '<span class="login-btn-icon"><img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google"></span><span>Continuar con Google</span>';
+      alert('El login de Google tardó demasiado. Por favor intenta de nuevo o usa Email.');
+    }, 10000);
+    
     const result = await signInWithGoogle();
     
-    if (!result.success) {
+    clearTimeout(timeoutId);
+    
+    if (!result.success && !result.redirecting) {
       if (result.error && result.error.includes('blocked')) {
-        alert('El popup fue bloqueado. Por favor permite popups para este sitio, o usa "Continuar como Invitado".');
+        alert('El popup fue bloqueado. Por favor permite popups para este sitio, o usa Email.');
       } else {
         alert('Error al iniciar sesión: ' + result.error);
       }
