@@ -101,8 +101,11 @@ export async function cargarDatosDelMes(yearMonth) {
     appState.saldoInicial = monthData.saldoInicial || 0;
     appState.lastPaymentMonth = monthData.lastPaymentMonth || null;
   } else {
-    // El mes no existe, inicializar con saldo del mes anterior
-    await initializeMonthWithPreviousBalance(yearMonth);
+    // El mes NO existe - empezar desde cero
+    // El saldo del mes anterior solo se transfiere cuando SE ARCHIVA el mes actual
+    appState.transactions = [];
+    appState.saldoInicial = 0;
+    appState.lastPaymentMonth = null;
   }
   
   appState.currentMonth = yearMonth;
