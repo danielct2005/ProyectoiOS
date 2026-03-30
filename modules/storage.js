@@ -361,12 +361,21 @@ export function addTransaction(amount, description, type) {
       appState.currentMonth = currentSystemMonth;
       appState.transactions = [];
       appState.saldoInicial = 0;
-      saveData();
     }
+    
+    // Agregar la transacción al mes actual
+    appState.transactions.unshift({
+      id: generateId(),
+      amount,
+      description,
+      type,
+      date: new Date().toISOString()
+    });
+    saveData();
     
     // Mostrar notificación al usuario
     return { 
-      success: false, 
+      success: true, 
       archived: true,
       message: 'El mes estaba archivado. Movimiento agregado al mes actual.' 
     };
@@ -384,9 +393,8 @@ export function addTransaction(amount, description, type) {
 }
 
 export function updateTransaction(id, amount, description, type) {
-  const check = handleArchivedMonth();
-  if (!check.success) {
-    return check;
+  if (isCurrentMonthArchived()) {
+    return { success: false, message: 'No puedes editar transacciones de un mes archivado' };
   }
   
   const idx = appState.transactions.findIndex(t => t.id === id);
@@ -403,9 +411,8 @@ export function updateTransaction(id, amount, description, type) {
 }
 
 export function deleteTransaction(id) {
-  const check = handleArchivedMonth();
-  if (!check.success) {
-    return check;
+  if (isCurrentMonthArchived()) {
+    return { success: false, message: 'No puedes eliminar transacciones de un mes archivado' };
   }
   
   appState.transactions = appState.transactions.filter(t => t.id !== id);
