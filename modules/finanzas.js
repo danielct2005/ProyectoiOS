@@ -50,7 +50,7 @@ export function calculateExpense() {
 }
 
 export function calculateBalance() {
-  return calculateIncome() - calculateExpense();
+  return appState.saldoInicial + calculateIncome() - calculateExpense();
 }
 
 export function calculateFixedExpensesTotal() {
