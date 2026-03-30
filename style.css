@@ -201,7 +201,7 @@ body {
 }
 
 .balance-card--purple {
-  background: linear-gradient(135deg, var(--purple) 0%, #af52de 100%);
+  background: linear-gradient(135deg, #b8860b 0%, #daa520 50%, #ffd700 100%);
 }
 
 .balance-card__label {
@@ -226,6 +226,12 @@ body {
 
 .balance-card__amount.negative {
   color: #ff6b6b;
+}
+
+.balance-card__info--secondary {
+  font-size: 0.75rem;
+  opacity: 0.8;
+  margin-top: var(--space-sm);
 }
 
 .balance-card__info {

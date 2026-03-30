@@ -911,10 +911,10 @@ export function renderDeudas() {
     </div>
     
     <div class="balance-card balance-card--purple">
-      <div class="balance-card__label">Total Deuda</div>
-      <div class="balance-card__amount">${formatCurrency(totalDebt)}</div>
-      <div class="balance-card__info">
-        <span>💳 Cuotas mensuales: ${formatCurrency(monthlyInstallments)}</span>
+      <div class="balance-card__label">Cuotas Mensuales</div>
+      <div class="balance-card__amount">${formatCurrency(monthlyInstallments)}</div>
+      <div class="balance-card__info balance-card__info--secondary">
+        <span>Deuda Total: ${formatCurrency(totalDebt)}</span>
       </div>
     </div>
     
