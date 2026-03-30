@@ -344,7 +344,34 @@ export async function initializeMonthWithPreviousBalance(yearMonth) {
 
 // --- Transacciones ---
 
+// Función para verificar si el mes actual está archivado
+function isCurrentMonthArchived() {
+  return appState.history && appState.history[appState.currentMonth];
+}
+
 export function addTransaction(amount, description, type) {
+  // Verificar si el mes está archivado
+  if (isCurrentMonthArchived()) {
+    // Cambiar al mes actual del sistema
+    const now = new Date();
+    const currentSystemMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    
+    // Si el mes actual del sistema es diferente, actualizar
+    if (appState.currentMonth !== currentSystemMonth) {
+      appState.currentMonth = currentSystemMonth;
+      appState.transactions = [];
+      appState.saldoInicial = 0;
+      saveData();
+    }
+    
+    // Mostrar notificación al usuario
+    return { 
+      success: false, 
+      archived: true,
+      message: 'El mes estaba archivado. Movimiento agregado al mes actual.' 
+    };
+  }
+  
   appState.transactions.unshift({
     id: generateId(),
     amount,
@@ -353,9 +380,15 @@ export function addTransaction(amount, description, type) {
     date: new Date().toISOString()
   });
   saveData();
+  return { success: true };
 }
 
 export function updateTransaction(id, amount, description, type) {
+  const check = handleArchivedMonth();
+  if (!check.success) {
+    return check;
+  }
+  
   const idx = appState.transactions.findIndex(t => t.id === id);
   if (idx >= 0) {
     appState.transactions[idx] = { 
@@ -366,11 +399,18 @@ export function updateTransaction(id, amount, description, type) {
     };
     saveData();
   }
+  return { success: true };
 }
 
 export function deleteTransaction(id) {
+  const check = handleArchivedMonth();
+  if (!check.success) {
+    return check;
+  }
+  
   appState.transactions = appState.transactions.filter(t => t.id !== id);
   saveData();
+  return { success: true };
 }
 
 // --- Gastos Fijos ---

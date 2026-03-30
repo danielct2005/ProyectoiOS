@@ -497,7 +497,16 @@ async function handleTransactionSubmit(e) {
     return;
   }
   
-  addTransaction(amount, description, type);
+  const result = addTransaction(amount, description, type);
+  
+  // Si el mes estaba archivado, mostrar notificación
+  if (result.archived) {
+    Swal.fire({ 
+      title: 'Mes archivado', 
+      text: 'El mes estaba archivado. Movimiento agregado al mes actual.', 
+      icon: 'warning' 
+    });
+  }
   
   // Guardar el mes en Firestore después de cada transacción
   await saveCurrentMonth();
