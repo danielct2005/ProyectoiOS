@@ -334,8 +334,8 @@ function handleClearAllData() {
   }).then((result) => {
     if (result.isConfirmed) {
       clearAllData();
-      window.dispatchEvent(new CustomEvent('app:render'));
-      Swal.fire({ title: '¡Borrado!', text: 'Todos los datos han sido eliminados', icon: 'success' });
+      // Recargar la página para asegurar que todo se limpie correctamente
+      window.location.reload();
     }
   });
 }
