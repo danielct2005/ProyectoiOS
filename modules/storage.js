@@ -3,7 +3,8 @@
  * Gestión de datos con Firebase + localStorage como fallback
  */
 
-import { generateId } from './utils.js';
+import { generateId, formatCurrency, getCurrentMonthKey } from './utils.js';
+export { generateId, formatCurrency, getCurrentMonthKey };
 import { 
   initFirebase, 
   saveToFirestore, 
