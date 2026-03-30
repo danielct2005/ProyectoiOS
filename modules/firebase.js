@@ -485,3 +485,24 @@ export function getAuthState() {
     photoURL: currentUser?.photoURL || null
   };
 }
+
+// Eliminar todos los datos del usuario en Firestore
+export async function deleteAllUserData() {
+  if (!isFirebaseReady || isAnonymous) {
+    return false;
+  }
+  
+  try {
+    const userId = getUserId();
+    const userDocRef = getDb().collection('users').doc(userId);
+    
+    // Eliminar el documento completo del usuario
+    await userDocRef.delete();
+    
+    console.log('Todos los datos de Firestore eliminados');
+    return true;
+  } catch (error) {
+    console.error('Error al eliminar datos de Firestore:', error);
+    return false;
+  }
+}

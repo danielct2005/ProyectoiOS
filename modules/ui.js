@@ -15,7 +15,7 @@ import * as Agenda from './agenda.js';
 import * as Economia from './economia.js';
 import * as Ahorros from './ahorros.js';
 import * as Noticias from './noticias.js';
-import { getAuthState, signOut } from './firebase.js';
+import { getAuthState, signOut, deleteAllUserData } from './firebase.js';
 
 // ==================== CONSTANTS ====================
 
@@ -325,16 +325,24 @@ function setupAjustesEvents() {
 function handleClearAllData() {
   Swal.fire({
     title: '¿Borrar todos los datos?',
-    text: 'Esta acción no se puede deshacer',
+    text: 'Esta acción no se puede deshacer. Se eliminarán todos los datos de la nube también.',
     icon: 'warning',
     showCancelButton: true,
     confirmButtonText: 'Sí, borrar todo',
     cancelButtonText: 'Cancelar',
     confirmButtonColor: '#ff3b30'
-  }).then((result) => {
+  }).then(async (result) => {
     if (result.isConfirmed) {
+      // Eliminar datos de Firestore
+      await deleteAllUserData();
+      
+      // Limpiar localStorage
       clearAllData();
-      // Recargar la página para asegurar que todo se limpie correctamente
+      
+      // Cerrar sesión
+      await signOut();
+      
+      // Recargar la página
       window.location.reload();
     }
   });
