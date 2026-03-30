@@ -333,17 +333,24 @@ function handleClearAllData() {
     confirmButtonColor: '#ff3b30'
   }).then(async (result) => {
     if (result.isConfirmed) {
-      // Eliminar datos de Firestore
-      await deleteAllUserData();
-      
-      // Limpiar localStorage
-      clearAllData();
-      
-      // Cerrar sesión
-      await signOut();
-      
-      // Recargar la página
-      window.location.reload();
+      try {
+        // 1. Primero cerrar sesión para evitar que se guarden datos de nuevo
+        await signOut();
+        
+        // 2. Eliminar datos de Firestore
+        await deleteAllUserData();
+        
+        // 3. Limpiar localStorage
+        clearAllData();
+        
+        // 4. Recargar la página
+        window.location.reload();
+      } catch (e) {
+        console.error('Error al borrar:', e);
+        // Igual intentar limpiar
+        clearAllData();
+        window.location.reload();
+      }
     }
   });
 }
