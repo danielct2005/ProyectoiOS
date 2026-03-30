@@ -887,7 +887,7 @@ export function renderDeudas() {
         <div class="debt-group">
           <div class="debt-group__header">
             <span>💳 ${escapeHtml(cardData.name)}</span>
-            <span class="debt-group__total">${formatCurrency(cardData.total)}</span>
+            <span class="debt-group__total" style="font-size: 0.75rem; opacity: 0.8;">Total: ${formatCurrency(cardData.total)}</span>
           </div>
           <div class="transaction-list">
             ${sortedDebts.map(d => buildDebtItemHtml(d)).join('')}
@@ -1030,9 +1030,9 @@ function buildDebtItemHtml(d) {
       <div class="transaction-item__icon transaction-item__icon--gasto">💳</div>
       <div class="transaction-item__content">
         <div class="transaction-item__desc">${escapeHtml(d.product)}</div>
-        <div class="transaction-item__date ${isComplete ? 'text-success' : ''}">${d.paidInstallments || 0}/${d.totalInstallments} cuotas (${formatCurrency(d.installmentAmount)})${isComplete ? ' ✓ Pagado' : ''}</div>
+        <div class="transaction-item__date ${isComplete ? 'text-success' : ''}" style="font-size: 0.75rem; opacity: 0.8;">Total: ${formatCurrency(d.totalAmount)}${isComplete ? ' ✓ Pagado' : ''}</div>
       </div>
-      <div class="transaction-item__amount transaction-item__amount--gasto">${formatCurrency(d.totalAmount)}</div>
+      <div class="transaction-item__amount transaction-item__amount--gasto" style="font-size: 1.1rem;">${formatCurrency(d.installmentAmount)} <span style="font-size: 0.7rem; opacity: 0.7;">/cuota</span></div>
     </div>
   `;
 }
