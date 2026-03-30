@@ -668,11 +668,20 @@ export function getCompletedGoals() {
 
 export function exportAllData() {
   return JSON.stringify({
+    // Finanzas
     transactions: appState.transactions,
     fixedExpenses: appState.fixedExpenses,
     debts: appState.debts,
     creditCards: appState.creditCards,
     history: appState.history,
+    saldoInicial: appState.saldoInicial,
+    lastPaymentMonth: appState.lastPaymentMonth,
+    
+    // Ahorros
+    savingsAccounts: appState.savingsAccounts,
+    savingsGoals: appState.savingsGoals,
+    
+    // Agenda
     importantDates: appState.importantDates
   }, null, 2);
 }
@@ -680,12 +689,23 @@ export function exportAllData() {
 export function importData(data) {
   try {
     const parsed = JSON.parse(data);
+    
+    // Finanzas
     if (parsed.transactions) appState.transactions = parsed.transactions;
     if (parsed.fixedExpenses) appState.fixedExpenses = parsed.fixedExpenses;
     if (parsed.debts) appState.debts = parsed.debts;
     if (parsed.creditCards) appState.creditCards = parsed.creditCards;
     if (parsed.history) appState.history = parsed.history;
+    if (parsed.saldoInicial) appState.saldoInicial = parsed.saldoInicial;
+    if (parsed.lastPaymentMonth) appState.lastPaymentMonth = parsed.lastPaymentMonth;
+    
+    // Ahorros
+    if (parsed.savingsAccounts) appState.savingsAccounts = parsed.savingsAccounts;
+    if (parsed.savingsGoals) appState.savingsGoals = parsed.savingsGoals;
+    
+    // Agenda
     if (parsed.importantDates) appState.importantDates = parsed.importantDates;
+    
     saveData();
     return true;
   } catch (error) {
