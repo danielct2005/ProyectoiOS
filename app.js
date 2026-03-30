@@ -78,7 +78,6 @@ function setupLoginScreen() {
   // Solo ejecutar si el elemento loginScreen existe
   const loginScreen = document.getElementById('loginScreen');
   if (!loginScreen) {
-    console.log('No login screen found');
     return;
   }
   
@@ -90,8 +89,6 @@ function setupLoginScreen() {
   const registerBtn = document.getElementById('registerBtn');
   const loginBtn = document.getElementById('loginBtn');
   const backToLoginBtn = document.getElementById('backToLoginBtn');
-  
-  console.log('Login elements:', { loginEmailBtn, loginAnonBtn, loginEmailForm });
   
   // Mostrar formulario de email
   if (loginEmailBtn) {
@@ -243,8 +240,6 @@ function checkAuthAndShowLogin() {
  * Inicializa la aplicación
  */
 async function init() {
-  console.log('🚀 Inicializando App Modular...');
-  
   // Configurar pantalla de login
   setupLoginScreen();
   
@@ -273,8 +268,6 @@ async function init() {
   
   // Configurar evento de renderizado global
   setupGlobalEvents();
-  
-  console.log('✅ App inicializada correctamente');
 }
 
 /**
