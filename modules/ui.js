@@ -325,7 +325,7 @@ function setupAjustesEvents() {
 function handleClearAllData() {
   Swal.fire({
     title: '¿Borrar todos los datos?',
-    text: 'Esta acción no se puede deshacer. Se eliminarán todos los datos de la nube también.',
+    text: 'Esta acción no se puede deshacer.',
     icon: 'warning',
     showCancelButton: true,
     confirmButtonText: 'Sí, borrar todo',
@@ -333,24 +333,40 @@ function handleClearAllData() {
     confirmButtonColor: '#ff3b30'
   }).then(async (result) => {
     if (result.isConfirmed) {
+      // 1. FORZAR limpieza de localStorage INMEDIATA
+      localStorage.clear();
+      
+      // 2. Forzar limpiar todo el estado de la app
+      appState.transactions = [];
+      appState.fixedExpenses = [];
+      appState.debts = [];
+      appState.creditCards = [];
+      appState.history = {};
+      appState.lastPaymentMonth = null;
+      appState.importantDates = [];
+      appState.previousMonthBalance = 0;
+      appState.savingsAccounts = [];
+      appState.savingsGoals = [];
+      appState.news = [];
+      appState.saldoInicial = 0;
+      appState.currentMonth = null;
+      
+      // 3. Eliminar datos de Firestore (async, no espera)
       try {
-        // 1. Primero cerrar sesión para evitar que se guarden datos de nuevo
-        await signOut();
-        
-        // 2. Eliminar datos de Firestore
         await deleteAllUserData();
-        
-        // 3. Limpiar localStorage
-        clearAllData();
-        
-        // 4. Recargar la página
-        window.location.reload();
-      } catch (e) {
-        console.error('Error al borrar:', e);
-        // Igual intentar limpiar
-        clearAllData();
-        window.location.reload();
+      } catch(e) {
+        console.log('Error Firestore (no importa):', e);
       }
+      
+      // 4. Cerrar sesión
+      try {
+        await signOut();
+      } catch(e) {
+        console.log('Error signOut (no importa):', e);
+      }
+      
+      // 5. Recargar INMEDIATO
+      window.location.href = window.location.origin + window.location.pathname;
     }
   });
 }
