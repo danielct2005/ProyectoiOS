@@ -597,8 +597,8 @@ async function handleArchiveMonth() {
   const now = new Date();
   const [year, month] = appState.currentMonth.split('-').map(Number);
   const lastDayOfMonth = new Date(year, month, 0).getDate();
-  const isEndOfMonth = now.getDate() >= lastDayOfMonth - 3;
-  
+const isEndOfMonth = now.getDate() >= lastDayOfMonth - 1;
+   
   if (appState.history[appState.currentMonth]) {
     Swal.fire({ title: '¡Ya archivado!', text: 'Este mes ya está en el historial', icon: 'warning' });
     return;
@@ -612,7 +612,7 @@ async function handleArchiveMonth() {
   if (!isEndOfMonth) {
     Swal.fire({
       title: 'Aún no puedes archivar',
-      text: `Solo puedes archivar el mes los últimos días del mes (desde el día ${lastDayOfMonth - 3})`,
+      text: `Solo puedes archivar el mes a partir del día ${lastDayOfMonth - 1} (un día antes de que termine el mes)`,
       icon: 'warning'
     });
     return;

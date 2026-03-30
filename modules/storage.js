@@ -124,10 +124,35 @@ export async function loadData() {
 
 // Inicializar el mes actual al cargar la app
 export async function initializeCurrentMonth() {
-  if (!appState.currentMonth) {
-    const now = new Date();
-    appState.currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const now = new Date();
+  const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  
+  // Si hay un mes anterior sin archivar, archivar automáticamente
+  if (appState.currentMonth && appState.currentMonth !== currentMonthKey) {
+    // Obtener el mes anterior
+    const [year, month] = appState.currentMonth.split('-');
+    const prevDate = new Date(parseInt(year), parseInt(month) - 1, 1);
+    const prevMonthKey = `${prevDate.getFullYear()}-${String(prevDate.getMonth() + 1).padStart(2, '0')}`;
+    
+    // Si el mes anterior no está archivado, archivar automáticamente
+    if (!appState.history[prevMonthKey] && (appState.transactions.length > 0 || appState.saldoInicial > 0)) {
+      // Calcular totales del mes anterior
+      const income = appState.transactions
+        .filter(t => t.type === 'ingreso')
+        .reduce((sum, t) => sum + t.amount, 0);
+      const expense = appState.transactions
+        .filter(t => t.type === 'egreso')
+        .reduce((sum, t) => sum + t.amount, 0);
+      const balance = appState.saldoInicial + income - expense;
+      
+      // Archivar el mes anterior
+      archiveMonth(prevMonthKey, income, expense, appState.transactions, balance);
+      console.log(`Mes ${prevMonthKey} archivado automáticamente`);
+    }
   }
+  
+  // Actualizar al mes actual
+  appState.currentMonth = currentMonthKey;
   
   // Intentar cargar el mes desde Firestore/localStorage
   const monthData = await loadMonthDataFromStorage(appState.currentMonth);
