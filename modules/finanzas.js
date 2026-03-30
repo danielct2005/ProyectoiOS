@@ -172,6 +172,9 @@ export async function archiveCurrentMonth() {
   appState.currentMonth = newMonthKey;
   
   saveData();
+  
+  // Re-renderizar la UI para mostrar el nuevo mes
+  window.dispatchEvent(new CustomEvent('app:render'));
 }
 
 // ==================== PAY ALL CUENTAS ====================
