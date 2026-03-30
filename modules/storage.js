@@ -84,25 +84,22 @@ export async function loadData() {
         appState.news = data.news || [];
         appState.saldoInicial = data.saldoInicial || 0;
         
-        // Sincronizar cambios en tiempo real
+        // Sincronizar cambios en tiempo real (solo datos globales, NO saldoInicial que es específico del mes)
         subscribeToChanges('appData', (cloudData) => {
-          // Actualizar el estado con los datos de la nube
+          // NO sincronizar saldoInicial ya que es específico del mes actual
+          // Solo sincronizar datos globales que no cambian entre meses
           if (cloudData) {
-            appState.transactions = cloudData.transactions || appState.transactions;
+            // Solo actualizar estos datos globales
             appState.fixedExpenses = cloudData.fixedExpenses || appState.fixedExpenses;
             appState.debts = cloudData.debts || appState.debts;
             appState.creditCards = cloudData.creditCards || appState.creditCards;
-            appState.history = cloudData.history || appState.history;
-            appState.lastPaymentMonth = cloudData.lastPaymentMonth || appState.lastPaymentMonth;
-            appState.importantDates = cloudData.importantDates || appState.importantDates;
-            appState.previousMonthBalance = cloudData.previousMonthBalance || appState.previousMonthBalance;
             appState.savingsAccounts = cloudData.savingsAccounts || appState.savingsAccounts;
             appState.savingsGoals = cloudData.savingsGoals || appState.savingsGoals;
-            appState.saldoInicial = cloudData.saldoInicial || appState.saldoInicial;
+            appState.importantDates = cloudData.importantDates || appState.importantDates;
             
             // Re-renderizar la UI
             window.dispatchEvent(new CustomEvent('app:render'));
-            console.log('Datos sincronizados desde la nube');
+            console.log('Datos globales sincronizados desde la nube');
           }
         });
         
@@ -219,7 +216,8 @@ function resetState() {
 // ==================== SAVE DATA ====================
 
 export function saveData() {
-  const dataToSave = {
+  // Datos para localStorage (incluye saldoInicial porque es específico del mes)
+  const localDataToSave = {
     transactions: appState.transactions,
     fixedExpenses: appState.fixedExpenses,
     debts: appState.debts,
@@ -236,17 +234,32 @@ export function saveData() {
   
   // Siempre guardar en localStorage como backup
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(localDataToSave));
   } catch (error) {
     console.error('Error guardando en localStorage:', error);
   }
   
-  // Tambien guardar en Firebase si hay usuario logueado (no anonimo)
+  // Guardar en Firebase (NO incluir saldoInicial porque es específico de cada mes)
   if (firebaseInitialized) {
     try {
       const authState = getAuthState();
       if (authState.isLoggedIn && !authState.isAnonymous) {
-        saveToFirestore('appData', dataToSave).catch(err => {
+        const firestoreData = {
+          transactions: appState.transactions,
+          fixedExpenses: appState.fixedExpenses,
+          debts: appState.debts,
+          creditCards: appState.creditCards,
+          history: appState.history,
+          lastPaymentMonth: appState.lastPaymentMonth,
+          importantDates: appState.importantDates,
+          previousMonthBalance: appState.previousMonthBalance,
+          savingsAccounts: appState.savingsAccounts,
+          savingsGoals: appState.savingsGoals,
+          news: appState.news
+          // NO saldoInicial - es específico del mes
+        };
+        
+        saveToFirestore('appData', firestoreData).catch(err => {
           console.error('Error guardando en Firebase:', err);
         });
       }
@@ -742,6 +755,7 @@ export function clearAllData() {
   
   // También limpiar explícitamente las claves conocidas
   localStorage.removeItem('finanzas_app_data');
+  localStorage.removeItem('finanzas_months_data');
   localStorage.removeItem('currentMonth');
   localStorage.removeItem('darkMode');
 }

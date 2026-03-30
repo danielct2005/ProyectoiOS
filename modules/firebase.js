@@ -495,11 +495,8 @@ export async function deleteAllUserData() {
   try {
     const userId = getUserId();
     
-    // Los datos se guardan en users/{userId}/appData/data
-    // En lugar de eliminar, sobreescribimos con datos vacíos
+    // 1. Eliminar datos generales (appData)
     const appDataRef = getDb().collection('users').doc(userId).collection('appData').doc('data');
-    
-    // Sobreescribir con datos vacíos
     await appDataRef.set({
       transactions: [],
       fixedExpenses: [],
@@ -510,11 +507,18 @@ export async function deleteAllUserData() {
       savingsGoals: [],
       importantDates: [],
       saldoInicial: 0,
-      lastPaymentMonth: null,
-      deletedAt: window.firebase.firestore.FieldValue.serverTimestamp()
+      lastPaymentMonth: null
     });
     
-    console.log('Todos los datos de Firestore eliminados (sobrescritos con vacío)');
+    // 2. Eliminar TODOS los meses (colección 'meses')
+    const mesesRef = getDb().collection('users').doc(userId).collection('meses');
+    const mesesSnapshot = await mesesRef.get();
+    
+    // Eliminar cada documento de mes
+    const deletePromises = mesesSnapshot.docs.map(doc => doc.ref.delete());
+    await Promise.all(deletePromises);
+    
+    console.log('Todos los datos de Firestore eliminados (appData + meses)');
     return true;
   } catch (error) {
     console.error('Error al eliminar datos de Firestore:', error);
