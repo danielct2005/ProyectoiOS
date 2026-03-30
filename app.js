@@ -27,7 +27,13 @@ import {
 // ==================== LOGIN UI ====================
 
 function setupLoginScreen() {
+  // Solo ejecutar si el elemento loginScreen existe
   const loginScreen = document.getElementById('loginScreen');
+  if (!loginScreen) {
+    console.log('No login screen found');
+    return;
+  }
+  
   const loginEmailBtn = document.getElementById('loginEmailBtn');
   const loginAnonBtn = document.getElementById('loginAnonBtn');
   const loginEmailForm = document.getElementById('loginEmailForm');
@@ -37,21 +43,29 @@ function setupLoginScreen() {
   const loginBtn = document.getElementById('loginBtn');
   const backToLoginBtn = document.getElementById('backToLoginBtn');
   
-  if (!loginScreen) return;
+  console.log('Login elements:', { loginEmailBtn, loginAnonBtn, loginEmailForm });
   
   // Mostrar formulario de email
-  loginEmailBtn?.addEventListener('click', () => {
-    document.querySelector('.login-buttons')?.style?.setProperty('display', 'none');
-    document.querySelector('.login-note')?.style?.setProperty('display', 'none');
-    loginEmailForm?.style?.setProperty('display', 'flex');
-  });
+  if (loginEmailBtn) {
+    loginEmailBtn.addEventListener('click', () => {
+      const buttonsEl = document.querySelector('.login-buttons');
+      const noteEl = document.querySelector('.login-note');
+      if (buttonsEl) buttonsEl.style.display = 'none';
+      if (noteEl) noteEl.style.display = 'none';
+      if (loginEmailForm) loginEmailForm.style.display = 'flex';
+    });
+  }
   
   // Volver a los botones de login
-  backToLoginBtn?.addEventListener('click', () => {
-    loginEmailForm?.style?.setProperty('display', 'none');
-    document.querySelector('.login-buttons')?.style?.setProperty('display', 'flex');
-    document.querySelector('.login-note')?.style?.setProperty('display', 'block');
-  });
+  if (backToLoginBtn) {
+    backToLoginBtn.addEventListener('click', () => {
+      const buttonsEl = document.querySelector('.login-buttons');
+      const noteEl = document.querySelector('.login-note');
+      if (loginEmailForm) loginEmailForm.style.display = 'none';
+      if (buttonsEl) buttonsEl.style.display = 'flex';
+      if (noteEl) noteEl.style.display = 'block';
+    });
+  }
   
   // Validar formato de email
   function isValidEmail(email) {
