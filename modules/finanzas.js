@@ -1030,7 +1030,7 @@ function buildDebtItemHtml(d) {
       <div class="transaction-item__icon transaction-item__icon--gasto">💳</div>
       <div class="transaction-item__content">
         <div class="transaction-item__desc">${escapeHtml(d.product)}</div>
-        <div class="transaction-item__date ${isComplete ? 'text-success' : ''}" style="font-size: 0.75rem; opacity: 0.8;">Total: ${formatCurrency(d.totalAmount)}${isComplete ? ' ✓ Pagado' : ''}</div>
+        <div class="transaction-item__date ${isComplete ? 'text-success' : ''}" style="font-size: 0.75rem; opacity: 0.8;">${d.paidInstallments || 0}/${d.totalInstallments} cuotas${isComplete ? ' ✓ Pagado' : ''}</div>
       </div>
       <div class="transaction-item__amount transaction-item__amount--gasto" style="font-size: 1.1rem;">${formatCurrency(d.installmentAmount)} <span style="font-size: 0.7rem; opacity: 0.7;">/cuota</span></div>
     </div>
