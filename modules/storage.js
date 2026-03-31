@@ -73,7 +73,7 @@ export async function loadData() {
       // Cargar datos de Firestore
       const data = await loadFromFirestore('appData');
       if (data) {
-        appState.transactions = data.transactions || [];
+        // transactions NO se cargan desde appData - están en meses/{month}
         appState.fixedExpenses = data.fixedExpenses || [];
         appState.debts = data.debts || [];
         appState.cobros = data.cobros || [];
@@ -85,12 +85,10 @@ export async function loadData() {
         appState.savingsAccounts = data.savingsAccounts || [];
         appState.savingsGoals = data.savingsGoals || [];
         appState.news = data.news || [];
-        appState.saldoInicial = data.saldoInicial || 0;
+        // saldoInicial se carga en initializeCurrentMonth()
         
-        // Sincronizar cambios en tiempo real (solo datos globales, NO saldoInicial que es específico del mes)
+        // Sincronizar cambios en tiempo real (solo datos globales, NO transactions ni saldoInicial)
         subscribeToChanges('appData', (cloudData) => {
-          // NO sincronizar saldoInicial ya que es específico del mes actual
-          // Solo sincronizar datos globales que no cambian entre meses
           if (cloudData) {
             // Solo actualizar estos datos globales
             appState.fixedExpenses = cloudData.fixedExpenses || appState.fixedExpenses;
@@ -251,7 +249,7 @@ export function saveData() {
       const authState = getAuthState();
       if (authState.isLoggedIn && !authState.isAnonymous) {
         const firestoreData = {
-          transactions: appState.transactions,
+          // NOTA: transactions NO se guardan aquí - están en meses/{month}
           fixedExpenses: appState.fixedExpenses,
           debts: appState.debts,
           cobros: appState.cobros,
@@ -263,7 +261,7 @@ export function saveData() {
           savingsAccounts: appState.savingsAccounts,
           savingsGoals: appState.savingsGoals,
           news: appState.news
-          // NO saldoInicial - es específico del mes
+          // NO transactions - están en el documento del mes
         };
         
         saveToFirestore('appData', firestoreData).catch(err => {
@@ -390,7 +388,11 @@ export function addTransaction(amount, description, type) {
     type,
     date: new Date().toISOString()
   });
+  
+  // Guardar en localStorage Y en Firestore (mes actual)
   saveData();
+  saveCurrentMonth();
+  
   return { success: true };
 }
 
@@ -418,7 +420,11 @@ export function deleteTransaction(id) {
   }
   
   appState.transactions = appState.transactions.filter(t => t.id !== id);
+  
+  // Guardar en localStorage Y en Firestore (mes actual)
   saveData();
+  saveCurrentMonth();
+  
   return { success: true };
 }
 
