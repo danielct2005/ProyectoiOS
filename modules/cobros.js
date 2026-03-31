@@ -353,14 +353,6 @@ export function showAddCobroModal() {
     }
   });
 }
-    
-    if (result.success) {
-      modalContainer.innerHTML = '';
-      renderCobros();
-      window.dispatchEvent(new CustomEvent('app:render'));
-    }
-  });
-}
 
 // ==================== HELPER ====================
 
