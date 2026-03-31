@@ -789,7 +789,7 @@ body.modal-open {
   border-radius: var(--radius);
   padding: var(--space-md);
   margin-bottom: var(--space-sm);
-  border-left: 4px solid #34c759;
+  border-left: 4px solid #b8860b;
 }
 
 .cobro-item:last-child {
@@ -811,8 +811,8 @@ body.modal-open {
 .cobro-item__categoria {
   font-size: 0.75rem;
   padding: 2px 8px;
-  background: rgba(52, 209, 88, 0.15);
-  color: #34c759;
+  background: rgba(184, 134, 11, 0.15);
+  color: #b8860b;
   border-radius: var(--radius);
 }
 
