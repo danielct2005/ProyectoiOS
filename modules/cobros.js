@@ -140,6 +140,7 @@ export function undoInstallmentPayment(cobroId) {
 // Construir HTML de un item de cobro
 function buildCobroItemHtml(c) {
   const isComplete = c.paidInstallments >= c.totalInstallments;
+  const isCuotas = c.totalInstallments > 1;
   const remainingAmount = c.totalAmount - ((c.paidInstallments || 0) * c.installmentAmount);
   
   return `
@@ -150,8 +151,11 @@ function buildCobroItemHtml(c) {
       </div>
       <div class="cobro-item__concepto">${escapeHtml(c.concepto)}</div>
       <div class="cobro-item__details">
-        <span class="cobro-item__cuotas">${c.paidInstallments || 0}/${c.totalInstallments} cuotas</span>
-        <span class="cobro-item__monto">${formatCurrency(c.installmentAmount)}/mes</span>
+        ${isCuotas 
+          ? `<span class="cobro-item__cuotas">${c.paidInstallments || 0}/${c.totalInstallments} cuotas</span>
+             <span class="cobro-item__monto">${formatCurrency(c.installmentAmount)}/mes</span>`
+          : `<span class="cobro-item__monto">${formatCurrency(c.totalAmount)}</span>`
+        }
       </div>
       <div class="cobro-item__status ${isComplete ? 'cobro-item__status--complete' : ''}">
         ${isComplete 
@@ -160,9 +164,10 @@ function buildCobroItemHtml(c) {
         }
       </div>
       <div class="cobro-item__actions">
-        ${!isComplete ? `
+        <button class="btn btn--sm btn--ghost edit-cobro-btn" data-id="${c.id}">✏️</button>
+        ${!isComplete && isCuotas ? `
           <button class="btn btn--sm btn--success mark-paid-btn" data-id="${c.id}">
-            ✓ Cobrar Cuota
+            ✓
           </button>
         ` : ''}
         <button class="btn btn--sm btn--ghost delete-cobro-btn" data-id="${c.id}">
@@ -253,6 +258,14 @@ export function renderCobros() {
       }
     });
   });
+  
+  // Botones de editar
+  document.querySelectorAll('.edit-cobro-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const cobroId = e.target.dataset.id;
+      showEditCobroModal(cobroId);
+    });
+  });
 }
 
 // ==================== MODAL ====================
@@ -292,7 +305,7 @@ export function showAddCobroModal() {
           <div id="camposCuotas">
             <div class="form-group">
               <label class="form-label" for="cobroTotal">Monto Total</label>
-              <input type="text" id="cobroTotal" class="form-input" placeholder="0" inputmode="numeric" required>
+              <input type="text" id="cobroTotal" class="form-input" placeholder="0" inputmode="numeric">
             </div>
             <div class="form-group">
               <label class="form-label" for="cobroCuotas">Cantidad de Cuotas</label>
@@ -377,6 +390,11 @@ export function showAddCobroModal() {
     const concepto = document.getElementById('cobroConcepto').value;
     const tipo = document.querySelector('input[name="cobroTipo"]:checked').value;
     
+    if (!deudor.trim() || !concepto.trim()) {
+      alert('Por favor completá todos los campos');
+      return;
+    }
+    
     let result;
     
     if (tipo === 'cuotas') {
@@ -384,11 +402,205 @@ export function showAddCobroModal() {
       const totalInstallments = parseInt(document.getElementById('cobroCuotas').value) || 1;
       const installmentAmount = parseFloat(document.getElementById('cobroMontoCuota').value.replace(/[^\d]/g, '')) || (totalAmount / totalInstallments);
       
+      if (!totalAmount || totalAmount <= 0) {
+        alert('Por favor ingresá el monto total');
+        return;
+      }
+      
       result = addCobro(deudor, concepto, totalAmount, totalInstallments, installmentAmount, 'Con Cuotas');
     } else {
       const montoUnico = parseFloat(document.getElementById('cobroMontoUnico').value.replace(/[^\d]/g, ''));
       
+      if (!montoUnico || montoUnico <= 0) {
+        alert('Por favor ingresá el monto a cobrar');
+        return;
+      }
+      
       result = addCobro(deudor, concepto, montoUnico, 1, montoUnico, 'Monto Único');
+    }
+    
+    if (result.success) {
+      modalContainer.remove();
+      renderCobros();
+      window.dispatchEvent(new CustomEvent('app:render'));
+    }
+  });
+}
+
+// ==================== MODAL EDITAR ====================
+
+export function showEditCobroModal(cobroId) {
+  const cobro = appState.cobros.find(c => c.id === cobroId);
+  if (!cobro) return;
+  
+  const isCuotas = cobro.totalInstallments > 1;
+  
+  // Crear el modal de edición
+  const modalContainer = document.getElementById('cobroModalContainer') || document.createElement('div');
+  modalContainer.id = 'cobroModalContainer';
+  
+  modalContainer.innerHTML = `
+    <div class="modal visible" id="editCobroModal">
+      <div class="modal__backdrop"></div>
+      <div class="modal__content">
+        <h3 class="modal__title">Editar Cobro</h3>
+        <form id="editCobroForm">
+          <input type="hidden" id="editCobroId" value="${cobro.id}">
+          <div class="form-group">
+            <label class="form-label" for="editCobroDeudor">Deudor / Categoría</label>
+            <input type="text" id="editCobroDeudor" class="form-input" value="${escapeHtml(cobro.deudor)}" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="editCobroConcepto">Concepto</label>
+            <input type="text" id="editCobroConcepto" class="form-input" value="${escapeHtml(cobro.concepto)}" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Tipo de Cobro</label>
+            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+              <label style="flex: 1; display: flex; align-items: center; gap: 5px; padding: 10px; border: 2px solid var(--gray-200); border-radius: var(--radius); cursor: pointer;" id="editLabelCuotas">
+                <input type="radio" name="editCobroTipo" value="cuotas" ${isCuotas ? 'checked' : ''} style="width: 18px; height: 18px;">
+                Con Cuotas
+              </label>
+              <label style="flex: 1; display: flex; align-items: center; gap: 5px; padding: 10px; border: 2px solid var(--gray-200); border-radius: var(--radius); cursor: pointer;" id="editLabelUnico">
+                <input type="radio" name="editCobroTipo" value="unico" ${!isCuotas ? 'checked' : ''} style="width: 18px; height: 18px;">
+                Monto Único
+              </label>
+            </div>
+          </div>
+          <div id="editCamposCuotas" style="display: ${isCuotas ? 'block' : 'none'};">
+            <div class="form-group">
+              <label class="form-label" for="editCobroTotal">Monto Total</label>
+              <input type="text" id="editCobroTotal" class="form-input" value="${cobro.totalAmount.toLocaleString()}" inputmode="numeric" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="editCobroCuotas">Cantidad de Cuotas</label>
+              <input type="text" id="editCobroCuotas" class="form-input" value="${cobro.totalInstallments}" inputmode="numeric" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="editCobroMontoCuota">Monto por Cuota</label>
+              <input type="text" id="editCobroMontoCuota" class="form-input" value="${cobro.installmentAmount.toLocaleString()}" inputmode="numeric">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="editCobroPaid">Cuotas Pagadas</label>
+              <input type="number" id="editCobroPaid" class="form-input" value="${cobro.paidInstallments || 0}" min="0" max="${cobro.totalInstallments}" required>
+            </div>
+          </div>
+          <div id="editCamposUnico" style="display: ${isCuotas ? 'none' : 'block'};">
+            <div class="form-group">
+              <label class="form-label" for="editCobroMontoUnico">Monto a Cobrar</label>
+              <input type="text" id="editCobroMontoUnico" class="form-input" value="${cobro.totalAmount.toLocaleString()}" inputmode="numeric">
+            </div>
+          </div>
+          <div class="modal__actions">
+            <button type="button" class="btn btn--danger" id="deleteEditCobroBtn">🗑️ Eliminar</button>
+            <button type="submit" class="btn btn--primary">Guardar</button>
+          </div>
+          <button type="button" class="btn btn--secondary btn--block mt-1" id="cancelEditCobroBtn">Cancelar</button>
+        </form>
+      </div>
+    </div>
+  `;
+  
+  if (!document.getElementById('cobroModalContainer')) {
+    document.body.appendChild(modalContainer);
+  }
+  
+  // Toggle entre cuotas y monto único
+  document.querySelectorAll('input[name="editCobroTipo"]').forEach(radio => {
+    radio.addEventListener('change', (e) => {
+      const editCamposCuotas = document.getElementById('editCamposCuotas');
+      const editCamposUnico = document.getElementById('editCamposUnico');
+      const editLabelCuotas = document.getElementById('editLabelCuotas');
+      const editLabelUnico = document.getElementById('editLabelUnico');
+      
+      if (e.target.value === 'cuotas') {
+        editCamposCuotas.style.display = 'block';
+        editCamposUnico.style.display = 'none';
+        editLabelCuotas.style.borderColor = 'var(--primary)';
+        editLabelUnico.style.borderColor = 'var(--gray-200)';
+      } else {
+        editCamposCuotas.style.display = 'none';
+        editCamposUnico.style.display = 'block';
+        editLabelCuotas.style.borderColor = 'var(--gray-200)';
+        editLabelUnico.style.borderColor = 'var(--primary)';
+      }
+    });
+  });
+  
+  // Auto-calcular cuota
+  const totalInput = document.getElementById('editCobroTotal');
+  const cuotasInput = document.getElementById('editCobroCuotas');
+  const montoCuotaInput = document.getElementById('editCobroMontoCuota');
+  
+  const autoCalculate = () => {
+    const total = parseFloat(totalInput?.value?.replace(/[^\d]/g, '')) || 0;
+    const cuotas = parseInt(cuotasInput?.value) || 1;
+    if (total > 0 && cuotas > 0 && montoCuotaInput && !montoCuotaInput.value) {
+      montoCuotaInput.value = Math.round(total / cuotas).toLocaleString();
+    }
+  };
+  
+  totalInput?.addEventListener('input', autoCalculate);
+  cuotasInput?.addEventListener('input', autoCalculate);
+  
+  // Cerrar modal
+  document.getElementById('cancelEditCobroBtn')?.addEventListener('click', () => {
+    modalContainer.remove();
+  });
+  
+  document.querySelector('#editCobroModal .modal__backdrop')?.addEventListener('click', () => {
+    modalContainer.remove();
+  });
+  
+  // Eliminar cobro desde edición
+  document.getElementById('deleteEditCobroBtn')?.addEventListener('click', () => {
+    if (confirm('¿Estás seguro de eliminar este cobro?')) {
+      deleteCobro(cobroId);
+      modalContainer.remove();
+      renderCobros();
+      window.dispatchEvent(new CustomEvent('app:render'));
+    }
+  });
+  
+  // Submit form
+  document.getElementById('editCobroForm')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    
+    const deudor = document.getElementById('editCobroDeudor').value;
+    const concepto = document.getElementById('editCobroConcepto').value;
+    const tipo = document.querySelector('input[name="editCobroTipo"]:checked').value;
+    
+    let result;
+    
+    if (tipo === 'cuotas') {
+      const totalAmount = parseFloat(document.getElementById('editCobroTotal').value.replace(/[^\d]/g, ''));
+      const totalInstallments = parseInt(document.getElementById('editCobroCuotas').value) || 1;
+      const installmentAmount = parseFloat(document.getElementById('editCobroMontoCuota').value.replace(/[^\d]/g, '')) || (totalAmount / totalInstallments);
+      const paidInstallments = parseInt(document.getElementById('editCobroPaid').value) || 0;
+      
+      result = updateCobro(cobroId, {
+        deudor,
+        concepto,
+        totalAmount,
+        totalInstallments,
+        installmentAmount,
+        paidInstallments,
+        categoria: 'Con Cuotas',
+        currentPending: paidInstallments < totalInstallments
+      });
+    } else {
+      const montoUnico = parseFloat(document.getElementById('editCobroMontoUnico').value.replace(/[^\d]/g, ''));
+      
+      result = updateCobro(cobroId, {
+        deudor,
+        concepto,
+        totalAmount: montoUnico,
+        totalInstallments: 1,
+        installmentAmount: montoUnico,
+        paidInstallments: 0,
+        categoria: 'Monto Único',
+        currentPending: true
+      });
     }
     
     if (result.success) {
