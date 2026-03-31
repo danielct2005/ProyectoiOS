@@ -257,9 +257,11 @@ export function renderCobros() {
 // ==================== MODAL ====================
 
 export function showAddCobroModal() {
+  console.log('showAddCobroModal llamado');
   const modalHtml = `
-    <div class="modal-overlay" id="cobroModal">
-      <div class="modal">
+    <div class="modal" id="cobroModal">
+      <div class="modal__backdrop"></div>
+      <div class="modal__content">
         <div class="modal__header">
           <h3>Agregar Cobro</h3>
           <button class="modal__close" id="closeCobroModal">&times;</button>
@@ -312,6 +314,14 @@ export function showAddCobroModal() {
     document.body.appendChild(modalContainer);
   }
   modalContainer.innerHTML = modalHtml;
+  
+  // Asegurar que el modal sea visible
+  const modal = document.getElementById('cobroModal');
+  if (modal) {
+    modal.classList.add('visible');
+  }
+  
+  console.log('Modal insertado:', modal ? 'OK' : 'NO ENCONTRADO');
   
   // Auto-calcular cuota cuando cambie el monto o las cuotas
   const totalAmountInput = document.getElementById('totalAmount');
