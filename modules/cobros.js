@@ -3,6 +3,7 @@
 
 import { appState, saveData, generateId } from './storage.js';
 import { formatCurrency, getCurrentMonthKey } from './utils.js';
+import { openModal, closeModal } from './ui.js';
 
 // ==================== CÁLCULOS ====================
 
@@ -205,7 +206,7 @@ export function renderCobros() {
       </div>
     </div>
     
-    <div class="balance-card balance-card--gold">
+    <div class="balance-card balance-card--purple">
       <div class="balance-card__label">Total por Cobrar</div>
       <div class="balance-card__amount">${formatCurrency(totalCobrar)}</div>
       <div class="balance-card__info balance-card__info--secondary">
@@ -257,81 +258,65 @@ export function renderCobros() {
 // ==================== MODAL ====================
 
 export function showAddCobroModal() {
-  console.log('showAddCobroModal llamado');
-  const modalHtml = `
-    <div class="modal" id="cobroModal">
+  // Crear el modal en el body
+  const modalContainer = document.getElementById('cobroModalContainer') || document.createElement('div');
+  modalContainer.id = 'cobroModalContainer';
+  
+  modalContainer.innerHTML = `
+    <div class="modal visible" id="cobroModal">
       <div class="modal__backdrop"></div>
-      <div class="modal__content">
-        <div class="modal__header">
-          <h3>Agregar Cobro</h3>
-          <button class="modal__close" id="closeCobroModal">&times;</button>
+      <div class="modal__content" style="background: var(--white); border-radius: var(--radius); max-width: 400px; margin: auto; width: 100%;">
+        <div class="modal__header" style="padding: var(--space-md); border-bottom: 1px solid var(--gray-200);">
+          <h3 style="margin: 0; font-size: 1.1rem;">Agregar Cobro</h3>
+          <button id="closeCobroModal" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">&times;</button>
         </div>
-        <div class="modal__body">
+        <div style="padding: var(--space-md);">
           <form id="cobroForm">
-            <div class="form-group">
-              <label for="deudor">Deudor / Categoría</label>
-              <input type="text" id="deudor" placeholder="Ej: Jacqueline, Fer, CMR Prestada" required>
+            <div style="margin-bottom: var(--space-md);">
+              <label style="display: block; margin-bottom: 4px; font-weight: 600;">Deudor / Categoría</label>
+              <input type="text" id="deudor" required style="width: 100%; padding: 10px; border: 1px solid var(--gray-300); border-radius: var(--radius);">
             </div>
-            
-            <div class="form-group">
-              <label for="categoria">Categoría</label>
-              <input type="text" id="categoria" placeholder="Ej: Préstamo, Compra compartida" value="Otro">
+            <div style="margin-bottom: var(--space-md);">
+              <label style="display: block; margin-bottom: 4px; font-weight: 600;">Categoría</label>
+              <input type="text" id="categoria" value="Otro" style="width: 100%; padding: 10px; border: 1px solid var(--gray-300); border-radius: var(--radius);">
             </div>
-            
-            <div class="form-group">
-              <label for="concepto">Concepto / Producto</label>
-              <input type="text" id="concepto" placeholder="Ej: Flujómetro, Zapatillas, Mecánico" required>
+            <div style="margin-bottom: var(--space-md);">
+              <label style="display: block; margin-bottom: 4px; font-weight: 600;">Concepto / Producto</label>
+              <input type="text" id="concepto" required style="width: 100%; padding: 10px; border: 1px solid var(--gray-300); border-radius: var(--radius);">
             </div>
-            
-            <div class="form-group">
-              <label for="totalAmount">Monto Total</label>
-              <input type="number" id="totalAmount" placeholder="0" min="0" step="100" required>
+            <div style="margin-bottom: var(--space-md);">
+              <label style="display: block; margin-bottom: 4px; font-weight: 600;">Monto Total</label>
+              <input type="number" id="totalAmount" required min="0" step="100" style="width: 100%; padding: 10px; border: 1px solid var(--gray-300); border-radius: var(--radius);">
             </div>
-            
-            <div class="form-group">
-              <label for="totalInstallments">Total de Cuotas</label>
-              <input type="number" id="totalInstallments" placeholder="1" min="1" max="60" value="1" required>
+            <div style="margin-bottom: var(--space-md);">
+              <label style="display: block; margin-bottom: 4px; font-weight: 600;">Total de Cuotas</label>
+              <input type="number" id="totalInstallments" required min="1" max="60" value="1" style="width: 100%; padding: 10px; border: 1px solid var(--gray-300); border-radius: var(--radius);">
             </div>
-            
-            <div class="form-group">
-              <label for="installmentAmount">Monto Cuota Mensual</label>
-              <input type="number" id="installmentAmount" placeholder="Se calcula automáticamente" min="0" step="100">
-              <small style="opacity: 0.6;">Dejar vacío para calcular automáticamente</small>
+            <div style="margin-bottom: var(--space-md);">
+              <label style="display: block; margin-bottom: 4px; font-weight: 600;">Monto Cuota Mensual</label>
+              <input type="number" id="installmentAmount" min="0" step="100" style="width: 100%; padding: 10px; border: 1px solid var(--gray-300); border-radius: var(--radius);">
+              <small style="color: var(--gray-500);">Dejar vacío para calcular automáticamente</small>
             </div>
-            
-            <button type="submit" class="btn btn--primary btn--block">Agregar Cobro</button>
+            <button type="submit" style="width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: var(--radius); font-weight: 600; cursor: pointer;">Agregar Cobro</button>
           </form>
         </div>
       </div>
     </div>
   `;
   
-  // Insertar modal si no existe
-  let modalContainer = document.getElementById('cobroModalContainer');
-  if (!modalContainer) {
-    modalContainer = document.createElement('div');
-    modalContainer.id = 'cobroModalContainer';
+  if (!document.getElementById('cobroModalContainer')) {
     document.body.appendChild(modalContainer);
   }
-  modalContainer.innerHTML = modalHtml;
   
-  // Asegurar que el modal sea visible
-  const modal = document.getElementById('cobroModal');
-  if (modal) {
-    modal.classList.add('visible');
-  }
-  
-  console.log('Modal insertado:', modal ? 'OK' : 'NO ENCONTRADO');
-  
-  // Auto-calcular cuota cuando cambie el monto o las cuotas
+  // Auto-calcular cuota
   const totalAmountInput = document.getElementById('totalAmount');
   const totalInstallmentsInput = document.getElementById('totalInstallments');
   const installmentAmountInput = document.getElementById('installmentAmount');
   
   const autoCalculate = () => {
-    const total = parseFloat(totalAmountInput.value) || 0;
-    const cuotas = parseInt(totalInstallmentsInput.value) || 1;
-    if (total > 0 && cuotas > 0 && !installmentAmountInput.value) {
+    const total = parseFloat(totalAmountInput?.value) || 0;
+    const cuotas = parseInt(totalInstallmentsInput?.value) || 1;
+    if (total > 0 && cuotas > 0 && installmentAmountInput && !installmentAmountInput.value) {
       installmentAmountInput.value = Math.round(total / cuotas);
     }
   };
@@ -341,13 +326,11 @@ export function showAddCobroModal() {
   
   // Cerrar modal
   document.getElementById('closeCobroModal')?.addEventListener('click', () => {
-    modalContainer.innerHTML = '';
+    modalContainer.remove();
   });
   
-  document.getElementById('cobroModal')?.addEventListener('click', (e) => {
-    if (e.target.id === 'cobroModal') {
-      modalContainer.innerHTML = '';
-    }
+  document.querySelector('#cobroModal .modal__backdrop')?.addEventListener('click', () => {
+    modalContainer.remove();
   });
   
   // Submit form
@@ -362,6 +345,14 @@ export function showAddCobroModal() {
     const installmentAmount = parseFloat(document.getElementById('installmentAmount').value) || (totalAmount / totalInstallments);
     
     const result = addCobro(deudor, concepto, totalAmount, totalInstallments, installmentAmount, categoria);
+    
+    if (result.success) {
+      modalContainer.remove();
+      renderCobros();
+      window.dispatchEvent(new CustomEvent('app:render'));
+    }
+  });
+}
     
     if (result.success) {
       modalContainer.innerHTML = '';
