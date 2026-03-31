@@ -205,7 +205,7 @@ export function renderCobros() {
       </div>
     </div>
     
-    <div class="balance-card balance-card--green">
+    <div class="balance-card balance-card--gold">
       <div class="balance-card__label">Total por Cobrar</div>
       <div class="balance-card__amount">${formatCurrency(totalCobrar)}</div>
       <div class="balance-card__info balance-card__info--secondary">
@@ -217,7 +217,15 @@ export function renderCobros() {
   `;
   
   // Event listeners
-  document.getElementById('addCobroBtn')?.addEventListener('click', showAddCobroModal);
+  const addBtn = document.getElementById('addCobroBtn');
+  if (addBtn) {
+    addBtn.addEventListener('click', () => {
+      console.log('Click en agregar cobro');
+      showAddCobroModal();
+    });
+  } else {
+    console.error('No se encontró el botón addCobroBtn');
+  }
   
   // Botones de marcar cuota pagada
   document.querySelectorAll('.mark-paid-btn').forEach(btn => {
