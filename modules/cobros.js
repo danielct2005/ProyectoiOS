@@ -2,7 +2,7 @@
 // Gestiona préstamos a terceros o compras que otros deben pagar
 
 import { appState, saveData, generateId } from './storage.js';
-import { formatCurrency, getCurrentMonthKey } from './utils.js';
+import { formatCurrency, formatNumber, getCurrentMonthKey, addThousandsSeparator } from './utils.js';
 import { openModal, closeModal } from './ui.js';
 
 // ==================== CÁLCULOS ====================
@@ -361,6 +361,12 @@ export function showAddCobroModal() {
   const totalInput = document.getElementById('cobroTotal');
   const cuotasInput = document.getElementById('cobroCuotas');
   const montoCuotaInput = document.getElementById('cobroMontoCuota');
+  const montoUnicoInput = document.getElementById('cobroMontoUnico');
+  
+  // Agregar separador de miles mientras escribe
+  addThousandsSeparator(totalInput);
+  addThousandsSeparator(montoCuotaInput);
+  addThousandsSeparator(montoUnicoInput);
   
   const autoCalculate = () => {
     const total = parseFloat(totalInput?.value?.replace(/[^\d]/g, '')) || 0;
@@ -531,6 +537,12 @@ export function showEditCobroModal(cobroId) {
   const totalInput = document.getElementById('editCobroTotal');
   const cuotasInput = document.getElementById('editCobroCuotas');
   const montoCuotaInput = document.getElementById('editCobroMontoCuota');
+  const montoUnicoInput = document.getElementById('editCobroMontoUnico');
+  
+  // Agregar separador de miles mientras escribe
+  addThousandsSeparator(totalInput);
+  addThousandsSeparator(montoCuotaInput);
+  addThousandsSeparator(montoUnicoInput);
   
   const autoCalculate = () => {
     const total = parseFloat(totalInput?.value?.replace(/[^\d]/g, '')) || 0;
