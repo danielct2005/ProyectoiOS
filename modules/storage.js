@@ -722,6 +722,7 @@ export function importData(data) {
     if (parsed.transactions) appState.transactions = parsed.transactions;
     if (parsed.fixedExpenses) appState.fixedExpenses = parsed.fixedExpenses;
     if (parsed.debts) appState.debts = parsed.debts;
+    if (parsed.cobros) appState.cobros = parsed.cobros;
     if (parsed.creditCards) appState.creditCards = parsed.creditCards;
     if (parsed.history) appState.history = parsed.history;
     if (parsed.saldoInicial) appState.saldoInicial = parsed.saldoInicial;
@@ -734,7 +735,41 @@ export function importData(data) {
     // Agenda
     if (parsed.importantDates) appState.importantDates = parsed.importantDates;
     
+    // Determinar el mes actual para las transactions
+    const now = new Date();
+    const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    appState.currentMonth = currentMonthKey;
+    
+    // GUARDAR TODO - localStorage Y Firestore
     saveData();
+    
+    // Guardar el mes actual en Firestore (donde se almacenan las transactions)
+    if (appState.transactions && appState.transactions.length > 0) {
+      saveCurrentMonth();
+    }
+    
+    // Si hay history con meses, guardarlos también
+    if (parsed.history) {
+      Object.keys(parsed.history).forEach(async (monthKey) => {
+        const monthData = {
+          transactions: parsed.history[monthKey].transactions || [],
+          saldoInicial: 0,
+          saldoFinal: parsed.history[monthKey].balance || 0,
+          income: parsed.history[monthKey].income || 0,
+          expense: parsed.history[monthKey].expense || 0,
+          lastPaymentMonth: null
+        };
+        if (firebaseInitialized) {
+          try {
+            const { saveMonthToFirestore } = await import('./firebase.js');
+            await saveMonthToFirestore(monthKey, monthData);
+          } catch(e) {
+            console.error('Error guardando mes importado:', e);
+          }
+        }
+      });
+    }
+    
     return true;
   } catch (error) {
     console.error('Error al importar datos:', error);
