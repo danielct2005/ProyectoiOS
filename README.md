@@ -1,15 +1,21 @@
-Tengo un problema en mi aplicación de finanzas. Cuando registro movimientos de forma manual, los datos se guardan correctamente y permanecen ahí después de reiniciar la app. Sin embargo, al usar la función de 'Importar Datos', sucede lo siguiente:
+Implementa la nueva sección 'Gestión Vehicular' siguiendo la arquitectura y diseño de las secciones actuales. La sección debe contener y gestionar los siguientes bloques de datos:
 
-Los datos aparecen visualmente en la interfaz tras la importación.
+Ficha del Vehículo: Registro de datos fijos (Marca, modelo, año, patente/placa, VIN) y Odómetro dinámico (kilometraje actual).
 
-Si cierro la app o la actualizo, los datos importados desaparecen.
+Módulo de Mantenciones: Historial con fecha, kilometraje del servicio, descripción, costo y selector de 'Tipo de Servicio' (Aceite, Frenos, Neumáticos, etc.).
 
-El problema parece estar ligado específicamente a los datos de la billetera/wallet.
+Control de Documentación: Panel de vencimientos para:
 
-Lo que necesito:
+Seguro/Póliza.
 
-Revisa mi lógica de importación para ver si estoy olvidando ejecutar el método de persistencia (commit, save, push, etc.).
+Revisión Técnica / ITV.
 
-Verifica si hay un conflicto de IDs (Primary Keys) que cause que los datos importados no se guarden por duplicidad o formato.
+Permiso de Circulación / Impuesto Vehicular.
 
-Analiza si la importación se está haciendo de forma asíncrona pero sin confirmar la transacción en la base de datos.
+Incluir sistema de estados: Vigente, Próximo a vencer y Vencido.
+
+Bitácora de Gastos: Registro rápido de carga de combustible y otros gastos (peajes, reparaciones) que se vinculen automáticamente al módulo de Finanzas de la app.
+
+Próximos Eventos: Generar recordatorios automáticos que se integren con la sección de Agenda basados en fechas de documentos o kilometraje proyectado.
+
+Genera la vista principal, los modales de ingreso y actualiza el modelo de datos global para incluir esta nueva entidad.
