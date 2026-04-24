@@ -76,26 +76,27 @@ export function updateCobro(cobroId, updates) {
 }
 
 // Set para evitar múltiples procesamientos del mismo cobro
-const processedCobros = new Set();
+const processedCobros = new Map();
 
 // Marcar cuota como pagada
 export function markInstallmentPaid(cobroId) {
-  // Verificar si este cobro ya está siendo procesado
-  if (processedCobros.has(cobroId)) {
-    console.log('markInstallmentPaid blocked - already processing cobro:', cobroId);
-    return { success: false, message: 'Ya se está procesando este cobro' };
+  const now = Date.now();
+  const lastProcess = processedCobros.get(cobroId) || 0;
+  
+  // Bloquear si se procesó en los últimos 3 segundos
+  if (now - lastProcess < 3000) {
+    console.log('markInstallmentPaid blocked - too soon:', cobroId);
+    return { success: false, message: 'Espera un momento' };
   }
   
-  processedCobros.add(cobroId);
+  processedCobros.set(cobroId, now);
   
   const cobro = appState.cobros.find(c => c.id ===cobroId);
   if (!cobro) {
-    processedCobros.delete(cobroId);
     return { success: false, message: 'Cobro no encontrado' };
   }
   
   if (cobro.paidInstallments >=cobro.totalInstallments) {
-    processedCobros.delete(cobroId);
     return { success: false, message: 'Todas las cuotas ya están pagadas' };
   }
 
@@ -123,11 +124,6 @@ export function markInstallmentPaid(cobroId) {
 
   console.log('After update - paidInstallments:', cobro.paidInstallments, 'total:', cobro.totalInstallments);
   saveData();
-  
-  // Limpiar el bloqueo después de un delay para evitar ciclos
-  setTimeout(() => {
-    processedCobros.delete(cobroId);
-  }, 2000);
   
   return { success: true, cobro };
 }
@@ -503,22 +499,28 @@ function setupCobrosEvents() {
     // Delete cobro
     document.getElementById('deleteEditCobroBtn')?.addEventListener('click', handleDeleteCobro);
     
-    // Mark paid buttons
+// Mark paid buttons
     document.querySelectorAll('.mark-paid-btn').forEach(btn => {
+      if (btn.hasAttribute('data-processed')) return; // Ya procesado
+      
+      btn.setAttribute('data-processed', 'true');
+      
       btn?.addEventListener('click', (e) => {
         e.stopPropagation();
         const cobroId = btn.dataset.id;
-        const cobro = appState.cobros.find(c => c.id === cobroId);
-        if (!cobro ||cobro.paidInstallments >= cobro.totalInstallments) {
+        const cobro = appState.cobros.find(c => c.id ===cobroId);
+        if (!cobro ||cobro.paidInstallments >=cobro.totalInstallments) {
           console.log('Blocked - invalid state');
           return;
         }
         // Deshabilitar botón inmediatamente
         btn.disabled = true;
+        btn.textContent = '⏳';
+        
         const result = markInstallmentPaid(cobroId);
         if (result.success) {
           renderCobros();
-          window.dispatchEvent(new CustomEvent('app:render'));
+          // No dispatch app:render para evitar ciclo
         }
       }, { once: true });
     });
