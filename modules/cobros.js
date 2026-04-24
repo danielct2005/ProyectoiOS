@@ -1,7 +1,7 @@
 // ==================== COBROS - MÓDULO DE COBROS A TERCEROS ====================
 // Gestiona préstamos a terceros o compras que otros deben pagar
 
-import { appState, saveData, generateId, addCreditCard, deleteCreditCard } from './storage.js';
+import { appState, saveData, generateId } from './storage.js';
 import { formatCurrency, formatNumber, addThousandsSeparator, digitsOnly, escapeHtml, createEmptyState } from './utils.js';
 
 // ==================== CÁLCULOS ====================
@@ -343,8 +343,22 @@ export function renderCobros() {
 function setupCobrosEvents() {
   setTimeout(() => {
     // Add cobro button
-    document.getElementById('addCobroBtn')?.addEventListener('click', () => {
-      document.getElementById('cobroModal')?.classList.add('visible');
+    const addCobroBtn = document.getElementById('addCobroBtn');
+    if (addCobroBtn) {
+      addCobroBtn.addEventListener('click', () => {
+        document.getElementById('cobroModal')?.classList.add('visible');
+      });
+    }
+    
+    // Edit cobro - abrir modal
+    document.querySelectorAll('.edit-cobro-btn').forEach(btn => {
+      btn?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const cobro = appState.cobros.find(c => c.id === btn.dataset.id);
+        if (cobro) {
+          openEditCobroModal(cobro);
+        }
+      });
     });
     
     // Format inputs
@@ -560,7 +574,7 @@ function handleAddCobro(e) {
       return;
     }
     
-    result = addCobro(deudor, concepto, montoUnico, 1, montoUnico, categoria);
+    result = addCobro(deudor, concepto, montoUnico, 1, montoUnico);
   }
   
   if (result.success) {
@@ -568,6 +582,39 @@ function handleAddCobro(e) {
     renderCobros();
     window.dispatchEvent(new CustomEvent('app:render'));
   }
+}
+
+// ==================== EDIT MODAL ====================
+
+function openEditCobroModal(cobro) {
+  if (!cobro) return;
+  
+  const isCuotas = cobro.totalInstallments > 1;
+  
+  // Llenar el formulario
+  document.getElementById('editCobroId').value = cobro.id;
+  document.getElementById('editCobroDeudor').value = cobro.deudor || '';
+  document.getElementById('editCobroConcepto').value = cobro.concepto || '';
+  document.getElementById('editCobroTotal').value = cobro.totalAmount || 0;
+  document.getElementById('editCobroCuotas').value = cobro.totalInstallments || 1;
+  document.getElementById('editCobroMontoCuota').value = cobro.installmentAmount || 0;
+  document.getElementById('editCobroPaid').value = cobro.paidInstallments || 0;
+  document.getElementById('editCobroMontoUnico').value = cobro.totalAmount || 0;
+  
+  // Set tipo
+  const tipoCuotas = document.querySelector('input[name="editCobroTipo"][value="cuotas"]');
+  const tipoUnico = document.querySelector('input[name="editCobroTipo"][value="unico"]');
+  if (tipoCuotas && tipoUnico) {
+    tipoCuotas.checked = isCuotas;
+    tipoUnico.checked = !isCuotas;
+  }
+  
+  // Mostrar/ocultar campos
+  document.getElementById('editCamposCuotas').style.display = isCuotas ? 'block' : 'none';
+  document.getElementById('editCamposUnico').style.display = isCuotas ? 'none' : 'block';
+  
+  // Abrir modal
+  document.getElementById('editCobroModal')?.classList.add('visible');
 }
 
 function handleEditCobro(e) {
