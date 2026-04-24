@@ -479,9 +479,12 @@ export function renderCobros() {
     
     // Delete cobro
     document.getElementById('deleteEditCobroBtn')?.addEventListener('click', handleDeleteCobro);
-    
+  }, 100);
+}
+
+// ==================== EVENT DELEGATION ====================
+
 function setupCobrosEvents() {
-  // Usar event delegation - UN solo listener para todos los botones
   const container = document.querySelector('.transaction-list');
   if (!container) return;
   
