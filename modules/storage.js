@@ -37,6 +37,7 @@ export const appState = {
   fixedExpenses: [],
   debts: [],
   cobros: [],  // Por Cobrar - préstamos a terceros
+  cobCategories: [],  // Categorías de cobros
   creditCards: [],
   history: {},
   
@@ -77,6 +78,7 @@ export async function loadData() {
         appState.fixedExpenses = data.fixedExpenses || [];
         appState.debts = data.debts || [];
         appState.cobros = data.cobros || [];
+        appState.cobCategories = data.cobCategories || [];
         appState.creditCards = data.creditCards || [];
         appState.history = data.history || {};
         appState.lastPaymentMonth = data.lastPaymentMonth || null;
@@ -94,6 +96,7 @@ export async function loadData() {
             appState.fixedExpenses = cloudData.fixedExpenses || appState.fixedExpenses;
             appState.debts = cloudData.debts || appState.debts;
             appState.cobros = cloudData.cobros || appState.cobros;
+            appState.cobCategories = cloudData.cobCategories || appState.cobCategories;
             appState.creditCards = cloudData.creditCards || appState.creditCards;
             appState.savingsAccounts = cloudData.savingsAccounts || appState.savingsAccounts;
             appState.savingsGoals = cloudData.savingsGoals || appState.savingsGoals;
@@ -225,6 +228,7 @@ export function saveData() {
     fixedExpenses: appState.fixedExpenses,
     debts: appState.debts,
     cobros: appState.cobros,
+    cobCategories: appState.cobCategories,
     creditCards: appState.creditCards,
     history: appState.history,
     lastPaymentMonth: appState.lastPaymentMonth,
@@ -253,6 +257,7 @@ export function saveData() {
           fixedExpenses: appState.fixedExpenses,
           debts: appState.debts,
           cobros: appState.cobros,
+          cobCategories: appState.cobCategories,
           creditCards: appState.creditCards,
           history: appState.history,
           lastPaymentMonth: appState.lastPaymentMonth,
@@ -510,6 +515,18 @@ export function deleteCreditCard(id) {
     if (d.cardId === id) d.cardId = 'none';
   });
   appState.creditCards = appState.creditCards.filter(c => c.id !== id);
+  saveData();
+}
+
+// --- Categorías de Cobros ---
+
+export function addCobCategory(name) {
+  appState.cobCategories.push({ id: generateId(), name });
+  saveData();
+}
+
+export function deleteCobCategory(id) {
+  appState.cobCategories = appState.cobCategories.filter(c => c.id !== id);
   saveData();
 }
 
