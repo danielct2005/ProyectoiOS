@@ -493,7 +493,7 @@ function setupCobrosEvents() {
           renderCobros();
           window.dispatchEvent(new CustomEvent('app:render'));
         }
-      });
+      }, { once: true }); // Solo registra una vez por render
     });
     
     // Delete buttons
@@ -505,7 +505,7 @@ function setupCobrosEvents() {
           renderCobros();
           window.dispatchEvent(new CustomEvent('app:render'));
         }
-      });
+      }, { once: true });
     });
   }, 100);
 }
