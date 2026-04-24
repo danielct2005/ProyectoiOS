@@ -1,7 +1,7 @@
 // ==================== COBROS - MÓDULO DE COBROS A TERCEROS ====================
 // Gestiona préstamos a terceros o compras que otros deben pagar
 
-import { appState, saveData, generateId, addCreditCard, deleteCreditCard, addCobCategory, deleteCobCategory } from './storage.js';
+import { appState, saveData, generateId, addCreditCard, deleteCreditCard } from './storage.js';
 import { formatCurrency, formatNumber, addThousandsSeparator, digitsOnly, escapeHtml, createEmptyState } from './utils.js';
 
 // ==================== CÁLCULOS ====================
@@ -30,12 +30,11 @@ export function calculateCobrosMonthly() {
 // ==================== CRUD OPERATIONS ====================
 
 // Agregar un nuevo cobro
-export function addCobro(deudor, concepto, totalAmount, totalInstallments, installmentAmount, categoria = 'Otro') {
+export function addCobro(deudor, concepto, totalAmount, totalInstallments, installmentAmount) {
   const cobro = {
     id: generateId(),
     deudor: deudor.trim(),
     concepto: concepto.trim(),
-    categoria: categoria.trim() || 'Otro',
     totalAmount: parseFloat(totalAmount),
     totalInstallments: parseInt(totalInstallments),
     installmentAmount: parseFloat(installmentAmount) || (parseFloat(totalAmount) / parseInt(totalInstallments)),
@@ -146,7 +145,6 @@ function buildCobroItemHtml(c) {
     <div class="cobro-item" data-id="${c.id}">
       <div class="cobro-item__header">
         <span class="cobro-item__deudor">${escapeHtml(c.deudor)}</span>
-        <span class="cobro-item__categoria">${escapeHtml(c.categoria)}</span>
       </div>
       <div class="cobro-item__concepto">${escapeHtml(c.concepto)}</div>
       <div class="cobro-item__details">
@@ -206,7 +204,6 @@ export function renderCobros() {
     <div class="section-header">
       <h2 class="section-title">Por Cobrar</h2>
       <div class="section-header__actions">
-        <button class="btn btn--sm btn--ghost" id="manageCobCategoriesBtn">📁 Categorías</button>
         <button class="btn btn--sm btn--primary" id="addCobroBtn">➕ Agregar</button>
       </div>
     </div>
@@ -236,14 +233,6 @@ export function renderCobros() {
             <input type="text" id="cobroConcepto" class="form-input" placeholder="Ej: Préstamo, Compra compartida" required>
           </div>
           <div class="form-group">
-            <label class="form-label" for="cobroCategoria">Categoría</label>
-            <select id="cobroCategoria" class="form-input">
-              <option value="">Seleccionar categoría</option>
-              ${appState.cobCategories.map(c => `<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)}</option>`).join('')}
-              <option value="Otro">Otro</option>
-            </select>
-          </div>
-          <div class="form-group">
             <label class="form-label">Tipo de Cobro</label>
             <div style="display: flex; gap: 10px; margin-bottom: 10px;">
               <label style="flex: 1; display: flex; align-items: center; gap: 5px; padding: 10px; border: 2px solid var(--gray-200); border-radius: var(--radius); cursor: pointer;" id="labelConCuotas">
@@ -267,7 +256,7 @@ export function renderCobros() {
             </div>
             <div class="form-group">
               <label class="form-label" for="cobroMontoCuota">Monto por Cuota</label>
-              <input type="text" id="cobroMontoCuota" class="form-input" placeholder="Se calcula solo" inputmode="numeric">
+              <input type="text" id="cobroMontoCuota" class="form-input" placeholder="Se calcula solo" inputmode="numeric" readonly style="background: var(--gray-100); cursor: not-allowed;">
             </div>
           </div>
           <div id="camposUnico" style="display: none;">
@@ -281,30 +270,6 @@ export function renderCobros() {
             <button type="submit" class="btn btn--primary">Guardar</button>
           </div>
         </form>
-      </div>
-    </div>
-    
-    <!-- Modal Gestionar Categorías -->
-    <div class="modal" id="cobCategoriesModal">
-      <div class="modal__backdrop"></div>
-      <div class="modal__content">
-        <h3 class="modal__title">Categorías de Cobros</h3>
-        <div class="card-list" id="cobCategoryList">
-          ${appState.cobCategories.length === 0 ? '<p class="text-muted">No hay categorías</p>' : 
-            appState.cobCategories.map(c => `
-              <div class="card-item">
-                <span>📁 ${escapeHtml(c.name)}</span>
-                <button class="delete-cob-category-btn" data-delete="${c.id}">🗑️</button>
-              </div>
-            `).join('')}
-        </div>
-        <form id="addCobCategoryForm" class="mt-2">
-          <div class="form-group">
-            <input type="text" id="newCobCategoryName" class="form-input" placeholder="Nombre de categoría" required>
-          </div>
-          <button type="submit" class="btn btn--primary btn--block">➕ Agregar Categoría</button>
-        </form>
-        <button class="btn btn--secondary btn--block mt-1" id="closeCobCategoriesModal">Cerrar</button>
       </div>
     </div>
     
@@ -347,7 +312,7 @@ export function renderCobros() {
             </div>
             <div class="form-group">
               <label class="form-label" for="editCobroMontoCuota">Monto por Cuota</label>
-              <input type="text" id="editCobroMontoCuota" class="form-input" inputmode="numeric">
+              <input type="text" id="editCobroMontoCuota" class="form-input" inputmode="numeric" readonly style="background: var(--gray-100); cursor: not-allowed;">
             </div>
             <div class="form-group">
               <label class="form-label" for="editCobroPaid">Cuotas Pagadas</label>
@@ -380,11 +345,6 @@ function setupCobrosEvents() {
     // Add cobro button
     document.getElementById('addCobroBtn')?.addEventListener('click', () => {
       document.getElementById('cobroModal')?.classList.add('visible');
-    });
-    
-    // Manage categories button
-    document.getElementById('manageCobCategoriesBtn')?.addEventListener('click', () => {
-      document.getElementById('cobCategoriesModal')?.classList.add('visible');
     });
     
     // Format inputs
@@ -441,37 +401,20 @@ function setupCobrosEvents() {
       document.getElementById('cobroModal')?.classList.remove('visible');
     });
     
-    document.getElementById('closeCobCategoriesModal')?.addEventListener('click', () => {
-      document.getElementById('cobCategoriesModal')?.classList.remove('visible');
-    });
-    
     document.getElementById('cancelEditCobroBtn')?.addEventListener('click', () => {
       document.getElementById('editCobroModal')?.classList.remove('visible');
     });
     
     // Backdrops
-    document.querySelectorAll('#cobroModal .modal__backdrop, #cobCategoriesModal .modal__backdrop, #editCobroModal .modal__backdrop').forEach(el => {
+    document.querySelectorAll('#cobroModal .modal__backdrop, #editCobroModal .modal__backdrop').forEach(el => {
       el?.addEventListener('click', () => {
         document.getElementById('cobroModal')?.classList.remove('visible');
-        document.getElementById('cobCategoriesModal')?.classList.remove('visible');
         document.getElementById('editCobroModal')?.classList.remove('visible');
       });
     });
     
     // Add cobro form
     document.getElementById('cobroForm')?.addEventListener('submit', handleAddCobro);
-    
-    // Add category form
-    document.getElementById('addCobCategoryForm')?.addEventListener('submit', handleAddCobCategory);
-    
-    // Delete category
-    document.querySelectorAll('.delete-cob-category-btn').forEach(btn => {
-      btn?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        deleteCobCategory(btn.dataset.delete);
-        window.dispatchEvent(new CustomEvent('app:render'));
-      });
-    });
     
     // Edit cobro
     document.querySelectorAll('.cobro-item').forEach(item => {
@@ -590,7 +533,6 @@ function handleAddCobro(e) {
   const deudor = document.getElementById('cobroDeudor').value.trim();
   const concepto = document.getElementById('cobroConcepto').value.trim();
   const tipo = document.querySelector('input[name="cobroTipo"]:checked').value;
-  const categoria = document.getElementById('cobroCategoria').value || 'Otro';
   
   if (!deudor || !concepto) {
     alert('Por favor completá todos los campos');
@@ -609,7 +551,7 @@ function handleAddCobro(e) {
       return;
     }
     
-    result = addCobro(deudor, concepto, totalAmount, totalInstallments, installmentAmount, categoria);
+    result = addCobro(deudor, concepto, totalAmount, totalInstallments, installmentAmount);
   } else {
     const montoUnico = parseNumber(document.getElementById('cobroMontoUnico').value);
     
@@ -626,19 +568,6 @@ function handleAddCobro(e) {
     renderCobros();
     window.dispatchEvent(new CustomEvent('app:render'));
   }
-}
-
-function handleAddCobCategory(e) {
-  e.preventDefault();
-  
-  const name = document.getElementById('newCobCategoryName').value.trim();
-  if (!name) {
-    return;
-  }
-  
-  addCobCategory(name);
-  document.getElementById('newCobCategoryName').value = '';
-  window.dispatchEvent(new CustomEvent('app:render'));
 }
 
 function handleEditCobro(e) {
