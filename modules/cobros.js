@@ -85,30 +85,28 @@ export function markInstallmentPaid(cobroId) {
   if (cobro.paidInstallments >= cobro.totalInstallments) {
     return { success: false, message: 'Todas las cuotas ya están pagadas' };
   }
-  
+
   // Registrar el pago en el historial
   const payment = {
     date: new Date().toISOString(),
     amount: cobro.installmentAmount,
     installmentNumber: cobro.paidInstallments + 1
   };
-  
+
   if (!cobro.history) cobro.history = [];
   cobro.history.push(payment);
-  
-  // Actualizar contadores
-  cobro.paidInstallments = (cobro.paidInstallments || 0) + 1;
-  
+
+  // Actualizar contadores - solo +1
+  cobro.paidInstallments = (parseInt(cobro.paidInstallments) || 0) + 1;
+
   // Si completó todas las cuotas, marcar como no pendiente
   if (cobro.paidInstallments >= cobro.totalInstallments) {
     cobro.currentPending = false;
-  }
-  
-  // Si hay más cuotas pendientes, la siguiente queda pendiente
-  if (cobro.paidInstallments < cobro.totalInstallments) {
+  } else {
     cobro.currentPending = true;
   }
-  
+
+  console.log('After update - paidInstallments:', cobro.paidInstallments, 'total:', cobro.totalInstallments);
   saveData();
   return { success: true, cobro };
 }
@@ -488,12 +486,20 @@ function setupCobrosEvents() {
     document.querySelectorAll('.mark-paid-btn').forEach(btn => {
       btn?.addEventListener('click', (e) => {
         e.stopPropagation();
-        const result = markInstallmentPaid(btn.dataset.id);
+        const cobroId = btn.dataset.id;
+        const cobro = appState.cobros.find(c => c.id === cobroId);
+        if (!cobro ||cobro.paidInstallments >= cobro.totalInstallments) {
+          console.log('Blocked - invalid state');
+          return;
+        }
+        // Deshabilitar botón inmediatamente
+        btn.disabled = true;
+        const result = markInstallmentPaid(cobroId);
         if (result.success) {
           renderCobros();
           window.dispatchEvent(new CustomEvent('app:render'));
         }
-      }, { once: true }); // Solo registra una vez por render
+      }, { once: true });
     });
     
     // Delete buttons
