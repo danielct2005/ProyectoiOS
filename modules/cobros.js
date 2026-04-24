@@ -31,6 +31,8 @@ export function calculateCobrosMonthly() {
 
 // Agregar un nuevo cobro
 export function addCobro(deudor, concepto, totalAmount, totalInstallments) {
+  console.log('addCobro called:', deudor, concepto, totalAmount, totalInstallments);
+  
   const cobro = {
     id: generateId(),
     deudor: deudor.trim(),
@@ -44,8 +46,12 @@ export function addCobro(deudor, concepto, totalAmount, totalInstallments) {
     history: []
   };
   
+  console.log('Cobro to add:', cobro);
   appState.cobros.unshift(cobro);
+  console.log('cobros array after add:', appState.cobros.length);
+  
   saveData();
+  console.log('saveData called');
   return { success: true, cobro };
 }
 
