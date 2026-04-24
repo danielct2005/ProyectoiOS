@@ -30,14 +30,14 @@ export function calculateCobrosMonthly() {
 // ==================== CRUD OPERATIONS ====================
 
 // Agregar un nuevo cobro
-export function addCobro(deudor, concepto, totalAmount, totalInstallments, installmentAmount) {
+export function addCobro(deudor, concepto, totalAmount, totalInstallments) {
   const cobro = {
     id: generateId(),
     deudor: deudor.trim(),
     concepto: concepto.trim(),
     totalAmount: parseFloat(totalAmount),
     totalInstallments: parseInt(totalInstallments),
-    installmentAmount: parseFloat(installmentAmount) || (parseFloat(totalAmount) / parseInt(totalInstallments)),
+    installmentAmount: Math.round(parseFloat(totalAmount) / parseInt(totalInstallments)),
     paidInstallments: 0,
     currentPending: true,
     createdAt: new Date().toISOString(),
@@ -64,6 +64,10 @@ export function deleteCobro(cobroId) {
 export function updateCobro(cobroId, updates) {
   const cobro = appState.cobros.find(c => c.id === cobroId);
   if (cobro) {
+    // Calcular installmentAmount automáticamente si es tipo cuotas
+    if (updates.totalAmount !== undefined && updates.totalInstallments !== undefined) {
+      updates.installmentAmount = Math.round(updates.totalAmount / updates.totalInstallments);
+    }
     Object.assign(cobro, updates);
     saveData();
     return { success: true, cobro };
@@ -254,10 +258,6 @@ export function renderCobros() {
               <label class="form-label" for="cobroCuotas">Cantidad de Cuotas</label>
               <input type="text" id="cobroCuotas" class="form-input" placeholder="12" inputmode="numeric">
             </div>
-            <div class="form-group">
-              <label class="form-label" for="cobroMontoCuota">Monto por Cuota</label>
-              <input type="text" id="cobroMontoCuota" class="form-input" placeholder="Se calcula solo" inputmode="numeric" readonly style="background: var(--gray-100); cursor: not-allowed;">
-            </div>
           </div>
           <div id="camposUnico" style="display: none;">
             <div class="form-group">
@@ -311,10 +311,6 @@ export function renderCobros() {
               <input type="text" id="editCobroCuotas" class="form-input" inputmode="numeric">
             </div>
             <div class="form-group">
-              <label class="form-label" for="editCobroMontoCuota">Monto por Cuota</label>
-              <input type="text" id="editCobroMontoCuota" class="form-input" inputmode="numeric" readonly style="background: var(--gray-100); cursor: not-allowed;">
-            </div>
-            <div class="form-group">
               <label class="form-label" for="editCobroPaid">Cuotas Pagadas</label>
               <input type="number" id="editCobroPaid" class="form-input" min="0" required>
             </div>
@@ -361,12 +357,10 @@ function setupCobrosEvents() {
       });
     });
     
-    // Format inputs
+// Format inputs
     addThousandsSeparator(document.getElementById('cobroTotal'));
-    addThousandsSeparator(document.getElementById('cobroMontoCuota'));
     addThousandsSeparator(document.getElementById('cobroMontoUnico'));
     addThousandsSeparator(document.getElementById('editCobroTotal'));
-    addThousandsSeparator(document.getElementById('editCobroMontoCuota'));
     addThousandsSeparator(document.getElementById('editCobroMontoUnico'));
     digitsOnly(document.getElementById('cobroCuotas'));
     digitsOnly(document.getElementById('editCobroCuotas'));
@@ -397,18 +391,6 @@ function setupCobrosEvents() {
     // Auto-calculate cuota
     const totalInput = document.getElementById('cobroTotal');
     const cuotasInput = document.getElementById('cobroCuotas');
-    const montoCuotaInput = document.getElementById('cobroMontoCuota');
-    
-    const autoCalculate = () => {
-      const total = parseNumber(totalInput?.value) || 0;
-      const cuotas = parseInt(cuotasInput?.value) || 1;
-      if (total > 0 && cuotas > 0 && montoCuotaInput && !montoCuotaInput.value) {
-        montoCuotaInput.value = Math.round(total / cuotas).toLocaleString();
-      }
-    };
-    
-    totalInput?.addEventListener('input', autoCalculate);
-    cuotasInput?.addEventListener('input', autoCalculate);
     
     // Close modals
     document.getElementById('cancelCobroBtn')?.addEventListener('click', () => {
@@ -456,7 +438,6 @@ function setupCobrosEvents() {
             editLabelUnico.style.borderColor = 'var(--gray-200)';
             document.getElementById('editCobroTotal').value = cobro.totalAmount;
             document.getElementById('editCobroCuotas').value = cobro.totalInstallments;
-            document.getElementById('editCobroMontoCuota').value = cobro.installmentAmount;
             document.getElementById('editCobroPaid').value = cobro.paidInstallments || 0;
           } else {
             editCamposCuotas.style.display = 'none';
@@ -496,18 +477,6 @@ function setupCobrosEvents() {
     // Auto-calculate edit cuota
     const editTotalInput = document.getElementById('editCobroTotal');
     const editCuotasInput = document.getElementById('editCobroCuotas');
-    const editMontoCuotaInput = document.getElementById('editCobroMontoCuota');
-    
-    const editAutoCalculate = () => {
-      const total = parseNumber(editTotalInput?.value) || 0;
-      const cuotas = parseInt(editCuotasInput?.value) || 1;
-      if (total > 0 && cuotas > 0 && editMontoCuotaInput && !editMontoCuotaInput.value) {
-        editMontoCuotaInput.value = Math.round(total / cuotas).toLocaleString();
-      }
-    };
-    
-    editTotalInput?.addEventListener('input', editAutoCalculate);
-    editCuotasInput?.addEventListener('input', editAutoCalculate);
     
     // Save edit cobro
     document.getElementById('editCobroForm')?.addEventListener('submit', handleEditCobro);
@@ -558,14 +527,14 @@ function handleAddCobro(e) {
   if (tipo === 'cuotas') {
     const totalAmount = parseNumber(document.getElementById('cobroTotal').value);
     const totalInstallments = parseNumber(document.getElementById('cobroCuotas').value) || 1;
-    const installmentAmount = parseNumber(document.getElementById('cobroMontoCuota').value) || (totalAmount / totalInstallments);
     
     if (!totalAmount || totalAmount <= 0) {
       alert('Por favor ingresá el monto total');
       return;
     }
     
-    result = addCobro(deudor, concepto, totalAmount, totalInstallments, installmentAmount);
+    // installmentAmount se calcula automáticamente en addCobro (como en Deudas)
+    result = addCobro(deudor, concepto, totalAmount, totalInstallments);
   } else {
     const montoUnico = parseNumber(document.getElementById('cobroMontoUnico').value);
     
@@ -574,7 +543,7 @@ function handleAddCobro(e) {
       return;
     }
     
-    result = addCobro(deudor, concepto, montoUnico, 1, montoUnico);
+    result = addCobro(deudor, concepto, montoUnico, 1);
   }
   
   if (result.success) {
@@ -597,7 +566,6 @@ function openEditCobroModal(cobro) {
   document.getElementById('editCobroConcepto').value = cobro.concepto || '';
   document.getElementById('editCobroTotal').value = cobro.totalAmount || 0;
   document.getElementById('editCobroCuotas').value = cobro.totalInstallments || 1;
-  document.getElementById('editCobroMontoCuota').value = cobro.installmentAmount || 0;
   document.getElementById('editCobroPaid').value = cobro.paidInstallments || 0;
   document.getElementById('editCobroMontoUnico').value = cobro.totalAmount || 0;
   
@@ -630,7 +598,6 @@ function handleEditCobro(e) {
   if (tipo === 'cuotas') {
     const totalAmount = parseNumber(document.getElementById('editCobroTotal').value);
     const totalInstallments = parseNumber(document.getElementById('editCobroCuotas').value) || 1;
-    const installmentAmount = parseNumber(document.getElementById('editCobroMontoCuota').value) || (totalAmount / totalInstallments);
     const paidInstallments = parseInt(document.getElementById('editCobroPaid').value) || 0;
     
     result = updateCobro(cobroId, {
@@ -638,7 +605,6 @@ function handleEditCobro(e) {
       concepto,
       totalAmount,
       totalInstallments,
-      installmentAmount,
       paidInstallments,
       currentPending: paidInstallments < totalInstallments
     });
@@ -650,9 +616,8 @@ function handleEditCobro(e) {
       concepto,
       totalAmount: montoUnico,
       totalInstallments: 1,
-      installmentAmount: montoUnico,
-      paidInstallments: 0,
-      currentPending: true
+      paidInstallments: 1,
+      currentPending: false
     });
   }
   
