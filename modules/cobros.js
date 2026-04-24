@@ -49,17 +49,6 @@ export function addCobro(deudor, concepto, totalAmount, totalInstallments) {
   return { success: true, cobro };
 }
 
-// Eliminar un cobro
-export function deleteCobro(cobroId) {
-  const index = appState.cobros.findIndex(c => c.id === cobroId);
-  if (index !== -1) {
-    appState.cobros.splice(index, 1);
-    saveData();
-    return { success: true };
-  }
-  return { success: false, message: 'Cobro no encontrado' };
-}
-
 // Actualizar un cobro
 export function updateCobro(cobroId, updates) {
   const cobro = appState.cobros.find(c => c.id === cobroId);
@@ -140,99 +129,7 @@ export function deleteCobro(cobroId) {
     saveData();
     return { success: true };
   }
-  return { success: false, message: 'Cobro no encontrado' };
-}
-
-// Actualizar un cobro
-export function updateCobro(cobroId, updates) {
-  const cobro = appState.cobros.find(c => c.id === cobroId);
-  if (cobro) {
-    // Calcular installmentAmount automáticamente si es tipo cuotas
-    if (updates.totalAmount !== undefined && updates.totalInstallments !== undefined) {
-      updates.installmentAmount = Math.round(updates.totalAmount / updates.totalInstallments);
-    }
-    Object.assign(cobro, updates);
-    saveData();
-    return { success: true, cobro };
-  }
-  return { success: false, message: 'Cobro no encontrado' };
-}
-
-// Set para evitar múltiples procesamientos del mismo cobro
-const processedCobros = new Map();
-
-// Marcar cuota como pagada
-export function markInstallmentPaid(cobroId) {
-  const now = Date.now();
-  const lastProcess = processedCobros.get(cobroId) || 0;
-  
-  // Bloquear si se procesó en los últimos 3 segundos
-  if (now - lastProcess < 3000) {
-    console.log('markInstallmentPaid blocked - too soon:', cobroId);
-    return { success: false, message: 'Espera un momento' };
-  }
-  
-  processedCobros.set(cobroId, now);
-  
-  const cobro = appState.cobros.find(c => c.id ===cobroId);
-  if (!cobro) {
-    return { success: false, message: 'Cobro no encontrado' };
-  }
-  
-  if (cobro.paidInstallments >=cobro.totalInstallments) {
-    return { success: false, message: 'Todas las cuotas ya están pagadas' };
-  }
-
-  console.log('markInstallmentPaid processing:', cobroId, 'paid:', cobro.paidInstallments);
-
-  // Registrar el pago en el historial
-  const payment = {
-    date: new Date().toISOString(),
-    amount: cobro.installmentAmount,
-    installmentNumber: cobro.paidInstallments + 1
-  };
-
-  if (!cobro.history) cobro.history = [];
-  cobro.history.push(payment);
-
-  // Actualizar contadores - solo +1
-  cobro.paidInstallments = (parseInt(cobro.paidInstallments) || 0) + 1;
-
-  // Si completó todas las cuotas, marcar como no pendiente
-  if (cobro.paidInstallments >= cobro.totalInstallments) {
-    cobro.currentPending = false;
-  } else {
-    cobro.currentPending = true;
-  }
-
-  console.log('After update - paidInstallments:', cobro.paidInstallments, 'total:', cobro.totalInstallments);
-  saveData();
-  
-  return { success: true, cobro };
-}
-
-// Revertir un pago de cuota
-export function undoInstallmentPayment(cobroId) {
-  const cobro = appState.cobros.find(c => c.id === cobroId);
-  if (!cobro) {
-    return { success: false, message: 'Cobro no encontrado' };
-  }
-  
-  if (cobro.paidInstallments <= 0) {
-    return { success: false, message: 'No hay pagos para revertir' };
-  }
-  
-  // Revertir el último pago del historial
-  if (cobro.history && cobro.history.length > 0) {
-    cobro.history.pop();
-  }
-  
-  // Actualizar contadores
-  cobro.paidInstallments = cobro.paidInstallments - 1;
-  cobro.currentPending = true;
-  
-  saveData();
-  return { success: true, cobro };
+return { success: false, message: 'Cobro no encontrado' };
 }
 
 // ==================== RENDER ====================
