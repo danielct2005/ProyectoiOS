@@ -41,10 +41,93 @@ export function addCobro(deudor, concepto, totalAmount, totalInstallments) {
     paidInstallments: 0,
     currentPending: true,
     createdAt: new Date().toISOString(),
-    history: [] // Para registrar cada pago
+    history: []
   };
   
   appState.cobros.unshift(cobro);
+  saveData();
+  return { success: true, cobro };
+}
+
+// Eliminar un cobro
+export function deleteCobro(cobroId) {
+  const index = appState.cobros.findIndex(c => c.id === cobroId);
+  if (index !== -1) {
+    appState.cobros.splice(index, 1);
+    saveData();
+    return { success: true };
+  }
+  return { success: false, message: 'Cobro no encontrado' };
+}
+
+// Actualizar un cobro
+export function updateCobro(cobroId, updates) {
+  const cobro = appState.cobros.find(c => c.id === cobroId);
+  if (cobro) {
+    // Calcular installmentAmount automáticamente si es tipo cuotas
+    if (updates.totalAmount !== undefined && updates.totalInstallments !== undefined) {
+      updates.installmentAmount = Math.round(updates.totalAmount / updates.totalInstallments);
+    }
+    Object.assign(cobro, updates);
+    saveData();
+    return { success: true, cobro };
+  }
+  return { success: false, message: 'Cobro no encontrado' };
+}
+
+// Revertir último pago
+export function revertLastPayment(cobroId) {
+  const cobro = appState.cobros.find(c => c.id === cobroId);
+  if (!cobro) {
+    return { success: false, message: 'Cobro no encontrado' };
+  }
+  
+  if (cobro.paidInstallments <= 0) {
+    return { success: false, message: 'No hay pagos para revertir' };
+  }
+
+  // Revertir el último pago del historial
+  if (cobro.history && cobro.history.length > 0) {
+    cobro.history.pop();
+  }
+
+  // Actualizar contadores
+  cobro.paidInstallments = cobro.paidInstallments - 1;
+  cobro.currentPending = true;
+  
+  saveData();
+  return { success: true, cobro };
+}
+
+// Marcar cuota como pagada
+export function markInstallmentPaid(cobroId) {
+  const cobro = appState.cobros.find(c => c.id === cobroId);
+  if (!cobro) {
+    return { success: false, message: 'Cobro no encontrado' };
+  }
+  
+  if (cobro.paidInstallments >= cobro.totalInstallments) {
+    return { success: false, message: 'Todas las cuotas ya están pagadas' };
+  }
+
+  // Registrar el pago en el historial
+  const payment = {
+    date: new Date().toISOString(),
+    amount: cobro.installmentAmount,
+    installmentNumber: cobro.paidInstallments + 1
+  };
+
+  if (!cobro.history) cobro.history = [];
+  cobro.history.push(payment);
+
+  // Actualizar contador
+  cobro.paidInstallments++;
+
+  // Si completó todas las cuotas, marcar como no pendiente
+  if (cobro.paidInstallments >= cobro.totalInstallments) {
+    cobro.currentPending = false;
+  }
+
   saveData();
   return { success: true, cobro };
 }
@@ -349,9 +432,10 @@ export function renderCobros() {
   setupCobrosEvents();
 }
 
-// ==================== EVENT SETUP ====================
+// ==================== RENDER ====================
 
-function setupCobrosEvents() {
+// Renderizar la vista de cobros
+export function renderCobros() {
   setTimeout(() => {
     // Add cobro button
     const addCobroBtn = document.getElementById('addCobroBtn');
@@ -499,44 +583,50 @@ function setupCobrosEvents() {
     // Delete cobro
     document.getElementById('deleteEditCobroBtn')?.addEventListener('click', handleDeleteCobro);
     
-// Mark paid buttons
-    document.querySelectorAll('.mark-paid-btn').forEach(btn => {
-      if (btn.hasAttribute('data-processed')) return; // Ya procesado
-      
-      btn.setAttribute('data-processed', 'true');
-      
-      btn?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const cobroId = btn.dataset.id;
-        const cobro = appState.cobros.find(c => c.id ===cobroId);
-        if (!cobro ||cobro.paidInstallments >=cobro.totalInstallments) {
-          console.log('Blocked - invalid state');
-          return;
-        }
-        // Deshabilitar botón inmediatamente
-        btn.disabled = true;
-        btn.textContent = '⏳';
-        
-        const result = markInstallmentPaid(cobroId);
-        if (result.success) {
-          renderCobros();
-          // No dispatch app:render para evitar ciclo
-        }
-      }, { once: true });
-    });
+function setupCobrosEvents() {
+  // Usar event delegation - UN solo listener para todos los botones
+  const container = document.querySelector('.transaction-list');
+  if (!container) return;
+  
+  // Remover listener anterior si existe
+  container.replaceWith(container.cloneNode(true));
+  const newContainer = document.querySelector('.transaction-list');
+  
+  newContainer?.addEventListener('click', (e) => {
+    const btn = e.target.closest('.mark-paid-btn');
+    if (btn) {
+      e.stopPropagation();
+      const cobroId = btn.dataset.id;
+      const cobro = appState.cobros.find(c => c.id === cobroId);
+      if (!cobro || cobro.paidInstallments >= cobro.totalInstallments) {
+        return;
+      }
+      // Deshabilitar botón inmediatamente
+      btn.disabled = true;
+      const result = markInstallmentPaid(cobroId);
+      if (result.success) {
+        renderCobros();
+      }
+      return;
+    }
     
-    // Delete buttons
-    document.querySelectorAll('.delete-cobro-btn').forEach(btn => {
-      btn?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (confirm('¿Estás seguro de eliminar este cobro?')) {
-          deleteCobro(btn.dataset.id);
-          renderCobros();
-          window.dispatchEvent(new CustomEvent('app:render'));
-        }
-      }, { once: true });
-    });
-  }, 100);
+    const editBtn = e.target.closest('.edit-cobro-btn');
+    if (editBtn) {
+      e.stopPropagation();
+      const cobro = appState.cobros.find(c => c.id === editBtn.dataset.id);
+      if (cobro) openEditCobroModal(cobro);
+      return;
+    }
+    
+    const deleteBtn = e.target.closest('.delete-cobro-btn');
+    if (deleteBtn) {
+      e.stopPropagation();
+      if (confirm('¿Estás seguro de eliminar este cobro?')) {
+        deleteCobro(deleteBtn.dataset.id);
+        renderCobros();
+      }
+    }
+  });
 }
 
 function handleAddCobro(e) {
