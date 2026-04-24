@@ -332,6 +332,15 @@ setupCobrosEvents();
 // ==================== EVENT DELEGATION ====================
 
 function setupCobrosEvents() {
+  // Botón agregar
+  const addBtn = document.getElementById('addCobroBtn');
+  if (addBtn) {
+    addBtn.addEventListener('click', () => {
+      document.getElementById('cobroModal')?.classList.add('visible');
+    });
+  }
+  
+  // Botones del listado - event delegation
   const container = document.querySelector('.transaction-list');
   if (!container) return;
   
@@ -374,6 +383,25 @@ function setupCobrosEvents() {
       }
     }
   });
+  
+  // Cerrar modales
+  document.getElementById('cancelCobroBtn')?.addEventListener('click', () => {
+    document.getElementById('cobroModal')?.classList.remove('visible');
+  });
+  document.getElementById('cancelEditCobroBtn')?.addEventListener('click', () => {
+    document.getElementById('editCobroModal')?.classList.remove('visible');
+  });
+  document.querySelectorAll('#cobroModal .modal__backdrop, #editCobroModal .modal__backdrop').forEach(el => {
+    el?.addEventListener('click', () => {
+      document.getElementById('cobroModal')?.classList.remove('visible');
+      document.getElementById('editCobroModal')?.classList.remove('visible');
+    });
+  });
+  
+  // Formularios
+  document.getElementById('cobroForm')?.addEventListener('submit', handleAddCobro);
+  document.getElementById('editCobroForm')?.addEventListener('submit', handleEditCobro);
+  document.getElementById('deleteEditCobroBtn')?.addEventListener('click', handleDeleteCobro);
 }
 
 function handleAddCobro(e) {
