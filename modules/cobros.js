@@ -75,16 +75,30 @@ export function updateCobro(cobroId, updates) {
   return { success: false, message: 'Cobro no encontrado' };
 }
 
+// Variable para evitar múltiples ejecuciones
+let isProcessingMarkPaid = false;
+
 // Marcar cuota como pagada
 export function markInstallmentPaid(cobroId) {
+  if (isProcessingMarkPaid) {
+    console.log('markInstallmentPaid blocked - already processing');
+    return { success: false, message: 'Ya se está procesando' };
+  }
+  
+  isProcessingMarkPaid = true;
+  
   const cobro = appState.cobros.find(c => c.id === cobroId);
   if (!cobro) {
+    isProcessingMarkPaid = false;
     return { success: false, message: 'Cobro no encontrado' };
   }
   
   if (cobro.paidInstallments >= cobro.totalInstallments) {
+    isProcessingMarkPaid = false;
     return { success: false, message: 'Todas las cuotas ya están pagadas' };
   }
+
+  console.log('markInstallmentPaid processing:', cobroId, 'paid:', cobro.paidInstallments);
 
   // Registrar el pago en el historial
   const payment = {
@@ -108,6 +122,8 @@ export function markInstallmentPaid(cobroId) {
 
   console.log('After update - paidInstallments:', cobro.paidInstallments, 'total:', cobro.totalInstallments);
   saveData();
+  
+  isProcessingMarkPaid = false;
   return { success: true, cobro };
 }
 
